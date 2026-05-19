@@ -1,0 +1,56 @@
+# Android Studio
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/gradle.xml
+.idea/assetWizardSettings.xml
+.idea/dictionaries
+.idea/libraries
+.idea/caches
+.idea/deploymentTargetSelector.xml
+*.iml
+.modules.xml
+
+# Build-files
+build/
+/build/
+app/build/
+captures/
+.externalNativeBuild
+.cxx
+local.properties
+
+# Gradle
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Secrets & Signatur
+*.jks
+*.keystore
+*.p12
+*.properties
+!gradle.properties
+!local.properties.template # Falls du eine Vorlage für andere erstellst
+!gradle/wrapper/gradle-wrapper.properties
+
+# System & Logs
+.DS_Store
+Thumbs.db
+*.log
+=======
+# Android spezifisch
+.gradle/
+build/
+capture/
+output.json
+
+# Lokale Konfiguration (WICHTIG: enthält oft Pfade zum SDK)
+local.properties
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+
+# System-Dateien
+.DS_Store
+Thumbs.db
