@@ -37,14 +37,9 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
-
-import me.hannes.eura_todo.ui.viewModels.TodoViewModel
-
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreens(
-    viewModel: TodoViewModel
 ) {
     val tabs = listOf("My Tasks", "Recipes", "Movies", "Clean")
 
