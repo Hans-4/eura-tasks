@@ -5,14 +5,14 @@ import androidx.room.PrimaryKey
 import java.sql.Time
 import java.sql.Date
 
-@Entity(tableName = "todos")
+@Entity(tableName = "tasks")
 data class TodoEntity(
     val title: String,
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
-    val date: Date,
-    val time: Time,
+    val date: String,
+    val time: String,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 1,
 )

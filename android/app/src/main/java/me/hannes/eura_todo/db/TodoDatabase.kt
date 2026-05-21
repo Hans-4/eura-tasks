@@ -8,5 +8,5 @@ import androidx.room.RoomDatabase
     version = 1
 )
 abstract class TodoDatabase: RoomDatabase() {
-    abstract fun todoDao(): TodoDao
+    abstract val dao: TodoDao
 }

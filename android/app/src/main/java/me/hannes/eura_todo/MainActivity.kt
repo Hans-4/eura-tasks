@@ -4,23 +4,36 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import me.hannes.eura_todo.db.TodoDatabase
-import me.hannes.eura_todo.ui.screens.HomeScreens
+import me.hannes.eura_todo.ui.AppNavHost
 import me.hannes.eura_todo.ui.theme.EuraToDoTheme
-import me.hannes.eura_todo.ui.viewModels.TodoViewModel
+import me.hannes.eura_todo.ui.viewModels.TaskViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val todoDb by lazy {
+    private val db by lazy {
         Room.databaseBuilder(
             applicationContext,
             TodoDatabase::class.java,
-            "todos.db"
+            "tasks.db"
         )
             .build()
     }
-
+    private val viewModel by viewModels<TaskViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return TaskViewModel(db.dao) as T
+                }
+            }
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,7 +41,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             EuraToDoTheme {
-                HomeScreens()
+                val state by viewModel.state.collectAsState()
+                AppNavHost(
+                    dbState = state,
+                    onEvent = viewModel::onEvent
+                    )
             }
         }
     }

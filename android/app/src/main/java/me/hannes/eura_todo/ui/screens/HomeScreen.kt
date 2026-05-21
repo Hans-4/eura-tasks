@@ -39,7 +39,8 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreens(
+fun HomeScreen(
+    onNavigateToAdd: () -> Unit
 ) {
     val tabs = listOf("My Tasks", "Recipes", "Movies", "Clean")
 
@@ -65,7 +66,7 @@ fun HomeScreens(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "Todos",
+                                "Tasks",
                                 fontWeight = Bold
                             )
                         }
@@ -141,7 +142,7 @@ fun HomeScreens(
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = onNavigateToAdd,
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
