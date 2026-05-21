@@ -30,7 +30,11 @@ fun AppNavHost(
             route = "home",
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            HomeScreen(onNavigateToAdd = { navController.navigate("addTask")})
+            HomeScreen(
+                state = dbState,
+                onEvent = onEvent,
+                onNavigateToAdd = { navController.navigate("addTask") }
+            )
         }
 
         composable(

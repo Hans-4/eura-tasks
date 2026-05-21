@@ -2,6 +2,8 @@ package me.hannes.eura_todo.db
 
 sealed interface TodoEvent {
     object SaveTask: TodoEvent
+    object OpenSheet: TodoEvent
+    object CloseSheet: TodoEvent
     data class SetTodoTitle(val title: String): TodoEvent
     data class SetTodoDescription(val description: String): TodoEvent
     data class SetTodoIsFavorite(val isFavorite: Boolean): TodoEvent

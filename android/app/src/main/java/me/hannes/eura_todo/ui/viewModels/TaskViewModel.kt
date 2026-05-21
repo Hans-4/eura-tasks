@@ -61,10 +61,24 @@ class TaskViewModel(
                     dao.upsertTask(task)
                 }
                 _state.update { it.copy(
+                    isAddingTask = false,
                     todoTitle = "",
                     todoDescription = "",
                 ) }
             }
+            TodoEvent.CloseSheet -> {
+                _state.update { it.copy(
+                    isAddingTask = false
+                ) }
+            }
+            TodoEvent.OpenSheet -> {
+                _state.update {
+                    it.copy(
+                        isAddingTask = true
+                    )
+                }
+            }
+
             is TodoEvent.SetDate -> {
                 _state.update {
                     it.copy(

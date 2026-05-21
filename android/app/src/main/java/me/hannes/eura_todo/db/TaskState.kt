@@ -9,4 +9,5 @@ data class TaskState(
     val todoDate: String = "",
     val todoTime: String = "",
     val sortType: SortType = SortType.TITLE,
+    val isAddingTask: Boolean = false,
 )
