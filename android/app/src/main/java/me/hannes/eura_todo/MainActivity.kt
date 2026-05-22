@@ -13,6 +13,7 @@ import androidx.room.Room
 import me.hannes.eura_todo.db.TodoDatabase
 import me.hannes.eura_todo.ui.AppNavHost
 import me.hannes.eura_todo.ui.theme.EuraToDoTheme
+import me.hannes.eura_todo.ui.viewModels.HomeViewModel
 import me.hannes.eura_todo.ui.viewModels.TaskViewModel
 
 class MainActivity : ComponentActivity() {
@@ -25,11 +26,21 @@ class MainActivity : ComponentActivity() {
         )
             .build()
     }
-    private val viewModel by viewModels<TaskViewModel>(
+    private val dbViewModel by viewModels<TaskViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return TaskViewModel(db.dao) as T
+                }
+            }
+        }
+    )
+
+    private val homeViewModel by viewModels<HomeViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return HomeViewModel() as T
                 }
             }
         }
@@ -41,11 +52,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             EuraToDoTheme {
-                val state by viewModel.state.collectAsState()
+                val state by dbViewModel.state.collectAsState()
+                val uiState by homeViewModel.state.collectAsState()
                 AppNavHost(
                     dbState = state,
-                    onEvent = viewModel::onEvent
-                    )
+                    uiState = uiState,
+                    onDbEvent = dbViewModel::onEvent,
+                    onUiEvent = homeViewModel::onEvent
+                )
             }
         }
     }

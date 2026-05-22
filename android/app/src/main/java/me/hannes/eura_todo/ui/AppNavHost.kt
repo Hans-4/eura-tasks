@@ -18,7 +18,9 @@ import me.hannes.eura_todo.ui.screens.HomeScreen
 @Composable
 fun AppNavHost(
     dbState: TaskState,
-    onEvent: (TodoEvent) -> Unit
+    uiState: UiState,
+    onDbEvent: (TodoEvent) -> Unit,
+    onUiEvent: (UiEvent) -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -31,8 +33,10 @@ fun AppNavHost(
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
             HomeScreen(
-                state = dbState,
-                onEvent = onEvent,
+                dbState = dbState,
+                uiState = uiState,
+                onDbEvent = onDbEvent,
+                onUiEvent = onUiEvent,
                 onNavigateToAdd = { navController.navigate("addTask") }
             )
         }
