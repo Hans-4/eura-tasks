@@ -1,13 +1,12 @@
 package me.hannes.eura_todo.ui.screens.homeScreenComponents
 
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material3.Button
@@ -16,17 +15,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.SortType
-import me.hannes.eura_todo.db.TaskState
-import me.hannes.eura_todo.db.TodoEvent
+import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 
@@ -34,9 +31,9 @@ import me.hannes.eura_todo.ui.UiState
 @Composable
 fun SortItemsSheet(
     onUiEvent: (UiEvent) -> Unit,
-    onDbEvent: (TodoEvent) -> Unit,
+    onDbEvent: (DbEvent) -> Unit,
     uiState: UiState,
-    dbState: TaskState
+    dbState: DbState
 ) {
     ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -53,7 +50,8 @@ fun SortItemsSheet(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {onDbEvent(TodoEvent.SortTodos(sortType))}
+                    onClick = {onDbEvent(DbEvent.SortTodos(sortType))},
+                    shape = RoundedCornerShape(0.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth()

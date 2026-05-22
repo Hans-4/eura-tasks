@@ -9,17 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.hannes.eura_todo.db.TaskState
-import me.hannes.eura_todo.db.TodoEvent
+import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.screens.AddTask
 import me.hannes.eura_todo.ui.screens.HomeScreen
 
 
 @Composable
 fun AppNavHost(
-    dbState: TaskState,
+    dbState: DbState,
     uiState: UiState,
-    onDbEvent: (TodoEvent) -> Unit,
+    onDbEvent: (DbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit
 ) {
     val navController = rememberNavController()

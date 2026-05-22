@@ -14,5 +14,5 @@ data class TodoEntity(
     val date: String,
     val time: String,
     @PrimaryKey(autoGenerate = true)
-    val id: Int = 1,
+    val id: Int = 0,
 )

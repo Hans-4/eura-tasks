@@ -49,8 +49,8 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
-import me.hannes.eura_todo.db.TaskState
-import me.hannes.eura_todo.db.TodoEvent
+import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
@@ -59,10 +59,10 @@ import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
 @Composable
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
-    onDbEvent: (TodoEvent) -> Unit,
+    onDbEvent: (DbEvent) -> Unit,
     onNavigateToAdd: () -> Unit,
     uiState: UiState,
-    dbState: TaskState
+    dbState: DbState
 ) {
     val tabs = listOf("My Tasks", "Recipes", "Movies", "Clean")
 
@@ -169,7 +169,7 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .navigationBarsPadding()
                         .imePadding(),
-                    onDismissRequest = {onDbEvent(TodoEvent.CloseSheet)},
+                    onDismissRequest = {onDbEvent(DbEvent.CloseSheet)},
                     dragHandle = null
                 ) {
                     Column(
@@ -178,7 +178,7 @@ fun HomeScreen(
                         TextField(
                             value = dbState.todoTitle,
                             onValueChange = {
-                                onDbEvent(TodoEvent.SetTodoTitle(it))
+                                onDbEvent(DbEvent.SetTodoTitle(it))
                             },
                             placeholder = {
                                 Text(text = "Title")
@@ -187,7 +187,7 @@ fun HomeScreen(
                         TextField(
                             value = dbState.todoDescription,
                             onValueChange = {
-                                onDbEvent(TodoEvent.SetTodoDescription(it))
+                                onDbEvent(DbEvent.SetTodoDescription(it))
                             },
                             placeholder = {
                                 Text(text = "Description")
@@ -209,7 +209,7 @@ fun HomeScreen(
                             Spacer(modifier = Modifier.weight(1f))
 
                             TextButton(
-                                onClick = {onDbEvent(TodoEvent.SaveTask)}
+                                onClick = {onDbEvent(DbEvent.SaveTask)}
                             ) {
                                 Text(
                                     "Save"
@@ -223,7 +223,7 @@ fun HomeScreen(
 
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {onDbEvent(TodoEvent.OpenSheet)},
+                onClick = {onDbEvent(DbEvent.OpenSheet)},
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
@@ -285,7 +285,7 @@ fun HomeScreen(
                             )
                         }
                         IconButton(onClick = {
-                            onDbEvent(TodoEvent.DeleteTodo(task))
+                            onDbEvent(DbEvent.DeleteTodo(task))
                         }) {
                             Icon(
                                 imageVector = Icons.Default.Delete,

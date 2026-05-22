@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
-import me.hannes.eura_todo.db.TaskState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

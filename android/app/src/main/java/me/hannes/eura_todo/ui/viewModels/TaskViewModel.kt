@@ -11,37 +11,37 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.SortType
-import me.hannes.eura_todo.db.TodoDao
-import me.hannes.eura_todo.db.TodoEvent
-import me.hannes.eura_todo.db.TaskState
+import me.hannes.eura_todo.db.DbDao
+import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.TodoEntity
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskViewModel(
-    private val dao: TodoDao
+    private val dao: DbDao
 ): ViewModel() {
 
-    private val _sortType = MutableStateFlow(SortType.TITLE)
-    private val _tasks = _sortType
+    private val _sortType = MutableStateFlow(SortType.ID)
+    private val _tasks = _sortType //TODO: Implement toggle to toggle Asc and Desc
         .flatMapLatest { sortType ->
             when(sortType) {
-                SortType.ID -> dao.getAllTasksByIdAsc()
+                SortType.ID -> dao.getAllTasksByIdDesc()
                 SortType.TITLE -> dao.getAllTodosByTitleAsc()
             SortType.DATE -> dao.getAllTasksByDateAsc()
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
-    private val _state = MutableStateFlow(TaskState())
+    private val _state = MutableStateFlow(DbState())
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
             sortType = sortType
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DbState())
 
-    fun onEvent(event: TodoEvent) {
+    fun onEvent(event: DbEvent) {
         when(event) {
-            TodoEvent.SaveTask -> {
+            DbEvent.SaveTask -> {
                 val title = state.value.todoTitle
                 val description = state.value.todoDescription
 
@@ -66,12 +66,12 @@ class TaskViewModel(
                     todoDescription = "",
                 ) }
             }
-            TodoEvent.CloseSheet -> {
+            DbEvent.CloseSheet -> {
                 _state.update { it.copy(
                     isAddingTask = false
                 ) }
             }
-            TodoEvent.OpenSheet -> {
+            DbEvent.OpenSheet -> {
                 _state.update {
                     it.copy(
                         isAddingTask = true
@@ -79,52 +79,52 @@ class TaskViewModel(
                 }
             }
 
-            is TodoEvent.SetDate -> {
+            is DbEvent.SetDate -> {
                 _state.update {
                     it.copy(
                         todoDate = event.date
                     )
                 }
             }
-            is TodoEvent.SetIsCompleted -> {
+            is DbEvent.SetIsCompleted -> {
                 _state.update {
                     it.copy(
                         todoIsCompleted = event.isCompleted
                     )
                 }
             }
-            is TodoEvent.SetTime -> {
+            is DbEvent.SetTime -> {
                 _state.update {
                     it.copy(
                         todoTime = event.time
                     )
                 }
             }
-            is TodoEvent.SetTodoDescription -> {
+            is DbEvent.SetTodoDescription -> {
                 _state.update {
                     it.copy(
                         todoDescription = event.description
                     )
                 }
             }
-            is TodoEvent.SetTodoIsFavorite -> {
+            is DbEvent.SetTodoIsFavorite -> {
                 _state.update {
                     it.copy(
                         todoIsFavorite = event.isFavorite
                     )
                 }
             }
-            is TodoEvent.SetTodoTitle -> {
+            is DbEvent.SetTodoTitle -> {
                 _state.update {
                     it.copy(
                         todoTitle = event.title
                     )
                 }
             }
-            is TodoEvent.SortTodos -> {
+            is DbEvent.SortTodos -> {
                 _sortType.value = event.sortType
             }
-            is TodoEvent.DeleteTodo -> {
+            is DbEvent.DeleteTodo -> {
                 viewModelScope.launch {
                     dao.deleteTodo(event.deleteTodo)
                 }

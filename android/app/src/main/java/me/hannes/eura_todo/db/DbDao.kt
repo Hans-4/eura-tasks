@@ -8,7 +8,7 @@ import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
 
 @Dao
-interface TodoDao {
+interface DbDao {
     @Upsert
     suspend fun upsertTask(todo: TodoEntity)
     @Update
@@ -17,6 +17,8 @@ interface TodoDao {
     suspend fun deleteTodo(todo: TodoEntity)
     @Query("SELECT * FROM tasks ORDER BY id ASC")
     fun getAllTasksByIdAsc(): Flow<List<TodoEntity>>
+    @Query("SELECT * FROM tasks ORDER BY id DESC")
+    fun getAllTasksByIdDesc(): Flow<List<TodoEntity>>
     @Query("SELECT * FROM tasks ORDER BY title ASC")
     fun getAllTodosByTitleAsc(): Flow<List<TodoEntity>>
     @Query("SELECT * FROM tasks ORDER BY date ASC")

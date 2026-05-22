@@ -1,6 +1,6 @@
 package me.hannes.eura_todo.db
 
-data class TaskState(
+data class DbState(
     val tasks: List<TodoEntity> = emptyList(),
     val todoTitle: String = "",
     val todoDescription: String = "",
