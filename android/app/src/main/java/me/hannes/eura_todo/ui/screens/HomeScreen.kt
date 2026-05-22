@@ -20,12 +20,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Close
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.ShortText
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.SwapVert
+import androidx.compose.material3.Button
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,6 +38,7 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryScrollableTabRow
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
@@ -264,33 +268,52 @@ fun HomeScreen(
             }
 
             LazyColumn(
-                contentPadding = PaddingValues(16.dp),
+                contentPadding = PaddingValues(8.dp),
                 modifier = Modifier
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(dbState.tasks) { task ->
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
+                    Button(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {TODO()}
                     ) {
-                        Column(
-                            modifier = Modifier.weight(1f)
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Text(
-                                text = task.title,
-                                fontSize = 20.sp
+                            RadioButton(
+                                onClick = {onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted))},
+                                selected = task.isCompleted
                             )
-                            Text(
-                                text = task.description
-                            )
-                        }
-                        IconButton(onClick = {
-                            onDbEvent(DbEvent.DeleteTodo(task))
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Delete,
-                                contentDescription = "Delete contact"
-                            )
+
+                            Column(
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text(
+                                    text = task.title,
+                                    fontSize = 20.sp
+                                )
+                                Text(
+                                    text = task.description
+                                )
+                            }
+                            IconButton(
+                                onClick = {
+                                    onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite))
+                                }
+                            ) {
+                                if (task.isFavorite) {
+                                    Icon(
+                                        imageVector = Icons.Rounded.Star,
+                                        contentDescription = "Tod is favorite"
+                                    )
+                                } else {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Close,
+                                        contentDescription = "Tod is not favorite"
+                                    )
+                                }
+                            }
                         }
                     }
                 }

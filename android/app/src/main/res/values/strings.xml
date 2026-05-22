@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Eura-ToDo</string>
+    <string name="app_name">Eura Tasks</string>
     <string name="recently_added">Recently Added</string>
     <string name="title">Title</string>
     <string name="date">Date</string>
