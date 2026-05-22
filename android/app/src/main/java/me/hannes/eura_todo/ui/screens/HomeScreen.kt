@@ -52,6 +52,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -242,16 +243,16 @@ fun HomeScreen(
         }
     ) { innerPadding ->
         LazyColumn(
-            contentPadding = PaddingValues(8.dp),
             modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding),
+                .fillMaxSize(),
+            contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -321,8 +322,9 @@ fun HomeScreen(
                                         }
                                     ) {
                                         Icon(
-                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Close,
-                                            contentDescription = "Toggle favorite"
+                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Star,
+                                            contentDescription = "Toggle favorite",
+                                            tint = Green
                                         )
                                     }
                                 }
@@ -336,6 +338,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(
