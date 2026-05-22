@@ -87,10 +87,16 @@ class TaskViewModel(
                 }
             }
             is DbEvent.SetIsCompleted -> {
-                _state.update {
-                    it.copy(
-                        todoIsCompleted = event.isCompleted
-                    )
+                if (event.todo != null) {
+                    viewModelScope.launch {
+                        dao.upsertTask(event.todo.copy(isCompleted = event.isCompleted))
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            todoIsCompleted = event.isCompleted
+                        )
+                    }
                 }
             }
             is DbEvent.SetTime -> {
@@ -108,10 +114,16 @@ class TaskViewModel(
                 }
             }
             is DbEvent.SetTodoIsFavorite -> {
-                _state.update {
-                    it.copy(
-                        todoIsFavorite = event.isFavorite
-                    )
+                if (event.todo != null) {
+                    viewModelScope.launch {
+                        dao.upsertTask(event.todo.copy(isFavorite = event.isFavorite))
+                    }
+                } else {
+                    _state.update {
+                        it.copy(
+                            todoIsFavorite = event.isFavorite
+                        )
+                    }
                 }
             }
             is DbEvent.SetTodoTitle -> {
