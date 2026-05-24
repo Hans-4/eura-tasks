@@ -17,7 +17,7 @@ import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.TodoEntity
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class TaskViewModel(
+class DbViewModel(
     private val dao: DbDao
 ): ViewModel() {
 

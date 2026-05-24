@@ -28,6 +28,20 @@ class HomeViewModel: ViewModel() {
                     )
                 }
             }
+            UiEvent.CloseAddTaskListDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingNewTaskList = false
+                    )
+                }
+            }
+            UiEvent.OpenAddTaskListDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingNewTaskList = true
+                    )
+                }
+            }
         }
     }
 }

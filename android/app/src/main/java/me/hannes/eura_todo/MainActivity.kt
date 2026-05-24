@@ -14,7 +14,7 @@ import me.hannes.eura_todo.db.TodoDatabase
 import me.hannes.eura_todo.ui.AppNavHost
 import me.hannes.eura_todo.ui.theme.EuraToDoTheme
 import me.hannes.eura_todo.ui.viewModels.HomeViewModel
-import me.hannes.eura_todo.ui.viewModels.TaskViewModel
+import me.hannes.eura_todo.ui.viewModels.DbViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -26,11 +26,11 @@ class MainActivity : ComponentActivity() {
         )
             .build()
     }
-    private val dbViewModel by viewModels<TaskViewModel>(
+    private val dbViewModel by viewModels<DbViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TaskViewModel(db.dao) as T
+                    return DbViewModel(db.dao) as T
                 }
             }
         }

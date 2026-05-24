@@ -3,4 +3,8 @@
     <string name="recently_added">Recently Added</string>
     <string name="title">Title</string>
     <string name="date">Date</string>
+    <string name="new_list">New List</string>
+    <string name="my_tasks">My Tasks</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
 </resources>

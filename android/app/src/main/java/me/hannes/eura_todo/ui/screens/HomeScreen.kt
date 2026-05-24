@@ -3,7 +3,6 @@ package me.hannes.eura_todo.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -16,10 +15,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -28,7 +25,6 @@ import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.ShortText
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -48,20 +44,25 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.Green
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -70,15 +71,19 @@ fun HomeScreen(
     onDbEvent: (DbEvent) -> Unit,
     onNavigateToAdd: () -> Unit,
     uiState: UiState,
-    dbState: DbState
+    dbState: DbState,
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
-    val tabs = listOf("My Tasks", "Recipes", "Movies", "Clean")
+    val task_lists by settingsViewModel.itemList.collectAsStateWithLifecycle(
+        initialValue = SettingsViewModel.DEFAULT_CATEGORIES
+    )
 
-    val totalTabs = 1 + tabs.size + 1
+    val totalTabs = 1 + task_lists.size + 1
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
 
     val scope = rememberCoroutineScope()
+
 
     Scaffold(
         topBar = {
@@ -142,8 +147,15 @@ fun HomeScreen(
                     icon = { Icon(Icons.Rounded.Star, null) }
                 )
 
-                tabs.forEachIndexed { index, tabTitle ->
+                task_lists.forEachIndexed { index, tabTitle ->
                     val targetPage = index + 1
+
+                    val finalTabTitle = if (tabTitle == "My Tasks") {
+                        stringResource(R.string.my_tasks)
+                    } else {
+                        tabTitle
+                    }
+
                     Tab(
                         selectedContentColor = MaterialTheme.colorScheme.primary,
                         unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -151,19 +163,27 @@ fun HomeScreen(
                         onClick = {
                             scope.launch { pagerState.animateScrollToPage(targetPage) }
                         },
-                        text = { Text(tabTitle) }
+                        text = { Text(finalTabTitle) }
                     )
                 }
 
                 Tab(
                     unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     selected = false,
-                    onClick = {},
+                    onClick = {onUiEvent(UiEvent.OpenAddTaskListDialog)},
                     text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Rounded.Add, null)
-                            Spacer(Modifier.width(4.dp))
-                            Text("New list")
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Add, null
+                            )
+                            Spacer(
+                                modifier = Modifier.width(4.dp)
+                            )
+                            Text(
+                                stringResource(R.string.new_list)
+                            )
                         }
                     }
                 )
@@ -252,7 +272,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
+                        .padding(8.dp)
                 ) {
                     Card(
                         colors = CardDefaults.cardColors(
@@ -322,9 +342,8 @@ fun HomeScreen(
                                         }
                                     ) {
                                         Icon(
-                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Star,
+                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Close,
                                             contentDescription = "Toggle favorite",
-                                            tint = Green
                                         )
                                     }
                                 }
@@ -415,8 +434,12 @@ fun HomeScreen(
             SortItemsSheet(
                 onUiEvent = onUiEvent,
                 onDbEvent = onDbEvent,
-                uiState = uiState,
                 dbState = dbState
+            )
+        }
+        if (uiState.isAddingNewTaskList) {
+            AddNewTaskListDialog(
+                onUiEvent = onUiEvent
             )
         }
     }

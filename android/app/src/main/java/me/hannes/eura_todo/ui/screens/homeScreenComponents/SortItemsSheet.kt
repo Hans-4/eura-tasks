@@ -32,7 +32,6 @@ import me.hannes.eura_todo.ui.UiState
 fun SortItemsSheet(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
-    uiState: UiState,
     dbState: DbState
 ) {
     ModalBottomSheet(
