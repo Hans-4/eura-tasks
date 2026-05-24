@@ -15,17 +15,18 @@ class SettingsViewModel(
     private val dataStore = application.dataStore
 
     companion object {
-        val DEFAULT_CATEGORIES = listOf("My Tasks")
+        val INITIAL_LIST = listOf("My Tasks")
     }
 
     val itemList: Flow<List<String>> = dataStore.data.map { prefs ->
-        prefs[SettingsKeys.TASK_LISTS]?.toList() ?: DEFAULT_CATEGORIES
+        prefs[SettingsKeys.TASK_LISTS]?.toList() ?: INITIAL_LIST
     }
 
     fun addItem(newItem: String) {
         viewModelScope.launch {
             dataStore.edit { prefs ->
-                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: emptySet()
+                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_LIST.toSet()
+
                 prefs[SettingsKeys.TASK_LISTS] = currentSet + newItem
             }
         }
@@ -34,7 +35,8 @@ class SettingsViewModel(
     fun removeItem(item: String) {
         viewModelScope.launch {
             dataStore.edit { prefs ->
-                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: emptySet()
+                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_LIST.toSet()
+
                 prefs[SettingsKeys.TASK_LISTS] = currentSet - item
             }
         }

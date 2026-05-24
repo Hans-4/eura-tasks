@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Close
@@ -75,10 +76,10 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val task_lists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.DEFAULT_CATEGORIES
+        initialValue = SettingsViewModel.INITIAL_LIST
     )
 
-    val totalTabs = 1 + task_lists.size + 1
+    val totalTabs = 1 + task_lists.size
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
 
@@ -91,7 +92,7 @@ fun HomeScreen(
                 CenterAlignedTopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .size(110.dp),
+                        .height(110.dp),
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
@@ -262,165 +263,177 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            contentPadding = innerPadding,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize(),
+            verticalAlignment = Alignment.Top
+        ) { page ->
+            val tasksToShow = if (page == 0) {
+                dbState.tasks.filter { it.isFavorite }
+            } else {
+                dbState.tasks
+            }
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize(),
+                contentPadding = innerPadding,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                            Column(
+                                modifier = Modifier.padding(8.dp)
                             ) {
-                                Text(
-                                    "Marked",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                Spacer(Modifier.weight(1f))
-
-                                IconButton(
-                                    onClick = { onUiEvent(UiEvent.OpenSortItemSheet) }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.SwapVert,
-                                        contentDescription = "Change sort type"
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { TODO() }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.MoreVert,
-                                        contentDescription = "More options"
-                                    )
-                                }
-                            }
-
-                            dbState.tasks.filter { !it.isCompleted }.forEach { task ->
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
+                                        .fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    RadioButton(
-                                        onClick = {
-                                            onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
-                                        },
-                                        selected = task.isCompleted
+                                    Text(
+                                        if (page == 0) "Marked" else task_lists.getOrNull(page - 1) ?: "Tasks",
+                                        style = MaterialTheme.typography.titleMedium
                                     )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = task.title, fontSize = 18.sp)
-                                        if (task.description.isNotBlank()) {
-                                            Text(
-                                                text = task.description,
-                                                fontSize = 14.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+
+                                    Spacer(Modifier.weight(1f))
+
                                     IconButton(
-                                        onClick = {
-                                            onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
-                                        }
+                                        onClick = { onUiEvent(UiEvent.OpenSortItemSheet) }
                                     ) {
                                         Icon(
-                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Close,
-                                            contentDescription = "Toggle favorite",
+                                            imageVector = Icons.Rounded.SwapVert,
+                                            contentDescription = "Change sort type"
                                         )
+                                    }
+
+                                    IconButton(
+                                        onClick = { TODO() }
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.MoreVert,
+                                            contentDescription = "More options"
+                                        )
+                                    }
+                                }
+
+                                tasksToShow.filter { !it.isCompleted }.forEach { task ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            onClick = {
+                                                onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
+                                            },
+                                            selected = task.isCompleted
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = task.title, fontSize = 18.sp)
+                                            if (task.description.isNotBlank()) {
+                                                Text(
+                                                    text = task.description,
+                                                    fontSize = 14.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Close,
+                                                contentDescription = "Toggle favorite",
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                ) {
-                    Card(
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                        )
+                item {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
                     ) {
-                        Column(
-                            modifier = Modifier.padding(8.dp)
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant
+                            )
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                            Column(
+                                modifier = Modifier.padding(8.dp)
                             ) {
-                                Text(
-                                    "Completed",
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                Spacer(Modifier.weight(1f))
-
-                                IconButton(
-                                    onClick = { TODO() }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.MoreVert,
-                                        contentDescription = "More options"
-                                    )
-                                }
-                            }
-
-                            dbState.tasks.filter { it.isCompleted }.forEach { task ->
                                 Row(
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 4.dp),
+                                        .fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    RadioButton(
-                                        onClick = {
-                                            onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
-                                        },
-                                        selected = task.isCompleted
+                                    Text(
+                                        "Completed",
+                                        style = MaterialTheme.typography.titleMedium
                                     )
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Text(text = task.title, fontSize = 18.sp)
-                                        if (task.description.isNotBlank()) {
-                                            Text(
-                                                text = task.description,
-                                                fontSize = 14.sp,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
-                                    }
+
+                                    Spacer(Modifier.weight(1f))
+
                                     IconButton(
-                                        onClick = {
-                                            onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
-                                        }
+                                        onClick = { TODO() }
                                     ) {
                                         Icon(
-                                            imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Star,
-                                            contentDescription = "Toggle favorite"
+                                            imageVector = Icons.Rounded.MoreVert,
+                                            contentDescription = "More options"
                                         )
+                                    }
+                                }
+
+                                tasksToShow.filter { it.isCompleted }.forEach { task ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        RadioButton(
+                                            onClick = {
+                                                onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
+                                            },
+                                            selected = task.isCompleted
+                                        )
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(text = task.title, fontSize = 18.sp)
+                                            if (task.description.isNotBlank()) {
+                                                Text(
+                                                    text = task.description,
+                                                    fontSize = 14.sp,
+                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                            }
+                                        }
+                                        IconButton(
+                                            onClick = {
+                                                onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Outlined.Star,
+                                                contentDescription = "Toggle favorite"
+                                            )
+                                        }
                                     }
                                 }
                             }
