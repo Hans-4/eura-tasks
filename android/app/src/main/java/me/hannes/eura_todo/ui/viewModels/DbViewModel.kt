@@ -15,6 +15,7 @@ import me.hannes.eura_todo.db.DbDao
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.TodoEntity
+import me.hannes.eura_todo.ui.UiState
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DbViewModel(
@@ -31,6 +32,8 @@ class DbViewModel(
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
+
+    private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(DbState())
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
@@ -44,8 +47,9 @@ class DbViewModel(
             DbEvent.SaveTask -> {
                 val title = state.value.todoTitle
                 val description = state.value.todoDescription
+                val parentList = state.value.taskParentList
 
-                if (title.isBlank() || description.isBlank()) {
+                if (title.isBlank() || description.isBlank() || parentList.isBlank()) {
                     return
                 }
 
@@ -55,26 +59,19 @@ class DbViewModel(
                     isFavorite = false,
                     isCompleted = false,
                     date = "21.07.2026",
-                    time = "19:30"
+                    time = "19:30",
+                    taskList = parentList
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)
                 }
                 _state.update { it.copy(
-                    isAddingTask = false,
                     todoTitle = "",
                     todoDescription = "",
                 ) }
-            }
-            DbEvent.CloseSheet -> {
-                _state.update { it.copy(
-                    isAddingTask = false
-                ) }
-            }
-            DbEvent.OpenSheet -> {
-                _state.update {
+                _uiState.update {
                     it.copy(
-                        isAddingTask = true
+                        isAddingTask = false
                     )
                 }
             }
@@ -136,9 +133,28 @@ class DbViewModel(
             is DbEvent.SortTodos -> {
                 _sortType.value = event.sortType
             }
+            is DbEvent.SelectTaskList -> {
+                _state.update {
+                    it.copy(
+                        taskParentList = event.listType
+                    )
+                }
+                _uiState.update {
+                    it.copy(
+                        isSelectingTaskList = false
+                    )
+                }
+            }
             is DbEvent.DeleteTodo -> {
                 viewModelScope.launch {
                     dao.deleteTodo(event.deleteTodo)
+                }
+            }
+            is DbEvent.SetParentList -> {
+                _state.update {
+                    it.copy(
+                        taskParentList = event.parentList
+                    )
                 }
             }
         }

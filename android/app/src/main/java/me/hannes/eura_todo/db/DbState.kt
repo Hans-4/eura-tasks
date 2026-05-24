@@ -8,6 +8,6 @@ data class DbState(
     val todoIsCompleted: Boolean = false,
     val todoDate: String = "",
     val todoTime: String = "",
+    val taskParentList: String = "",
     val sortType: SortType = SortType.TITLE,
-    val isAddingTask: Boolean = false,
 )

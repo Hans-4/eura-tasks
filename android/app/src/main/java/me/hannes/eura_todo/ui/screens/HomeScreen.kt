@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -23,7 +21,6 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.ShortText
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.SwapVert
 import androidx.compose.material3.Card
@@ -35,14 +32,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -62,6 +56,8 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.SelectTaskListSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
@@ -191,68 +187,9 @@ fun HomeScreen(
             }
             }
         },
-        bottomBar = {
-            if (dbState.isAddingTask) {
-                ModalBottomSheet(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .navigationBarsPadding()
-                        .imePadding(),
-                    onDismissRequest = {onDbEvent(DbEvent.CloseSheet)},
-                    dragHandle = null
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        TextField(
-                            value = dbState.todoTitle,
-                            onValueChange = {
-                                onDbEvent(DbEvent.SetTodoTitle(it))
-                            },
-                            placeholder = {
-                                Text(text = "Title")
-                            }
-                        )
-                        TextField(
-                            value = dbState.todoDescription,
-                            onValueChange = {
-                                onDbEvent(DbEvent.SetTodoDescription(it))
-                            },
-                            placeholder = {
-                                Text(text = "Description")
-                            }
-                        )
-
-                        Row(
-
-                        ) {
-                            IconButton(
-                                onClick = {}
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.ShortText,
-                                    contentDescription = "Add description button"
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            TextButton(
-                                onClick = {onDbEvent(DbEvent.SaveTask)}
-                            ) {
-                                Text(
-                                    "Save"
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-        },
-
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {onDbEvent(DbEvent.OpenSheet)},
+                onClick = {onUiEvent(UiEvent.OpenAddTaskSheet)},
                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
@@ -263,15 +200,23 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
+        val currentTabName = if (pagerState.currentPage == 0) {
+            "FAVOURITES"
+        } else {
+            task_lists.getOrNull(pagerState.currentPage - 1) ?: "ERROR"
+        }
+
         HorizontalPager(
             state = pagerState,
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.Top
         ) { page ->
+            val pageTabName = if (page == 0) "FAVOURITES" else task_lists.getOrNull(page - 1) ?: "ERROR"
+
             val tasksToShow = if (page == 0) {
                 dbState.tasks.filter { it.isFavorite }
             } else {
-                dbState.tasks
+                dbState.tasks.filter { it.taskList == pageTabName }
             }
 
             LazyColumn(
@@ -453,6 +398,23 @@ fun HomeScreen(
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent
+            )
+        }
+        if (uiState.isAddingTask) {
+            AddTaskBottomSheet(
+                onDbEvent = onDbEvent,
+                onUiEvent = onUiEvent,
+                dbState = dbState,
+                currentTab = currentTabName,
+                firstTaskList = task_lists[0]
+            )
+        }
+        if (uiState.isSelectingTaskList) {
+            SelectTaskListSheet(
+                onUiEvent = onUiEvent,
+                onDbEvent = onDbEvent,
+                dbState = dbState,
+                taskLists = task_lists
             )
         }
     }

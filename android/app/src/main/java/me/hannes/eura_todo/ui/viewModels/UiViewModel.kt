@@ -6,7 +6,7 @@ import kotlinx.coroutines.flow.update
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 
-class HomeViewModel: ViewModel() {
+class UiViewModel: ViewModel() {
 
     private val _state = MutableStateFlow(UiState())
 
@@ -39,6 +39,37 @@ class HomeViewModel: ViewModel() {
                 _state.update {
                     it.copy(
                         isAddingNewTaskList = true
+                    )
+                }
+            }
+            UiEvent.CloseSelectTaskListSheet -> {
+                _state.update {
+                    it.copy(
+                        isSelectingTaskList = false,
+                        isAddingTask = true
+                    )
+                }
+
+            }
+            UiEvent.OpenSelectTaskListSheet -> {
+                _state.update {
+                    it.copy(
+                        isSelectingTaskList = true,
+                        isAddingTask = false
+                    )
+                }
+            }
+            UiEvent.CloseAddTaskSheet -> {
+                _state.update {
+                    it.copy(
+                        isAddingTask = false
+                    )
+                }
+            }
+            UiEvent.OpenAddTaskSheet -> {
+                _state.update {
+                    it.copy(
+                        isAddingTask = true
                     )
                 }
             }

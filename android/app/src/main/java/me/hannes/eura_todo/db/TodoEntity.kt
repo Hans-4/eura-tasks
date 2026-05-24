@@ -13,6 +13,7 @@ data class TodoEntity(
     val isCompleted: Boolean,
     val date: String,
     val time: String,
+    val taskList: String,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

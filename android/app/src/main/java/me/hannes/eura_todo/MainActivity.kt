@@ -13,7 +13,7 @@ import androidx.room.Room
 import me.hannes.eura_todo.db.TodoDatabase
 import me.hannes.eura_todo.ui.AppNavHost
 import me.hannes.eura_todo.ui.theme.EuraToDoTheme
-import me.hannes.eura_todo.ui.viewModels.HomeViewModel
+import me.hannes.eura_todo.ui.viewModels.UiViewModel
 import me.hannes.eura_todo.ui.viewModels.DbViewModel
 
 class MainActivity : ComponentActivity() {
@@ -36,11 +36,11 @@ class MainActivity : ComponentActivity() {
         }
     )
 
-    private val homeViewModel by viewModels<HomeViewModel>(
+    private val uiViewModel by viewModels<UiViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return HomeViewModel() as T
+                    return UiViewModel() as T
                 }
             }
         }
@@ -53,12 +53,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             EuraToDoTheme {
                 val state by dbViewModel.state.collectAsState()
-                val uiState by homeViewModel.state.collectAsState()
+                val uiState by uiViewModel.state.collectAsState()
                 AppNavHost(
                     dbState = state,
                     uiState = uiState,
                     onDbEvent = dbViewModel::onEvent,
-                    onUiEvent = homeViewModel::onEvent
+                    onUiEvent = uiViewModel::onEvent
                 )
             }
         }

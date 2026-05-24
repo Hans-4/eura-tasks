@@ -5,4 +5,8 @@ sealed interface UiEvent {
     object CloseSortItemSheet: UiEvent
     object OpenAddTaskListDialog: UiEvent
     object CloseAddTaskListDialog: UiEvent
+    object OpenSelectTaskListSheet: UiEvent
+    object CloseSelectTaskListSheet: UiEvent
+    object OpenAddTaskSheet: UiEvent
+    object CloseAddTaskSheet: UiEvent
 }
