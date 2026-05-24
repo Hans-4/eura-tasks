@@ -50,7 +50,7 @@ class DbViewModel(
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
-                if (title.isBlank() || description.isBlank() || parentList.isBlank()) {
+                if (title.isBlank() || parentList.isBlank()) {
                     return
                 }
 
