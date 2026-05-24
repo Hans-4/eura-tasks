@@ -47,6 +47,7 @@ class DbViewModel(
             DbEvent.SaveTask -> {
                 val title = state.value.todoTitle
                 val description = state.value.todoDescription
+                val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
                 if (title.isBlank() || description.isBlank() || parentList.isBlank()) {
@@ -56,7 +57,7 @@ class DbViewModel(
                 val task = TodoEntity(
                     title = title,
                     description = description,
-                    isFavorite = false,
+                    isFavorite = favorite,
                     isCompleted = false,
                     date = "21.07.2026",
                     time = "19:30",
@@ -68,6 +69,7 @@ class DbViewModel(
                 _state.update { it.copy(
                     todoTitle = "",
                     todoDescription = "",
+                    todoIsFavorite = false,
                 ) }
                 _uiState.update {
                     it.copy(
