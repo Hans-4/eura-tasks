@@ -1,5 +1,12 @@
 package me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,6 +26,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,12 +35,14 @@ import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
+import me.hannes.eura_todo.ui.UiState
 
 @Composable
 fun AddTaskScreen(
     onDbEvent: (DbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     dbState: DbState,
+    uiState: UiState,
     currentTab: String,
     firstTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
@@ -44,6 +55,12 @@ fun AddTaskScreen(
             onDbEvent(DbEvent.SetTodoIsFavorite(isFavorite = true, todo = null))
         }
     }
+
+    val descriptionHeight by animateDpAsState(
+        targetValue = if (uiState.isAddingDescription) 56.dp else 0.dp,
+        animationSpec = tween(durationMillis = 300),
+        label = "SheetExpansion"
+    )
 
     Column(
         modifier = Modifier.fillMaxWidth()
@@ -80,22 +97,37 @@ fun AddTaskScreen(
             },
             singleLine = true
         )
-        TextField(
-            modifier = Modifier.fillMaxWidth(),
-            value = dbState.todoDescription,
-            onValueChange = {
-                onDbEvent(DbEvent.SetTodoDescription(it))
-            },
-            placeholder = {
-                Text(text = "Description")
-            }
-        )
+
+        AnimatedVisibility(
+            visible = uiState.isAddingDescription,
+            enter = expandVertically(
+                animationSpec = tween(300),
+                expandFrom = Alignment.Top
+            ) + fadeIn(animationSpec = tween(300, delayMillis = 100))
+        ) {
+            TextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = dbState.todoDescription,
+                onValueChange = {
+                    onDbEvent(DbEvent.SetTodoDescription(it))
+                },
+                placeholder = {
+                    Text(text = "Description")
+                }
+            )
+        }
 
         Row(
 
         ) {
             IconButton(
-                onClick = { TODO() }
+                onClick = {
+                    if (uiState.isAddingDescription) {
+                        onUiEvent(UiEvent.CloseAddTaskDescriptionTextField)
+                    } else {
+                        onUiEvent(UiEvent.OpenAddTaskDescriptionTextField)
+                    }
+                }
             ) {
                 Icon(
                     imageVector = Icons.Rounded.ShortText,

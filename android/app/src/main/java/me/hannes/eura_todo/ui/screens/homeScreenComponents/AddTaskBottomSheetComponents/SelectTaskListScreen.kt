@@ -39,7 +39,7 @@ fun SelectTaskListScreen(
             TextButton(
                 onClick = {
                     onDbEvent(DbEvent.SelectTaskList(item))
-                    onUiEvent(UiEvent.CloseSelectTaskListSheet)
+                    onNavigateBackToAddTaskScreen()
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {

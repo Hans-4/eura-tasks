@@ -9,4 +9,8 @@ sealed interface UiEvent {
     object CloseSelectTaskListSheet: UiEvent
     object OpenAddTaskSheet: UiEvent
     object CloseAddTaskSheet: UiEvent
+    object OpenAddTaskDescriptionTextField: UiEvent
+    object CloseAddTaskDescriptionTextField: UiEvent
+    object OpenConfirmDeletionDialog: UiEvent
+    object CloseConfirmDeletionDialog: UiEvent
 }

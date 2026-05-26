@@ -73,6 +73,36 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseAddTaskDescriptionTextField -> {
+                _state.update {
+                    it.copy(
+                        isAddingDescription = false
+                    )
+                }
+            }
+            UiEvent.OpenAddTaskDescriptionTextField -> {
+                _state.update {
+                    it.copy(
+                        isAddingDescription = true
+                    )
+                }
+            }
+
+            UiEvent.CloseConfirmDeletionDialog -> {
+                _state.update {
+                    it.copy(
+                        isConfirmingDeletion = false
+                    )
+                }
+            }
+            UiEvent.OpenConfirmDeletionDialog -> {
+                _state.update {
+                    it.copy(
+                        isConfirmingDeletion = true
+                    )
+                }
+            }
         }
     }
 }

@@ -11,8 +11,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
-import me.hannes.eura_todo.ui.screens.AddTask
 import me.hannes.eura_todo.ui.screens.HomeScreen
+import me.hannes.eura_todo.ui.screens.TaskDetailsScreen
 
 
 @Composable
@@ -37,20 +37,27 @@ fun AppNavHost(
                 uiState = uiState,
                 onDbEvent = onDbEvent,
                 onUiEvent = onUiEvent,
-                onNavigateToAdd = { navController.navigate("addTask") }
+                onTaskDetails = { taskId -> navController.navigate("taskDetails/$taskId") }
             )
         }
 
         composable(
-            route = "addTask",
+            route = "taskDetails/{taskId}",
             enterTransition = {
                 slideInVertically(initialOffsetY = { it }) + fadeIn()
             },
             popExitTransition = {
                 slideOutVertically(targetOffsetY = { it }) + fadeOut()
             }
-        ) {
-            AddTask(onClose = { navController.popBackStack() })
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
+            TaskDetailsScreen(
+                taskId = taskId,
+                onDbEvent = onDbEvent,
+                onClose = { navController.popBackStack() },
+                uiState = uiState,
+                onUiEvent = onUiEvent
+            )
         }
     }
 }

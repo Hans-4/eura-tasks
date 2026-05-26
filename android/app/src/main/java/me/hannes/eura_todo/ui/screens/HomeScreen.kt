@@ -55,6 +55,7 @@ import kotlinx.coroutines.launch
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.db.TodoEntity
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
@@ -67,7 +68,7 @@ import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
-    onNavigateToAdd: () -> Unit,
+    onTaskDetails: (Int) -> Unit,
     uiState: UiState,
     dbState: DbState,
     settingsViewModel: SettingsViewModel = viewModel()
@@ -273,7 +274,7 @@ fun HomeScreen(
 
                                 tasksToShow.filter { !it.isCompleted }.forEach { task ->
                                     Button(
-                                        onClick = {TODO()},
+                                        onClick = { onTaskDetails(task.id) },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -358,7 +359,7 @@ fun HomeScreen(
 
                                 tasksToShow.filter { it.isCompleted }.forEach { task ->
                                     Button(
-                                        onClick = {TODO()},
+                                        onClick = { onTaskDetails(task.id) },
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -424,6 +425,7 @@ fun HomeScreen(
                 onDbEvent = onDbEvent,
                 onUiEvent = onUiEvent,
                 dbState = dbState,
+                uiState = uiState,
                 currentTab = currentTabName,
                 firstTaskList = task_lists[0],
                 taskLists = task_lists

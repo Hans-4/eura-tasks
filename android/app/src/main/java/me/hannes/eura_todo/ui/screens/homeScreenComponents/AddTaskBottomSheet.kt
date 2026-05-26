@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
+import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.AddTaskScreen
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.SelectTaskListScreen
 
@@ -28,6 +29,7 @@ fun AddTaskBottomSheet(
     onDbEvent: (DbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     dbState: DbState,
+    uiState: UiState,
     currentTab: String,
     firstTaskList: String,
     taskLists: List<String>
@@ -40,80 +42,72 @@ fun AddTaskBottomSheet(
         onDismissRequest = { onUiEvent(UiEvent.CloseAddTaskSheet) },
         dragHandle = null
     ) {
-        ModalBottomSheet(
+        val sheetNavController = rememberNavController()
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .navigationBarsPadding()
-                .imePadding(),
-            onDismissRequest = { onUiEvent(UiEvent.CloseAddTaskSheet) },
-            dragHandle = null
+                .animateContentSize(animationSpec = tween(300))
         ) {
-            val sheetNavController = rememberNavController()
-            Column(
+            NavHost(
+                navController = sheetNavController,
+                startDestination = "addTaskScreen",
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .animateContentSize(animationSpec = tween(300))
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.TopStart
             ) {
-                NavHost(
-                    navController = sheetNavController,
-                    startDestination = "addTaskScreen",
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.TopStart
+                composable(
+                    route = "addTaskScreen",
+                    enterTransition = {
+                        slideIntoContainer(
+                            animationSpec = tween(300),
+                            towards = End
+                        )
+                    },
+                    exitTransition = {
+                        slideOutOfContainer(
+                            animationSpec = tween(300),
+                            towards = Start
+                        )
+                    },
+                    popEnterTransition = {
+                        slideIntoContainer(
+                            animationSpec = tween(300),
+                            towards = End
+                        )
+                    }
                 ) {
-                    composable(
-                        route = "addTaskScreen",
-                        enterTransition = {
-                            slideIntoContainer(
-                                animationSpec = tween(300),
-                                towards = End
-                            )
-                        },
-                        exitTransition = {
-                            slideOutOfContainer(
-                                animationSpec = tween(300),
-                                towards = Start
-                            )
-                        },
-                        popEnterTransition = {
-                            slideIntoContainer(
-                                animationSpec = tween(300),
-                                towards = End
-                            )
-                        }
-                    ) {
-                        AddTaskScreen(
-                            onDbEvent = onDbEvent,
-                            onUiEvent = onUiEvent,
-                            dbState = dbState,
-                            currentTab = currentTab,
-                            firstTaskList = firstTaskList,
-                            onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") }
-                        )
-                    }
+                    AddTaskScreen(
+                        onDbEvent = onDbEvent,
+                        onUiEvent = onUiEvent,
+                        dbState = dbState,
+                        uiState = uiState,
+                        currentTab = currentTab,
+                        firstTaskList = firstTaskList,
+                        onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") }
+                    )
+                }
 
-                    composable(
-                        "selectTaskListScreen",
-                        enterTransition = {
-                            slideIntoContainer(
-                                animationSpec = tween(300),
-                                towards = Start
-                            )
-                        },
-                        popExitTransition = {
-                            slideOutOfContainer(
-                                animationSpec = tween(300),
-                                towards = End
-                            )
-                        }
-                    ) {
-                        SelectTaskListScreen(
-                            onDbEvent = onDbEvent,
-                            onUiEvent = onUiEvent,
-                            taskLists = taskLists,
-                            onNavigateBackToAddTaskScreen = { sheetNavController.popBackStack() }
+                composable(
+                    "selectTaskListScreen",
+                    enterTransition = {
+                        slideIntoContainer(
+                            animationSpec = tween(300),
+                            towards = Start
+                        )
+                    },
+                    popExitTransition = {
+                        slideOutOfContainer(
+                            animationSpec = tween(300),
+                            towards = End
                         )
                     }
+                ) {
+                    SelectTaskListScreen(
+                        onDbEvent = onDbEvent,
+                        onUiEvent = onUiEvent,
+                        taskLists = taskLists,
+                        onNavigateBackToAddTaskScreen = { sheetNavController.popBackStack() }
+                    )
                 }
             }
         }

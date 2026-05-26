@@ -15,6 +15,8 @@ interface DbDao {
     suspend fun update(todo: TodoEntity)
     @Delete
     suspend fun deleteTodo(todo: TodoEntity)
+    @Query("DELETE FROM tasks WHERE id = :id")
+    suspend fun deleteTodoById(id: Int)
     @Query("SELECT * FROM tasks ORDER BY id ASC")
     fun getAllTasksByIdAsc(): Flow<List<TodoEntity>>
     @Query("SELECT * FROM tasks ORDER BY id DESC")

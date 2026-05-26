@@ -152,6 +152,11 @@ class DbViewModel(
                     dao.deleteTodo(event.deleteTodo)
                 }
             }
+            is DbEvent.DeleteTodoById -> {
+                viewModelScope.launch {
+                    dao.deleteTodoById(event.id)
+                }
+            }
             is DbEvent.SetParentList -> {
                 _state.update {
                     it.copy(

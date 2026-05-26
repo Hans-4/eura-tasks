@@ -12,4 +12,5 @@ sealed interface DbEvent {
     data class SortTodos(val sortType: SortType): DbEvent
     data class SelectTaskList(val listType: String): DbEvent
     data class DeleteTodo(val deleteTodo: TodoEntity): DbEvent
+    data class DeleteTodoById(val id: Int): DbEvent
 }
