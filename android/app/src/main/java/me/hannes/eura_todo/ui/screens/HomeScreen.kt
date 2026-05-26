@@ -58,7 +58,6 @@ import kotlinx.coroutines.launch
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
-import me.hannes.eura_todo.db.TodoEntity
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog

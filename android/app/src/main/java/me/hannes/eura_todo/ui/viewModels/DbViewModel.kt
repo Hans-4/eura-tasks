@@ -16,6 +16,8 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.TodoEntity
 import me.hannes.eura_todo.ui.UiState
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DbViewModel(
@@ -50,6 +52,8 @@ class DbViewModel(
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
+                val currentDateTime: Instant = Clock.System.now()
+
                 if (title.isBlank() || parentList.isBlank()) {
                     return
                 }
@@ -61,7 +65,8 @@ class DbViewModel(
                     isCompleted = false,
                     date = "21.07.2026",
                     time = "19:30",
-                    taskList = parentList
+                    taskList = parentList,
+                    creationTime = currentDateTime
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)

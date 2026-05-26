@@ -2,8 +2,7 @@ package me.hannes.eura_todo.db
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.sql.Time
-import java.sql.Date
+import kotlin.time.Instant
 
 @Entity(tableName = "tasks")
 data class TodoEntity(
@@ -11,9 +10,10 @@ data class TodoEntity(
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
-    val date: String,
+    val date: String, //TODO: Eventually make to one val and replace data type with LocalDateTime
     val time: String,
     val taskList: String,
+    val creationTime: Instant,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )
