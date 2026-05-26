@@ -12,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.screens.HomeScreen
+import me.hannes.eura_todo.ui.screens.TaskScreen
 import me.hannes.eura_todo.ui.screens.TaskDetailsScreen
 
 
@@ -32,7 +33,7 @@ fun AppNavHost(
             route = "home",
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
-            HomeScreen(
+            TaskScreen(
                 dbState = dbState,
                 uiState = uiState,
                 onDbEvent = onDbEvent,
