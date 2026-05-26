@@ -22,6 +22,18 @@ class SettingsViewModel(
         prefs[SettingsKeys.TASK_LISTS]?.toList() ?: INITIAL_LIST
     }
 
+    val selectedListIndex: Flow<Int> = dataStore.data.map { prefs ->
+        prefs[SettingsKeys.SELECTED_LIST_INDEX] ?: 0
+    }
+
+    fun setSelectedListIndex(index: Int) {
+        viewModelScope.launch {
+            dataStore.edit { prefs ->
+                prefs[SettingsKeys.SELECTED_LIST_INDEX] = index
+            }
+        }
+    }
+
     fun addItem(newItem: String) {
         viewModelScope.launch {
             dataStore.edit { prefs ->

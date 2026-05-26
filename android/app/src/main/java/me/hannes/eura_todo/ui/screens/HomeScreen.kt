@@ -41,8 +41,10 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -51,6 +53,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbState
@@ -82,6 +85,17 @@ fun HomeScreen(
     val pagerState = rememberPagerState(pageCount = { totalTabs })
 
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        val savedIndex = settingsViewModel.selectedListIndex.first()
+        if (savedIndex > 0) {
+            snapshotFlow { pagerState.pageCount }.first { it > savedIndex }
+            pagerState.scrollToPage(savedIndex)
+        }
+        snapshotFlow { pagerState.currentPage }.collect { currentPage ->
+            settingsViewModel.setSelectedListIndex(currentPage)
+        }
+    }
 
 
     Scaffold(
