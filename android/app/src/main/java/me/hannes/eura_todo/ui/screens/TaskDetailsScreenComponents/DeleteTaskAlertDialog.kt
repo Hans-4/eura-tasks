@@ -1,19 +1,22 @@
-package me.hannes.eura_todo.ui.screens.homeScreenComponents.TaskDetailsScreenComponents
+package me.hannes.eura_todo.ui.screens.TaskDetailsScreenComponents
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 
 @Composable
 fun DeleteTaskAlertDialog(
-    onClose: () -> Unit,
-    onDbEvent: (DbEvent) -> Unit,
-    onUiEvent: (UiEvent) -> Unit,
-    taskId: Int?
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
     AlertDialog(
         title = {
             Text("Do you really wanna delete this Task?")
@@ -21,15 +24,13 @@ fun DeleteTaskAlertDialog(
         text = {
             Text("This action is not undoable")
         },
-        onDismissRequest = {onUiEvent(UiEvent.CloseConfirmDeletionDialog)},
+        onDismissRequest = {
+            onDismiss()
+        },
         confirmButton = {
             TextButton(
                 onClick = {
-                    taskId?.let { id ->
-                        onUiEvent(UiEvent.CloseConfirmDeletionDialog)
-                        onDbEvent(DbEvent.DeleteTodoById(id))
-                        onClose()
-                    }
+                    onConfirm()
                 }
             ) {
                 Text("Delete")
@@ -38,7 +39,7 @@ fun DeleteTaskAlertDialog(
         dismissButton = {
             TextButton(
                 onClick = {
-                    onUiEvent(UiEvent.CloseConfirmDeletionDialog)
+                    onDismiss()
                 }
             ) {
                 Text("Cancel")

@@ -56,12 +56,6 @@ fun AddTaskScreen(
         }
     }
 
-    val descriptionHeight by animateDpAsState(
-        targetValue = if (uiState.isAddingDescription) 56.dp else 0.dp,
-        animationSpec = tween(durationMillis = 300),
-        label = "SheetExpansion"
-    )
-
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -155,6 +149,7 @@ fun AddTaskScreen(
                 onClick = {
                     onDbEvent(DbEvent.SetParentList(parenList))
                     onDbEvent(DbEvent.SaveTask)
+                    onUiEvent(UiEvent.CloseAddTaskSheet)
                 }
             ) {
                 Text(

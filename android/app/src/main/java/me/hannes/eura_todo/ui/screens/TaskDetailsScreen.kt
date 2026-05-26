@@ -6,11 +6,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.TaskDetailsScreenComponents.DeleteTaskAlertDialog
+import me.hannes.eura_todo.ui.screens.TaskDetailsScreenComponents.DeleteTaskAlertDialog
 
 @Composable
 fun TaskDetailsScreen(
@@ -20,6 +23,8 @@ fun TaskDetailsScreen(
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState
 ) {
+    val scope = rememberCoroutineScope()
+
     Scaffold(
 
     ) { innerPadding ->
@@ -37,10 +42,17 @@ fun TaskDetailsScreen(
     }
     if (uiState.isConfirmingDeletion) {
         DeleteTaskAlertDialog(
-            onClose = onClose,
-            onDbEvent = onDbEvent,
-            taskId = taskId,
-            onUiEvent = onUiEvent
+            onConfirm = {
+                taskId?.let { id ->
+                    onDbEvent(DbEvent.DeleteTodoById(id))
+                    scope.launch {
+                        onUiEvent(UiEvent.CloseConfirmDeletionDialog)
+                        delay(300)
+                        onClose()
+                    }
+                }
+            },
+            onDismiss = { onUiEvent(UiEvent.CloseConfirmDeletionDialog) }
         )
     }
 }
