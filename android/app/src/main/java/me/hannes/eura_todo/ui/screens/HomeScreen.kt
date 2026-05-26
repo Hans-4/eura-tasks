@@ -17,8 +17,6 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Close
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.MoreVert
@@ -61,7 +59,6 @@ import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.SelectTaskListSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
@@ -429,13 +426,6 @@ fun HomeScreen(
                 dbState = dbState,
                 currentTab = currentTabName,
                 firstTaskList = task_lists[0],
-            )
-        }
-        if (uiState.isSelectingTaskList) {
-            SelectTaskListSheet(
-                onUiEvent = onUiEvent,
-                onDbEvent = onDbEvent,
-                dbState = dbState,
                 taskLists = task_lists
             )
         }
