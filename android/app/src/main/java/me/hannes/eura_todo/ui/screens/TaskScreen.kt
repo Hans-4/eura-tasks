@@ -1,11 +1,9 @@
 package me.hannes.eura_todo.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -15,9 +13,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.IosShare
@@ -30,17 +28,13 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
@@ -55,19 +49,16 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import me.hannes.eura_todo.R
-import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
@@ -80,6 +71,7 @@ import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 fun TaskScreen(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
+    onNavigateToHome: () -> Unit,
     onTaskDetails: (Int) -> Unit,
     uiState: UiState,
     dbState: DbState,
@@ -109,57 +101,92 @@ fun TaskScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp),
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                ),
-                title = {/*No content*/},
-                navigationIcon = {
-                    IconButton(
-                        onClick = {TODO()},
-                        shape = RoundedCornerShape(32.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    Card(
-                        shape = RoundedCornerShape(32.dp),
-                        elevation = CardDefaults.elevatedCardElevation(8.dp)
-                    ) {
-                        Row(
+            Column(
+
+            ) {
+                TopAppBar(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = Color.Transparent
+                    ),
+                    title = {/*No content*/},
+                    navigationIcon = {
+                        Card(
+                            shape = CircleShape,
+                            elevation = CardDefaults.elevatedCardElevation(
+                                10.dp
+                            ),
                             modifier = Modifier
-                                .fillMaxHeight(),
-                            verticalAlignment = Alignment.CenterVertically
+                                .padding(start = 16.dp)
+                                .size(40.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = White
+                            )
                         ) {
                             IconButton(
-                                onClick = { TODO() }
+                                onClick = {TODO()},
+                                shape = RoundedCornerShape(32.dp),
+                                modifier = Modifier.fillMaxSize()
                             ) {
                                 Icon(
-                                    imageVector = Icons.Rounded.IosShare,
-                                    contentDescription = null
-                                )
-                            }
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = { TODO() },
-                            ) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(),
-                                    imageVector = Icons.Rounded.MoreHoriz,
+                                    imageVector = Icons.Rounded.ArrowBackIosNew,
                                     contentDescription = null
                                 )
                             }
                         }
+                    },
+                    actions = {
+                        Card(
+                            shape = RoundedCornerShape(32.dp),
+                            elevation = CardDefaults.elevatedCardElevation(10.dp),
+                            modifier = Modifier
+                                .padding(end = 16.dp)
+                                .width(96.dp)
+                                .height(40.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = White
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(horizontal = 8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                IconButton(
+                                    modifier = Modifier.size(32.dp),
+                                    onClick = {TODO()},
+                                    shape = CircleShape
+                                ) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(30.dp),
+                                        imageVector = Icons.Rounded.IosShare,
+                                        contentDescription = null
+                                    )
+                                }
+
+                                IconButton(
+                                    modifier = Modifier.size(32.dp),
+                                    onClick = {TODO()},
+                                    shape = CircleShape
+                                ) {
+                                    Icon(
+                                        modifier = Modifier
+                                            .size(30.dp),
+                                        imageVector = Icons.Rounded.MoreHoriz,
+                                        contentDescription = null
+                                    )
+                                }
+                            }
+                        }
                     }
-                }
-            )
+                )
+            }
+
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -205,7 +232,7 @@ fun TaskScreen(
                             0.3f to Color.Transparent,
                             1.0f to Color.Black,
                             startY = 0f,
-                            endY = 600f
+                            endY = 300f
                         )
 
                         drawRect(
@@ -215,8 +242,17 @@ fun TaskScreen(
                     }
                 ,
                 contentPadding = innerPadding,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
+                item {
+                    Text(
+                        modifier = Modifier.padding(start = 16.dp, top = 8.dp),
+                        text = "Movies",
+                        fontSize = 32.sp,
+                        fontWeight = Bold,
+                        color = Color(0xFF93C798)
+                    )
+                }
                 item {
                     Column(
                         modifier = Modifier

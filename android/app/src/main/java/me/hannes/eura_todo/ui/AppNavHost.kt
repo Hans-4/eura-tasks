@@ -33,11 +33,25 @@ fun AppNavHost(
             route = "home",
             exitTransition = { fadeOut(animationSpec = tween(300)) }
         ) {
+            HomeScreen(
+                dbState = dbState,
+                uiState = uiState,
+                onDbEvent = onDbEvent,
+                onUiEvent = onUiEvent,
+                onTaskDetails = { taskId -> navController.navigate("taskDetails/$taskId") }
+            )
+        }
+
+        composable(
+            route = "task",
+            exitTransition = { fadeOut(animationSpec = tween(300)) }
+        ) {
             TaskScreen(
                 dbState = dbState,
                 uiState = uiState,
                 onDbEvent = onDbEvent,
                 onUiEvent = onUiEvent,
+                onNavigateToHome = {navController.popBackStack()},
                 onTaskDetails = { taskId -> navController.navigate("taskDetails/$taskId") }
             )
         }
