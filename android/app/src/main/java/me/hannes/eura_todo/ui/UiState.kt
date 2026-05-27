@@ -6,5 +6,6 @@ data class UiState(
     val isSelectingTaskList: Boolean = false,
     val isAddingTask: Boolean = false,
     val isAddingDescription: Boolean = false,
-    val isConfirmingDeletion: Boolean = false
+    val isConfirmingDeletion: Boolean = false,
+    val isHomeFABMenuExpanded: Boolean = false,
 )

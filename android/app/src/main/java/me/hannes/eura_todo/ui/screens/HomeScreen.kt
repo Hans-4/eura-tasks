@@ -1,33 +1,36 @@
 package me.hannes.eura_todo.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material.icons.rounded.SwapVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material.icons.rounded.AddTask
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -35,35 +38,33 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import me.hannes.eura_todo.R
-import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -76,6 +77,16 @@ fun HomeScreen(
     dbState: DbState,
     settingsViewModel: SettingsViewModel = viewModel()
 ) {
+    val topBarHeight = 110.dp
+
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val rotation by animateFloatAsState(
+        targetValue = if (uiState.isHomeFABMenuExpanded) 45f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "FAB Rotation"
+    )
+
     val task_lists by settingsViewModel.itemList.collectAsStateWithLifecycle(
         initialValue = SettingsViewModel.INITIAL_LIST
     )
@@ -104,7 +115,7 @@ fun HomeScreen(
                 CenterAlignedTopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(110.dp),
+                        .height(topBarHeight),
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
@@ -144,17 +155,74 @@ fun HomeScreen(
                     }
                 )
             }
+
+            //Box to close the FAB menu over the entire top bar
+            AnimatedVisibility(
+                visible = uiState.isHomeFABMenuExpanded,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            onUiEvent(UiEvent.CloseHomeFABMenu)
+                        }
+                )
+
+            }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {onUiEvent(UiEvent.OpenAddTaskSheet)},
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null
-                )
+                AnimatedVisibility(
+                    visible = uiState.isHomeFABMenuExpanded,
+                    enter = fadeIn() + expandVertically() + slideInVertically { it / 2 },
+                    exit = fadeOut() + shrinkVertically() + slideOutVertically { it / 2 }
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FabMenuItem(
+                            label = "New List",
+                            icon = Icons.Rounded.Checklist,
+                            onClick = { onUiEvent(UiEvent.OpenAddTaskListDialog) },
+                            onUiEvent = onUiEvent
+                        )
+                        FabMenuItem(
+                            label = "New Task",
+                            icon = Icons.Rounded.AddTask,
+                            onClick = { onUiEvent(UiEvent.OpenAddTaskSheet) },
+                            onUiEvent = onUiEvent
+                        )
+                    }
+                }
+                FloatingActionButton(
+                    onClick = {
+                        if (uiState.isHomeFABMenuExpanded) {
+                            onUiEvent(UiEvent.CloseHomeFABMenu)
+                        } else {
+                            onUiEvent(UiEvent.OpenHomeFABMenu)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = null,
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -168,9 +236,43 @@ fun HomeScreen(
                 Text(list)
             }
         }
+
+
+        //Box to close the FAB menu over the entire screen body
+        AnimatedVisibility(
+            visible = uiState.isHomeFABMenuExpanded,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.1f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
+                    ) {
+                        onUiEvent(UiEvent.CloseHomeFABMenu)
+                    }
+            )
+        }
+
+
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent
+            )
+        }
+
+        if (uiState.isAddingTask) {
+            AddTaskBottomSheet(
+                onDbEvent = onDbEvent,
+                onUiEvent = onUiEvent,
+                dbState = dbState,
+                uiState = uiState,
+                currentTab = "HOME_SCREEN",
+                firstTaskList = task_lists[0],
+                taskLists = task_lists
             )
         }
     }

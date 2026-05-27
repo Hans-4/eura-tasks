@@ -1,12 +1,9 @@
 package me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -26,7 +23,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -59,7 +55,7 @@ fun AddTaskScreen(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (currentTab == "FAVOURITES") {
+        if (currentTab == "FAVOURITES" || currentTab == "HOME_SCREEN") {
             Button(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -67,7 +63,7 @@ fun AddTaskScreen(
                 shape = RoundedCornerShape(0.dp)
             ) {
                 Text(
-                    if (dbState.taskParentList.isBlank()) firstTaskList else dbState.taskParentList
+                    dbState.taskParentList.ifBlank { firstTaskList }
                 )
                 Icon(
                     imageVector = Icons.Rounded.ArrowDropDown,
@@ -76,9 +72,11 @@ fun AddTaskScreen(
             }
         }
 
-        val parenList = if (currentTab == "FAVOURITES") {
-            if (dbState.taskParentList.isBlank()) firstTaskList else dbState.taskParentList
-        } else currentTab
+        val parenList = when (currentTab) {
+            "FAVOURITES" -> dbState.taskParentList.ifBlank { firstTaskList }
+            "HOME_SCREEN" -> dbState.taskParentList.ifBlank { firstTaskList }
+            else -> currentTab
+        }
 
         TextField(
             modifier = Modifier.fillMaxWidth(),

@@ -13,4 +13,6 @@ sealed interface UiEvent {
     object CloseAddTaskDescriptionTextField: UiEvent
     object OpenConfirmDeletionDialog: UiEvent
     object CloseConfirmDeletionDialog: UiEvent
+    object OpenHomeFABMenu: UiEvent
+    object CloseHomeFABMenu: UiEvent
 }
