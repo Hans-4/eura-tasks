@@ -13,6 +13,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,7 +24,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -31,6 +32,8 @@ import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
 import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -44,10 +47,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +65,8 @@ import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
+import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.purple
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -72,14 +74,13 @@ import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
-    onTaskDetails: (Int) -> Unit,
+    onTask: (String) -> Unit,
     uiState: UiState,
     dbState: DbState,
-    settingsViewModel: SettingsViewModel = viewModel()
+    settingsViewModel: SettingsViewModel = viewModel(),
+    darkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val topBarHeight = 110.dp
-
-    var isExpanded by remember { mutableStateOf(false) }
 
     val rotation by animateFloatAsState(
         targetValue = if (uiState.isHomeFABMenuExpanded) 45f else 0f,
@@ -87,15 +88,13 @@ fun HomeScreen(
         label = "FAB Rotation"
     )
 
-    val task_lists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.INITIAL_LIST
+    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
+        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
     )
 
-    val totalTabs = 1 + task_lists.size
+    val totalTabs = 1 + taskLists.size
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
-
-    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         val savedIndex = settingsViewModel.selectedListIndex.first()
@@ -232,8 +231,28 @@ fun HomeScreen(
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            itemsIndexed(task_lists) { index, list ->
-                Text(list)
+            items(taskLists) { taskList ->
+                val colorList = when(taskList.colorString) {
+                    "green" -> green
+                    "purple" -> purple
+                    else -> purple
+                }
+                val itemColor = if (darkTheme) {
+                    colorList[1]
+                } else {
+                    colorList[0]
+                }
+
+                Button(
+                    onClick = { onTask(taskList.name) },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = itemColor.primary
+                    )
+                ) {
+                    Text(
+                        taskList.name)
+                }
+
             }
         }
 
@@ -260,7 +279,8 @@ fun HomeScreen(
 
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
-                onUiEvent = onUiEvent
+                onUiEvent = onUiEvent,
+                onClick = {}
             )
         }
 
@@ -271,8 +291,8 @@ fun HomeScreen(
                 dbState = dbState,
                 uiState = uiState,
                 currentTab = "HOME_SCREEN",
-                firstTaskList = task_lists[0],
-                taskLists = task_lists
+                firstTaskList = taskLists[0].name,
+                taskLists = taskLists.map { it.name }
             )
         }
     }

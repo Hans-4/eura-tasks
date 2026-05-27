@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
+data class TaskList(
+    val name: String,
+    val colorString: String
+)
+
 class SettingsViewModel(
     application: Application
 ) : AndroidViewModel(application) {
@@ -15,11 +20,21 @@ class SettingsViewModel(
     private val dataStore = application.dataStore
 
     companion object {
-        val INITIAL_LIST = listOf("My Tasks")
+        val INITIAL_INDIREKT_LIST = setOf("My Tasks|purple")
+        val INITIAL_DIREKT_LIST = listOf(TaskList("My Tasks", "purple"))
     }
 
-    val itemList: Flow<List<String>> = dataStore.data.map { prefs ->
-        prefs[SettingsKeys.TASK_LISTS]?.toList() ?: INITIAL_LIST
+    val itemList: Flow<List<TaskList>> = dataStore.data.map { prefs ->
+        val rawSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_INDIREKT_LIST.toSet()
+
+        rawSet.map { entry ->
+            if (entry.contains("|")) {
+                val parts = entry.split("|")
+                TaskList(name = parts[0], colorString = parts[1])
+            } else {
+                TaskList(name = entry, colorString = "purple")
+            }
+        }
     }
 
     val selectedListIndex: Flow<Int> = dataStore.data.map { prefs ->
@@ -34,22 +49,23 @@ class SettingsViewModel(
         }
     }
 
-    fun addItem(newItem: String) {
+    fun addItem(name: String, color: String) {
         viewModelScope.launch {
-            dataStore.edit { prefs ->
-                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_LIST.toSet()
+            val entry = "$name|$color"
 
-                prefs[SettingsKeys.TASK_LISTS] = currentSet + newItem
+            dataStore.edit { prefs ->
+                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_INDIREKT_LIST.toSet()
+                prefs[SettingsKeys.TASK_LISTS] = currentSet + entry
             }
         }
     }
 
-    fun removeItem(item: String) {
+    fun removeItem(taskList: TaskList) {
         viewModelScope.launch {
             dataStore.edit { prefs ->
-                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_LIST.toSet()
-
-                prefs[SettingsKeys.TASK_LISTS] = currentSet - item
+                val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_INDIREKT_LIST.toSet()
+                val entryToRemove = "${taskList.name}|${taskList.colorString}"
+                prefs[SettingsKeys.TASK_LISTS] = currentSet - entryToRemove
             }
         }
     }
