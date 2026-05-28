@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [TodoEntity::class],
-    version = 2
+    version = 1
 )
 @TypeConverters(
     Converters::class
