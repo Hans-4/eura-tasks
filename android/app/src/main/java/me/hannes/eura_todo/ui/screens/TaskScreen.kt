@@ -54,18 +54,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.ui.Converter
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
-import me.hannes.eura_todo.ui.pageNameConverter
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
-import me.hannes.eura_todo.ui.theme.blue
-import me.hannes.eura_todo.ui.theme.green
-import me.hannes.eura_todo.ui.theme.pink
-import me.hannes.eura_todo.ui.theme.purple
-import me.hannes.eura_todo.ui.theme.red
-import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,37 +77,22 @@ fun TaskScreen(
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
 
-    val red = red[systemThemeIndex]
-    val yellow = yellow[systemThemeIndex]
-    val green = green[systemThemeIndex]
-    val blue = blue[systemThemeIndex]
-    val purple = purple[systemThemeIndex]
-    val pink = pink[systemThemeIndex]
-
-    val pageTitle = pageNameConverter(pageName = pageName)
+    val pageTitle = Converter.pageNameConverter(pageName = pageName)
 
     val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
         initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
     )
 
-    val pageList = taskLists.find { it.name == pageTitle }
+    val pageList = taskLists.find { it.name == pageName }
 
-    val pageColor = when(pageList?.colorString) {
-        "red" -> red
-        "yellow" -> yellow
-        "green" -> green
-        "blue" -> blue
-        "pink" -> pink
-        else -> purple
-    }
+    val pageColorList = Converter.colorStringConverter(pageList?.colorString)
+    val pageColor = pageColorList[systemThemeIndex]
 
-    val tasksToShow = dbState.tasks.filter { it.taskList == pageTitle }
+    val tasksToShow = dbState.tasks.filter { it.taskList == pageName }
 
     Scaffold(
         topBar = {
-            Column(
-
-            ) {
+            Column{
                 TopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -443,7 +422,7 @@ fun TaskScreen(
                 onUiEvent = onUiEvent,
                 dbState = dbState,
                 uiState = uiState,
-                currentTab = pageTitle,
+                currentTab = pageName,
                 firstTaskList = taskLists[0].name,
                 taskLists = taskLists
             )

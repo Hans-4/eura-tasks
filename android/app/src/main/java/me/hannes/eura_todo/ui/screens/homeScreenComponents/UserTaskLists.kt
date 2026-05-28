@@ -11,7 +11,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowForwardIos
+import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.hannes.eura_todo.ui.theme.ColorItems
 
 @Composable
 fun UserTaskLists(
@@ -33,6 +34,7 @@ fun UserTaskLists(
     icon: ImageVector,
     title: String,
     count: Int,
+    color: ColorItems,
     onClick: () -> Unit
 ) {
     if (index != 0) {
@@ -44,7 +46,7 @@ fun UserTaskLists(
         shape = RoundedCornerShape(0.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surface,
-            contentColor = MaterialTheme.colorScheme.onSurface
+            contentColor = color.onSurface
         ),
         contentPadding = PaddingValues(16.dp),
         modifier = Modifier
@@ -62,13 +64,13 @@ fun UserTaskLists(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = color.primaryContainer,
                     shape = MaterialTheme.shapes.medium
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        tint = color.onPrimaryContainer,
                         modifier = Modifier
                             .padding(8.dp)
                             .size(24.dp)
@@ -81,7 +83,7 @@ fun UserTaskLists(
                     text = title,
                     fontSize = 18.sp,
                     fontWeight = Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = color.onSurface
                 )
             }
 
@@ -104,7 +106,7 @@ fun UserTaskLists(
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Icon(
-                    imageVector = Icons.Rounded.ArrowForwardIos,
+                    imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
                     contentDescription = null,
                     modifier = Modifier
                         .size(20.dp)

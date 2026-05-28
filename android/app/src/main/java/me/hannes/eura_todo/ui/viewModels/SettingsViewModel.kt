@@ -10,7 +10,8 @@ import kotlinx.coroutines.launch
 
 data class TaskList(
     val name: String,
-    val colorString: String
+    val type: String,
+    val colorString: String,
 )
 
 class SettingsViewModel(
@@ -21,37 +22,43 @@ class SettingsViewModel(
 
     companion object {
         val INITIAL_INDIREKT_LIST = setOf(
-            "SYSTEM_TODAY|purple",
-            "SYSTEM_SCHEDULE|pink",
-            "SYSTEM_ALL|red",
-            "SYSTEM_FAVORITES|yellow",
-            "SYSTEM_ASSIGNED_TO_ME|green",
-            "SYSTEM_GROCERIES|blue"
+            "SYSTEM_TODAY|TODAY|purple",
+            "SYSTEM_SCHEDULE|SCHEDULE|pink",
+            "SYSTEM_ALL|ALL|red",
+            "SYSTEM_FAVORITES|FAVORITES|yellow",
+            "SYSTEM_ASSIGNED_TO_ME|ASSIGNED_TO_ME|green",
+            "SYSTEM_GROCERIES|GROCERIES|blue"
         )
         val INITIAL_DIREKT_LIST = listOf(
             TaskList(
                 name = "SYSTEM_TODAY",
-                colorString= "purple"
+                type = "TODAY",
+                colorString= "purple",
             ),
             TaskList(
                 name = "SYSTEM_SCHEDULE",
-                colorString = "pink"
+                type = "SCHEDULE",
+                colorString = "pink",
             ),
             TaskList(
                 name = "SYSTEM_ALL",
-                colorString = "red"
+                type = "ALL",
+                colorString = "red",
             ),
             TaskList(
                 name = "SYSTEM_FAVORITES",
-                colorString = "yellow"
+                type = "FAVORITES",
+                colorString = "yellow",
             ),
             TaskList(
                 name = "SYSTEM_ASSIGNED_TO_ME",
-                colorString = "green"
+                type = "ASSIGNED_TO_ME",
+                colorString = "green",
             ),
             TaskList(
                 name = "SYSTEM_GROCERIES",
-                colorString = "blue"
+                type = "GROCERIES",
+                colorString = "blue",
             ),
         )
     }
@@ -62,9 +69,9 @@ class SettingsViewModel(
         rawSet.map { entry ->
             if (entry.contains("|")) {
                 val parts = entry.split("|")
-                TaskList(name = parts[0], colorString = parts[1])
+                TaskList(name = parts[0], type = parts[1], colorString = parts[2])
             } else {
-                TaskList(name = entry, colorString = "purple")
+                TaskList(name = entry, type = "OTHER", colorString = "purple")
             }
         }
     }
@@ -81,9 +88,9 @@ class SettingsViewModel(
         }
     }
 
-    fun addItem(name: String, color: String) {
+    fun addItem(name: String, type: String, color: String) {
         viewModelScope.launch {
-            val entry = "$name|$color"
+            val entry = "$name|$type|$color"
 
             dataStore.edit { prefs ->
                 val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_INDIREKT_LIST.toSet()

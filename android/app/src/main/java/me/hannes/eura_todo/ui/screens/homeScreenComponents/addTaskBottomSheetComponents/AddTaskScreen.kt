@@ -1,4 +1,4 @@
-package me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents
+package me.hannes.eura_todo.ui.screens.homeScreenComponents.addTaskBottomSheetComponents
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -12,8 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.rounded.ArrowDropDown
-import androidx.compose.material.icons.rounded.ShortText
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.Button
@@ -32,15 +32,9 @@ import androidx.compose.ui.unit.dp
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.ui.Converter
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
-import me.hannes.eura_todo.ui.pageNameConverter
-import me.hannes.eura_todo.ui.theme.blue
-import me.hannes.eura_todo.ui.theme.green
-import me.hannes.eura_todo.ui.theme.pink
-import me.hannes.eura_todo.ui.theme.purple
-import me.hannes.eura_todo.ui.theme.red
-import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.TaskList
 
 @Composable
@@ -58,27 +52,13 @@ fun AddTaskScreen(
     val systemThemeIndex = if (darkTheme) 1 else 0
     val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstTaskList } }
 
-    val listTitle = pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstTaskList })
+    val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstTaskList })
 
-    val red = red[systemThemeIndex]
-    val yellow = yellow[systemThemeIndex]
-    val green = green[systemThemeIndex]
-    val blue = blue[systemThemeIndex]
-    val purple = purple[systemThemeIndex]
-    val pink = pink[systemThemeIndex]
-
-    val pageColorList = when(pageList?.colorString) {
-        "red" -> red
-        "yellow" -> yellow
-        "green" -> green
-        "blue" -> blue
-        "purple" -> purple
-        "pink" -> pink
-        else -> purple
-    }
+    val pageColorList = Converter.colorStringConverter(pageList?.colorString)
+    val pageColor = pageColorList[systemThemeIndex]
 
     val isFavorite = dbState.todoIsFavorite
-    val isLockedAsFavorite = currentTab == "FAVOURITES"
+    val isLockedAsFavorite = currentTab == "SYSTEM_FAVORITES"
 
     LaunchedEffect(currentTab) {
         if (isLockedAsFavorite) {
@@ -89,30 +69,30 @@ fun AddTaskScreen(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (currentTab == "FAVOURITES" || currentTab == "HOME_SCREEN") {
+        if (currentTab == "SYSTEM_FAVORITES" || currentTab == "HOME_SCREEN") {
             Button(
                 modifier = Modifier
                     .fillMaxWidth(),
                 onClick = { onNavigateToSelectTaskListScreen() },
                 shape = RoundedCornerShape(0.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = pageColorList.primary
+                    containerColor = pageColor.primary
                 )
             ) {
                 Text(
                     text = listTitle,
-                    color = pageColorList.onSurface
+                    color = pageColor.onSurface
                 )
                 Icon(
                     imageVector = Icons.Rounded.ArrowDropDown,
                     contentDescription = null,
-                    tint = pageColorList.onSurface
+                    tint = pageColor.onSurface
                 )
             }
         }
 
         val parenList = when (currentTab) {
-            "FAVOURITES" -> dbState.taskParentList.ifBlank { firstTaskList }
+            "SYSTEM_FAVORITES" -> dbState.taskParentList.ifBlank { firstTaskList }
             "HOME_SCREEN" -> dbState.taskParentList.ifBlank { firstTaskList }
             else -> currentTab
         }
@@ -148,9 +128,7 @@ fun AddTaskScreen(
             )
         }
 
-        Row(
-
-        ) {
+        Row{
             IconButton(
                 onClick = {
                     if (uiState.isAddingDescription) {
@@ -161,7 +139,7 @@ fun AddTaskScreen(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.ShortText,
+                    imageVector = Icons.AutoMirrored.Rounded.ShortText,
                     contentDescription = "Add description button"
                 )
             }

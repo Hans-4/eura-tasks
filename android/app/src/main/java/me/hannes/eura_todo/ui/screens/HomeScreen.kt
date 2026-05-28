@@ -1,6 +1,5 @@
 package me.hannes.eura_todo.ui.screens
 
-import me.hannes.eura_todo.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -19,7 +18,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -32,35 +30,29 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
-import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Event
-import androidx.compose.material.icons.rounded.List
 import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -81,8 +73,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
+import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.ui.Converter
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
@@ -108,12 +102,6 @@ data class SystemTaskListsItems(
     val color: ColorItems
 )
 
-data class UserTaskListItems(
-    val icon: ImageVector,
-    val title: String,
-     val count: Int,
-    val onClick: (String) -> Unit
-)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -334,7 +322,7 @@ fun HomeScreen(
                     SystemTaskListsItems(
                         name = taskLists[2].name,
                         count = 89,
-                        icon = Icons.Rounded.List,
+                        icon = Icons.AutoMirrored.Rounded.List,
                         listType = "All",
                         progress = 0.8f,
                         color = red
@@ -410,11 +398,15 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxWidth(),
                     ) {
                         taskLists.drop(6).forEachIndexed { index, item ->
+                            val icon = Converter.typeIconConverter(typeString = item.type)
+                            val colorItems = Converter.colorStringConverter(item.colorString)
+                            val colorItem = colorItems[systemThemeIndex]
                             UserTaskLists(
                                 index = index,
                                 title = item.name,
-                                icon = Icons.Outlined.Notifications,
+                                icon = icon,
                                 count = 33,
+                                color = colorItem,
                                 onClick = { onTask(item.name) }
                             )
                         }

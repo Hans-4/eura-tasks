@@ -44,7 +44,6 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -68,7 +67,6 @@ import me.hannes.eura_todo.ui.theme.purple
 import me.hannes.eura_todo.ui.theme.red
 import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
-import kotlin.collections.chunked
 
 data class TypeItems(
     val icon: ImageVector,
@@ -168,8 +166,7 @@ fun AddNewTaskListDialog(
     AlertDialog(
         title =  {Text("Add new list")},
         text = {
-            Column(
-            ) {
+            Column{
                 TextField(
                     value = newListName,
                     onValueChange = { newListName = it },
@@ -183,7 +180,7 @@ fun AddNewTaskListDialog(
 
                 Text(
                     text = "List type",
-                    modifier = Modifier.padding(top = 16.dp,)
+                    modifier = Modifier.padding(top = 16.dp)
                 )
 
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
@@ -212,7 +209,7 @@ fun AddNewTaskListDialog(
 
                 Text(
                     text = "Color",
-                    modifier = Modifier.padding(top = 8.dp,)
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 LazyRow(
@@ -234,7 +231,7 @@ fun AddNewTaskListDialog(
 
                 Text(
                     text = "Preview",
-                    modifier = Modifier.padding(top = 8.dp,)
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 ListPreview(
@@ -250,6 +247,7 @@ fun AddNewTaskListDialog(
                 onClick = {
                     settingsViewModel.addItem(
                         name = newListName,
+                        type = selectedItem?.identificationTitle ?: "OTHER",
                         color = selectedColor
                     )
                     onUiEvent(UiEvent.CloseAddTaskListDialog)

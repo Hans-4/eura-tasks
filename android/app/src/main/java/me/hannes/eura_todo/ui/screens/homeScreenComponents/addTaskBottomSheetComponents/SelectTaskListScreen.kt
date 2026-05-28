@@ -1,4 +1,4 @@
-package me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents
+package me.hannes.eura_todo.ui.screens.homeScreenComponents.addTaskBottomSheetComponents
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,14 +13,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.ui.Converter
 import me.hannes.eura_todo.ui.UiEvent
-import me.hannes.eura_todo.ui.pageNameConverter
-import me.hannes.eura_todo.ui.theme.blue
-import me.hannes.eura_todo.ui.theme.green
-import me.hannes.eura_todo.ui.theme.pink
-import me.hannes.eura_todo.ui.theme.purple
-import me.hannes.eura_todo.ui.theme.red
-import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.TaskList
 
 @Composable
@@ -32,12 +26,6 @@ fun SelectTaskListScreen(
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
-    val red = red[systemThemeIndex]
-    val yellow = yellow[systemThemeIndex]
-    val green = green[systemThemeIndex]
-    val blue = blue[systemThemeIndex]
-    val purple = purple[systemThemeIndex]
-    val pink = pink[systemThemeIndex]
 
     LazyColumn(
         modifier = Modifier
@@ -54,17 +42,10 @@ fun SelectTaskListScreen(
             }
         }
         items(taskLists) { item ->
-            val listTitle = pageNameConverter(pageName = item.name)
+            val listTitle = Converter.pageNameConverter(pageName = item.name)
 
-            val itemColor = when(item.colorString) {
-                "red" -> red
-                "yellow" -> yellow
-                "green" -> green
-                "blue" -> blue
-                "purple" -> purple
-                "pink" -> pink
-                else -> purple
-            }
+            val itemColorList = Converter.colorStringConverter(item.colorString)
+            val itemColor = itemColorList[systemThemeIndex]
 
             TextButton(
                 onClick = {
