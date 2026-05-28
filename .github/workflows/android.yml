@@ -20,7 +20,9 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: gradle
-        cache-dependency-path: android/*.gradle* - name: Grant execute permission for gradlew
+        cache-dependency-path: android/gradle/wrapper/gradle-wrapper.properties
+        
+    - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
     - name: Build with Gradle
