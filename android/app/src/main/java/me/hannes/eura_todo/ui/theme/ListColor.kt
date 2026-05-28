@@ -122,7 +122,7 @@ val purple = listOf(
         primaryContainer = Color(0xFFE2DFFF),
         onPrimaryContainer = Color(0xFF424178),
         surfaceContainer = Color(0xFFf0ecf4),
-        onSurface = Color(0xFFE0E4DC),
+        onSurface = Color(0xFF1B1B21),
         onSurfaceVariant = Color(0xFF47464F)
     ),
     ColorItems(

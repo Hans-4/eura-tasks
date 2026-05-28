@@ -22,6 +22,7 @@ import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.AddTaskScreen
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.SelectTaskListScreen
+import me.hannes.eura_todo.ui.viewModels.TaskList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +33,7 @@ fun AddTaskBottomSheet(
     uiState: UiState,
     currentTab: String,
     firstTaskList: String,
-    taskLists: List<String>
+    taskLists: List<TaskList>
 ) {
     ModalBottomSheet(
         modifier = Modifier
@@ -83,7 +84,8 @@ fun AddTaskBottomSheet(
                         uiState = uiState,
                         currentTab = currentTab,
                         firstTaskList = firstTaskList,
-                        onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") }
+                        onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") },
+                        taskLists = taskLists
                     )
                 }
 

@@ -17,7 +17,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -28,12 +27,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
@@ -57,7 +53,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -65,11 +60,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,14 +69,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
@@ -103,6 +91,7 @@ import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 data class systemTaskListsItems(
+    val name: String,
     val count: Int,
     val icon: ImageVector,
     val listType: String,
@@ -311,6 +300,7 @@ fun HomeScreen(
             item {
                 val itemList = listOf(
                     systemTaskListsItems(
+                        name = "SYSTEM_TODAY",
                         count = 14,
                         icon = Icons.Rounded.Today,
                         listType = "Today",
@@ -318,6 +308,7 @@ fun HomeScreen(
                         color = purple
                     ),
                     systemTaskListsItems(
+                        name = "SYSTEM_SCHEDULE",
                         count = 28,
                         icon = Icons.Rounded.Event,
                         listType = "Scheduled",
@@ -325,6 +316,7 @@ fun HomeScreen(
                         color = pink
                     ),
                     systemTaskListsItems(
+                        name = "SYSTEM_ALL",
                         count = 89,
                         icon = Icons.Rounded.List,
                         listType = "All",
@@ -332,6 +324,7 @@ fun HomeScreen(
                         color = red
                     ),
                     systemTaskListsItems(
+                        name = "SYSTEM_FAVORITES",
                         count = 3,
                         icon = Icons.Rounded.Star,
                         listType = "Favorites",
@@ -339,6 +332,7 @@ fun HomeScreen(
                         color = yellow
                     ),
                     systemTaskListsItems(
+                        name = "SYSTEM_ASSIGNED_TO_ME",
                         count = 1,
                         icon = Icons.Rounded.PersonAdd,
                         listType = "Assigned to me",
@@ -346,6 +340,7 @@ fun HomeScreen(
                         color = green
                     ),
                     systemTaskListsItems(
+                        name = "SYSTEM_GROCERIES",
                         count = 19,
                         icon = Icons.Rounded.ShoppingCart,
                         listType = "Groceries",
@@ -366,7 +361,8 @@ fun HomeScreen(
                                         icon = item.icon,
                                         listType = item.listType,
                                         progress = item.progress,
-                                        color = item.color
+                                        color = item.color,
+                                        onTask = { onTask(item.name)}
                                     )
                                 }
                             }
@@ -438,7 +434,7 @@ fun HomeScreen(
                 uiState = uiState,
                 currentTab = "HOME_SCREEN",
                 firstTaskList = taskLists[0].name,
-                taskLists = taskLists.map { it.name }
+                taskLists = taskLists
             )
         }
     }
@@ -450,10 +446,11 @@ fun SystemTaskLists(
     icon: ImageVector,
     listType: String,
     progress: Float,
-    color: ColorItems
+    color: ColorItems,
+    onTask: () -> Unit
 ) {
     Button(
-        onClick = {TODO()},
+        onClick = { onTask() },
         modifier = Modifier.fillMaxWidth(),
         colors = buttonColors(
             containerColor = color.primaryContainer
@@ -461,7 +458,7 @@ fun SystemTaskLists(
         shape = MaterialTheme.shapes.large
     ) {
         Column(
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(vertical = 8.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -501,8 +498,8 @@ fun SystemTaskLists(
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.primary,
-                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                color = color.primary,
+                trackColor = color.primary.copy(alpha = 0.2f),
                 strokeCap = StrokeCap.Round,
                 gapSize = 0.dp,
                 drawStopIndicator = {}

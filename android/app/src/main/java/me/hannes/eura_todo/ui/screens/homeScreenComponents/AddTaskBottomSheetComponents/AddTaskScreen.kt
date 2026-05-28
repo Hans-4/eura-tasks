@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.rounded.ShortText
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Text
@@ -32,6 +34,13 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
+import me.hannes.eura_todo.ui.theme.blue
+import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.pink
+import me.hannes.eura_todo.ui.theme.purple
+import me.hannes.eura_todo.ui.theme.red
+import me.hannes.eura_todo.ui.theme.yellow
+import me.hannes.eura_todo.ui.viewModels.TaskList
 
 @Composable
 fun AddTaskScreen(
@@ -42,7 +51,30 @@ fun AddTaskScreen(
     currentTab: String,
     firstTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
+    taskLists: List<TaskList>,
+    darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val systemThemeIndex = if (darkTheme) 1 else 0
+    val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstTaskList } }
+
+
+    val red = red[systemThemeIndex]
+    val yellow = yellow[systemThemeIndex]
+    val green = green[systemThemeIndex]
+    val blue = blue[systemThemeIndex]
+    val purple = purple[systemThemeIndex]
+    val pink = pink[systemThemeIndex]
+
+    val pageColorList = when(pageList?.colorString) {
+        "red" -> red
+        "yellow" -> yellow
+        "green" -> green
+        "blue" -> blue
+        "purple" -> purple
+        "pink" -> pink
+        else -> purple
+    }
+
     val isFavorite = dbState.todoIsFavorite
     val isLockedAsFavorite = currentTab == "FAVOURITES"
 
@@ -60,14 +92,19 @@ fun AddTaskScreen(
                 modifier = Modifier
                     .fillMaxWidth(),
                 onClick = { onNavigateToSelectTaskListScreen() },
-                shape = RoundedCornerShape(0.dp)
+                shape = RoundedCornerShape(0.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = pageColorList.primary
+                )
             ) {
                 Text(
-                    dbState.taskParentList.ifBlank { firstTaskList }
+                    dbState.taskParentList.ifBlank { firstTaskList },
+                    color = pageColorList.onSurface
                 )
                 Icon(
                     imageVector = Icons.Rounded.ArrowDropDown,
-                    contentDescription = null
+                    contentDescription = null,
+                    tint = pageColorList.onSurface
                 )
             }
         }

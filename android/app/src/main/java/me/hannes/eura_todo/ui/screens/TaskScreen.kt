@@ -80,21 +80,42 @@ fun TaskScreen(
     pageName: String,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val pagenName = when(pageName) {
+        "SYSTEM_TODAY" -> "Today"
+        "SYSTEM_SCHEDULE" -> "Schedule"
+        "SYSTEM_ALL" -> "All"
+        "SYSTEM_FAVORITES" -> "Favourites"
+        "SYSTEM_ASSIGNED_TO_ME" -> "Assigned to me"
+        "SYSTEM_GROCERIES" -> "Groceries"
+        else -> pageName
+    }
+
     val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
         initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
     )
 
     val pageList = taskLists.find { it.name == pageName }
 
-    val pageColorList = when(pageList?.colorString) {
-        "red" -> red
-        "yellow" -> yellow
-        "green" -> green
-        "blue" -> blue
-        "purple" -> purple
-        "pink" -> pink
-        else -> purple
+    val pageColorList = if (pageList != null) {
+        when(pageList.colorString) {
+            "red" -> red
+            "yellow" -> yellow
+            "green" -> green
+            "blue" -> blue
+            "pink" -> pink
+            else -> purple
+        }
+    } else {
+        when(pageName) {
+            "SYSTEM_SCHEDULE" -> pink
+            "SYSTEM_ALL" -> red
+            "SYSTEM_FAVORITES" -> yellow
+            "SYSTEM_ASSIGNED_TO_ME" -> green
+            "SYSTEM_GROCERIES" -> blue
+            else -> purple
+        }
     }
+
     val pageColor = if (darkTheme) {
         pageColorList[1]
     } else {
@@ -116,7 +137,7 @@ fun TaskScreen(
                         containerColor = Color.Transparent
                     ),
                     title = {
-                        Text("currentTabName")
+                        Text("")
                     },
                     navigationIcon = {
                         Card(
@@ -233,7 +254,7 @@ fun TaskScreen(
             item {
                 Text(
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp),
-                    text = pageName,
+                    text = pagenName,
                     fontSize = 32.sp,
                     fontWeight = Bold,
                     color = pageColor.primary
@@ -259,7 +280,7 @@ fun TaskScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    pageName
+                                    pagenName
                                 )
 
                                 Spacer(Modifier.weight(1f))
@@ -439,7 +460,7 @@ fun TaskScreen(
                 uiState = uiState,
                 currentTab = pageName,
                 firstTaskList = taskLists[0].name,
-                taskLists = taskLists.map { it.name }
+                taskLists = taskLists
             )
         }
     }
