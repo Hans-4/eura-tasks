@@ -59,8 +59,12 @@ import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.pink
 import me.hannes.eura_todo.ui.theme.purple
+import me.hannes.eura_todo.ui.theme.red
+import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,8 +87,12 @@ fun TaskScreen(
     val pageList = taskLists.find { it.name == pageName }
 
     val pageColorList = when(pageList?.colorString) {
+        "red" -> red
+        "yellow" -> yellow
         "green" -> green
+        "blue" -> blue
         "purple" -> purple
+        "pink" -> pink
         else -> purple
     }
     val pageColor = if (darkTheme) {

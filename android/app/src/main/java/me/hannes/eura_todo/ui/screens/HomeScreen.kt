@@ -17,47 +17,75 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
 import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.List
+import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ProgressIndicatorDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
@@ -65,10 +93,22 @@ import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
+import me.hannes.eura_todo.ui.theme.ColorItems
+import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.pink
 import me.hannes.eura_todo.ui.theme.purple
+import me.hannes.eura_todo.ui.theme.red
+import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
+data class systemTaskListsItems(
+    val count: Int,
+    val icon: ImageVector,
+    val listType: String,
+    val progress: Float,
+    val color: ColorItems
+)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -80,6 +120,15 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel = viewModel(),
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val systemThemeIndex = if (darkTheme) 1 else 0
+
+    val red = red[systemThemeIndex]
+    val yellow = yellow[systemThemeIndex]
+    val green = green[systemThemeIndex]
+    val blue = blue[systemThemeIndex]
+    val purple = purple[systemThemeIndex]
+    val pink = pink[systemThemeIndex]
+
     val topBarHeight = 110.dp
 
     val rotation by animateFloatAsState(
@@ -116,7 +165,6 @@ fun HomeScreen(
                         .fillMaxWidth()
                         .height(topBarHeight),
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
                     title = {
                         Box(
@@ -153,6 +201,34 @@ fun HomeScreen(
                         }
                     }
                 )
+
+                Button(
+                    onClick = {TODO()},
+                    colors = buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSecondary,
+                        contentColor = MaterialTheme.colorScheme.outline
+                    ),
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = null
+                        )
+
+                        Spacer(modifier = Modifier.width(4.dp))
+
+                        Text(
+                            "Search in Tasks..."
+                        )
+                    }
+                }
             }
 
             //Box to close the FAB menu over the entire top bar
@@ -227,20 +303,90 @@ fun HomeScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(taskLists) { taskList ->
-                val colorList = when(taskList.colorString) {
-                    "green" -> green
-                    "purple" -> purple
-                    else -> purple
+            item {
+                val itemList = listOf(
+                    systemTaskListsItems(
+                        count = 14,
+                        icon = Icons.Rounded.Today,
+                        listType = "Today",
+                        progress = 0.1f,
+                        color = purple
+                    ),
+                    systemTaskListsItems(
+                        count = 28,
+                        icon = Icons.Rounded.Event,
+                        listType = "Scheduled",
+                        progress = 0.3f,
+                        color = pink
+                    ),
+                    systemTaskListsItems(
+                        count = 89,
+                        icon = Icons.Rounded.List,
+                        listType = "All",
+                        progress = 0.8f,
+                        color = red
+                    ),
+                    systemTaskListsItems(
+                        count = 3,
+                        icon = Icons.Rounded.Star,
+                        listType = "Favorites",
+                        progress = 0.4f,
+                        color = yellow
+                    ),
+                    systemTaskListsItems(
+                        count = 1,
+                        icon = Icons.Rounded.PersonAdd,
+                        listType = "Assigned to me",
+                        progress = 0.2f,
+                        color = green
+                    ),
+                    systemTaskListsItems(
+                        count = 19,
+                        icon = Icons.Rounded.ShoppingCart,
+                        listType = "Groceries",
+                        progress = 0.5f,
+                        color = blue
+                    ),
+                )
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    itemList.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            for (item in rowItems) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SystemTaskLists(
+                                        count = item.count,
+                                        icon = item.icon,
+                                        listType = item.listType,
+                                        progress = item.progress,
+                                        color = item.color
+                                    )
+                                }
+                            }
+                            if (rowItems.size < 2) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
                 }
-                val itemColor = if (darkTheme) {
-                    colorList[1]
-                } else {
-                    colorList[0]
+            }
+
+            items(taskLists) { taskList ->
+                val itemColor = when(taskList.colorString) {
+                    "red" -> red
+                    "yellow" -> yellow
+                    "green" -> green
+                    "blue" -> blue
+                    "purple" -> purple
+                    "pink" -> pink
+                    else -> purple
                 }
 
                 Button(
@@ -293,6 +439,73 @@ fun HomeScreen(
                 currentTab = "HOME_SCREEN",
                 firstTaskList = taskLists[0].name,
                 taskLists = taskLists.map { it.name }
+            )
+        }
+    }
+}
+
+@Composable
+fun SystemTaskLists(
+    count: Int,
+    icon: ImageVector,
+    listType: String,
+    progress: Float,
+    color: ColorItems
+) {
+    Button(
+        onClick = {TODO()},
+        modifier = Modifier.fillMaxWidth(),
+        colors = buttonColors(
+            containerColor = color.primaryContainer
+        ),
+        shape = MaterialTheme.shapes.large
+    ) {
+        Column(
+            modifier = Modifier.padding(8.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Surface(
+                    color = color.primary,
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = color.onPrimary,
+                        modifier = Modifier
+                            .padding(4.dp)
+                            .size(24.dp)
+                    )
+                }
+
+                Text(
+                    "$count",
+                    fontSize = 30.sp,
+                    fontWeight = Bold,
+                    color = color.onSurface
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                listType,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            LinearProgressIndicator(
+                progress = { progress },
+                modifier = Modifier.fillMaxWidth(),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                strokeCap = StrokeCap.Round,
+                gapSize = 0.dp,
+                drawStopIndicator = {}
             )
         }
     }

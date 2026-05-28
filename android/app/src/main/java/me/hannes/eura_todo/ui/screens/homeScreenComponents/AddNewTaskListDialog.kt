@@ -36,8 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import me.hannes.eura_todo.R
 import me.hannes.eura_todo.ui.UiEvent
+import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.pink
 import me.hannes.eura_todo.ui.theme.purple
+import me.hannes.eura_todo.ui.theme.red
+import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 
@@ -51,8 +55,12 @@ fun AddNewTaskListDialog(
     var newListName by remember { mutableStateOf("") }
     
     val colors = listOf(
+        red,
+        yellow,
+        green,
+        blue,
         purple,
-        green
+        pink
     )
 
     var selectedColor by remember { mutableStateOf("purple") }
