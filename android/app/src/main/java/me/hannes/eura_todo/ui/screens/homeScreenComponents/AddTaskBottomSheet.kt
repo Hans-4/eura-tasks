@@ -20,8 +20,9 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.AddTaskScreen
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheetComponents.SelectTaskListScreen
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.AddTaskScreen
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.SelectTaskListScreen
+import me.hannes.eura_todo.ui.viewModels.TaskList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,8 +32,8 @@ fun AddTaskBottomSheet(
     dbState: DbState,
     uiState: UiState,
     currentTab: String,
-    firstTaskList: String,
-    taskLists: List<String>
+    firstUserTaskList: String,
+    taskLists: List<TaskList>
 ) {
     ModalBottomSheet(
         modifier = Modifier
@@ -82,8 +83,9 @@ fun AddTaskBottomSheet(
                         dbState = dbState,
                         uiState = uiState,
                         currentTab = currentTab,
-                        firstTaskList = firstTaskList,
-                        onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") }
+                        firstUserTaskList = firstUserTaskList,
+                        onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") },
+                        taskLists = taskLists
                     )
                 }
 

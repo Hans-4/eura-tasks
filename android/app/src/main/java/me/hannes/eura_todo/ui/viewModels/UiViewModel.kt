@@ -103,6 +103,36 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseHomeFABMenu -> {
+                _state.update {
+                    it.copy(
+                        isHomeFABMenuExpanded = false
+                    )
+                }
+            }
+            UiEvent.OpenHomeFABMenu -> {
+                _state.update {
+                    it.copy(
+                        isHomeFABMenuExpanded = true
+                    )
+                }
+            }
+
+            UiEvent.CloseManageListSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageListSheetOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenManageListSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageListSheetOpen = true
+                    )
+                }
+            }
         }
     }
 }

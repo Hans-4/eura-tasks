@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Eura Tasks</string>
+    <string name="app_name" translatable="false">Eura Tasks</string>
     <string name="recently_added">Recently Added</string>
     <string name="title">Title</string>
     <string name="date">Date</string>
@@ -8,4 +8,19 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="enter_list_name">Enter list name</string>
+    <string name="today">Today</string>
+    <string name="all">All</string>
+    <string name="favorites">Favorites</string>
+    <string name="my_lists">My Lists</string>
+    <string name="reminders">Reminders</string>
+    <string name="travel">Travel</string>
+    <string name="finance">Finance</string>
+    <string name="shopping">Shopping</string>
+    <string name="other">Other</string>
+    <string name="media">Media</string>
+    <string name="healt">Health</string>
+    <string name="work">Work</string>
+    <string name="you_cant_delete_default_lists">You can\'t delete default lists</string>
+    <string name="delete_list">Delete list</string>
+    <string name="there_is_no_user_list_please_add_one_first">There is no user list. Please add one first.</string>
 </resources>

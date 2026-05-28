@@ -1,56 +1,32 @@
-# Android Studio
-.idea/workspace.xml
-.idea/tasks.xml
-.idea/gradle.xml
-.idea/assetWizardSettings.xml
-.idea/dictionaries
-.idea/libraries
-.idea/caches
-.idea/deploymentTargetSelector.xml
-*.iml
-.modules.xml
-
-# Build-files
+# Build artifacts
 build/
-/build/
-app/build/
-captures/
+.gradle/
+/captures/
 .externalNativeBuild
 .cxx
-local.properties
-
-# Gradle
-.gradle/
-!gradle/wrapper/gradle-wrapper.jar
-
-# Secrets & Signatur
-*.jks
-*.keystore
-*.p12
-*.properties
-!gradle.properties
-!local.properties.template # Falls du eine Vorlage für andere erstellst
-!gradle/wrapper/gradle-wrapper.properties
-
-# System & Logs
-.DS_Store
-Thumbs.db
-*.log
-=======
-# Android spezifisch
-.gradle/
-build/
-capture/
-output.json
-
-# Lokale Konfiguration (WICHTIG: enthält oft Pfade zum SDK)
-local.properties
 
 # Android Studio / IntelliJ
 .idea/
 *.iml
 *.iws
+.modules.xml
 
-# System-Dateien
+# Local configuration (DO NOT COMMIT)
+local.properties
+
+# Secrets & Signing
+*.jks
+*.keystore
+*.p12
+google-services.json
+
+# Gradle Wrapper (MUST COMMIT THESE FOR CI)
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Keep gradle.properties for project config
+!gradle.properties
+
+# System files
 .DS_Store
 Thumbs.db

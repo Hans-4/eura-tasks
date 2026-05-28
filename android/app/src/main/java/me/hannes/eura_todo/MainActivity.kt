@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
             TodoDatabase::class.java,
             "tasks.db"
         )
+            .fallbackToDestructiveMigration()
             .build()
     }
     private val dbViewModel by viewModels<DbViewModel>(

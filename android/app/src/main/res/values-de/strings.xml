@@ -1,4 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="my_tasks">Meine Aufgaben</string>
     <string name="save">Speichern</string>
+    <string name="today">Heute</string>
+    <string name="all">Alle</string>
+    <string name="favorites">Favoriten</string>
+    <string name="recently_added">Kürzlich Hinzugefügt</string>
+    <string name="title">Titel</string>
+    <string name="my_lists">Meine Listen</string>
+    <string name="work">Arbeit</string>
+    <string name="you_cant_delete_default_lists">Du kannst keine standert Listen löschen</string>
+    <string name="delete_list">Liste löschen</string>
+    <string name="there_is_no_user_list_please_add_one_first">Keine Benutzer Liste gefunden. Bitte ersteller erst eine neue Liste.</string>
+    <string name="date">Datum</string>
+    <string name="new_list">Neue Liste</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="enter_list_name">Listen Name eingeben</string>
+    <string name="reminders">Erinnerungen</string>
+    <string name="travel">Reisen</string>
+    <string name="finance">Finanzen</string>
+    <string name="shopping">Einkaufen</string>
+    <string name="other">Andere</string>
+    <string name="media">Medien</string>
+    <string name="healt">Gesundheit</string>
 </resources>

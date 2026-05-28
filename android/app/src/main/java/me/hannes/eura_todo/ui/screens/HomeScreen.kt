@@ -1,5 +1,20 @@
 package me.hannes.eura_todo.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,20 +28,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.MoreVert
+import androidx.compose.material.icons.rounded.AddTask
+import androidx.compose.material.icons.rounded.Checklist
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material.icons.rounded.SwapVert
+import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -34,19 +53,23 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.PrimaryScrollableTabRow
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
@@ -54,36 +77,83 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import me.hannes.eura_todo.R
-import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.db.DbEvent
+import me.hannes.eura_todo.db.DbState
+import me.hannes.eura_todo.ui.Converter
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
-import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.SystemTaskLists
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.UserTaskLists
+import me.hannes.eura_todo.ui.theme.ColorItems
+import me.hannes.eura_todo.ui.theme.blue
+import me.hannes.eura_todo.ui.theme.green
+import me.hannes.eura_todo.ui.theme.pink
+import me.hannes.eura_todo.ui.theme.purple
+import me.hannes.eura_todo.ui.theme.red
+import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
+
+data class SystemTaskListsItems(
+    val name: String,
+    val count: Int,
+    val icon: ImageVector,
+    val listType: String,
+    val progress: Float,
+    val color: ColorItems
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
-    onTaskDetails: (Int) -> Unit,
+    onTask: (String) -> Unit,
     uiState: UiState,
     dbState: DbState,
-    settingsViewModel: SettingsViewModel = viewModel()
+    settingsViewModel: SettingsViewModel = viewModel(),
+    darkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    val task_lists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.INITIAL_LIST
+    val systemThemeIndex = if (darkTheme) 1 else 0
+
+    val red = red[systemThemeIndex]
+    val yellow = yellow[systemThemeIndex]
+    val green = green[systemThemeIndex]
+    val blue = blue[systemThemeIndex]
+    val purple = purple[systemThemeIndex]
+    val pink = pink[systemThemeIndex]
+
+    val topBarHeight = 110.dp
+
+    val rotation by animateFloatAsState(
+        targetValue = if (uiState.isHomeFABMenuExpanded) 45f else 0f,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "FAB Rotation"
     )
 
-    val totalTabs = 1 + task_lists.size
+    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
+        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
+    )
+
+    val totalTabs = 1 + taskLists.size
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
 
-    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
+
+    LaunchedEffect(uiState.isAddingTask) {
+        if (uiState.isAddingTask && taskLists.size <= 6) {
+            snackbarHostState.showSnackbar(
+                message = snackbarMessage,
+                withDismissAction = true
+            )
+            onUiEvent(UiEvent.CloseAddTaskSheet)
+        }
+    }
 
     LaunchedEffect(Unit) {
         val savedIndex = settingsViewModel.selectedListIndex.first()
@@ -103,9 +173,8 @@ fun HomeScreen(
                 CenterAlignedTopAppBar(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(110.dp),
+                        .height(topBarHeight),
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceContainer
                     ),
                     title = {
                         Box(
@@ -121,8 +190,9 @@ fun HomeScreen(
                     actions = {
                         Box(
                             modifier = Modifier
+                                .padding(end = 16.dp)
                                 .fillMaxHeight(),
-                            contentAlignment = Alignment.Center
+                            contentAlignment = Alignment.Center,
                         ) {
                             IconButton(
                                 modifier = Modifier.size(32.dp),
@@ -142,307 +212,278 @@ fun HomeScreen(
                     }
                 )
 
-                PrimaryScrollableTabRow(
-                    modifier = Modifier.height(56.dp),
-                    containerColor = MaterialTheme.colorScheme.surfaceContainer,
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selectedTabIndex = pagerState.currentPage,
-                    edgePadding = 0.dp
+                Button(
+                    onClick = {TODO()},
+                    colors = buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSecondary,
+                        contentColor = MaterialTheme.colorScheme.outline
+                    ),
+                    shape = CircleShape,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
                 ) {
-                Tab(
-                    selectedContentColor = MaterialTheme.colorScheme.primary,
-                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selected = pagerState.currentPage == 0,
-                    onClick = {
-                        scope.launch { pagerState.animateScrollToPage(0) }
-                    },
-                    icon = { Icon(Icons.Rounded.Star, null) }
-                )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Search,
+                            contentDescription = null
+                        )
 
-                task_lists.forEachIndexed { index, tabTitle ->
-                    val targetPage = index + 1
+                        Spacer(modifier = Modifier.width(4.dp))
 
-                    val finalTabTitle = if (tabTitle == "My Tasks") {
-                        stringResource(R.string.my_tasks)
-                    } else {
-                        tabTitle
+                        Text(
+                            "Search in Tasks..."
+                        )
                     }
-
-                    Tab(
-                        selectedContentColor = MaterialTheme.colorScheme.primary,
-                        unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        selected = pagerState.currentPage == targetPage,
-                        onClick = {
-                            scope.launch { pagerState.animateScrollToPage(targetPage) }
-                        },
-                        text = { Text(finalTabTitle) }
-                    )
                 }
-
-                Tab(
-                    unselectedContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    selected = false,
-                    onClick = {onUiEvent(UiEvent.OpenAddTaskListDialog)},
-                    text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add, null
-                            )
-                            Spacer(
-                                modifier = Modifier.width(4.dp)
-                            )
-                            Text(
-                                stringResource(R.string.new_list)
-                            )
-                        }
-                    }
-                )
             }
+
+            //Box to close the FAB menu over the entire top bar
+            AnimatedVisibility(
+                visible = uiState.isHomeFABMenuExpanded,
+                enter = fadeIn(),
+                exit = fadeOut()
+            ) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                        .background(Color.Black.copy(alpha = 0.1f))
+                        .clickable(
+                            indication = null,
+                            interactionSource = remember { MutableInteractionSource() }
+                        ) {
+                            onUiEvent(UiEvent.CloseHomeFABMenu)
+                        }
+                )
+
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(32.dp),
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSurface
+                )
             }
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = {onUiEvent(UiEvent.OpenAddTaskSheet)},
-                containerColor = MaterialTheme.colorScheme.primaryContainer,
-                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Rounded.Add,
-                    contentDescription = null
-                )
+                AnimatedVisibility(
+                    visible = uiState.isHomeFABMenuExpanded,
+                    enter = fadeIn() + expandVertically() + slideInVertically { it / 2 },
+                    exit = fadeOut() + shrinkVertically() + slideOutVertically { it / 2 }
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FabMenuItem(
+                            label = "New List",
+                            icon = Icons.Rounded.Checklist,
+                            onClick = { onUiEvent(UiEvent.OpenAddTaskListDialog) },
+                            onUiEvent = onUiEvent
+                        )
+                        FabMenuItem(
+                            label = "New Task",
+                            icon = Icons.Rounded.AddTask,
+                            onClick = { onUiEvent(UiEvent.OpenAddTaskSheet) },
+                            onUiEvent = onUiEvent
+                        )
+                    }
+                }
+                FloatingActionButton(
+                    onClick = {
+                        if (uiState.isHomeFABMenuExpanded) {
+                            onUiEvent(UiEvent.CloseHomeFABMenu)
+                        } else {
+                            onUiEvent(UiEvent.OpenHomeFABMenu)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    shape = CircleShape
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Add,
+                        contentDescription = null,
+                        modifier = Modifier.rotate(rotation)
+                    )
+                }
             }
         }
     ) { innerPadding ->
-        val currentTabName = if (pagerState.currentPage == 0) {
-            "FAVOURITES"
-        } else {
-            task_lists.getOrNull(pagerState.currentPage - 1) ?: "ERROR"
-        }
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier.fillMaxSize(),
-            verticalAlignment = Alignment.Top
-        ) { page ->
-            val pageTabName = if (page == 0) "FAVOURITES" else task_lists.getOrNull(page - 1) ?: "ERROR"
-
-            val tasksToShow = if (page == 0) {
-                dbState.tasks.filter { it.isFavorite }
-            } else {
-                dbState.tasks.filter { it.taskList == pageTabName }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            contentPadding = innerPadding,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            item {
+                val itemList = listOf(
+                    SystemTaskListsItems(
+                        name = taskLists[0].name,
+                        count = 14,
+                        icon = Icons.Rounded.Today,
+                        listType = "Today",
+                        progress = 0.1f,
+                        color = purple
+                    ),
+                    SystemTaskListsItems(
+                        name = taskLists[1].name,
+                        count = 28,
+                        icon = Icons.Rounded.Event,
+                        listType = "Scheduled",
+                        progress = 0.3f,
+                        color = pink
+                    ),
+                    SystemTaskListsItems(
+                        name = taskLists[2].name,
+                        count = 89,
+                        icon = Icons.AutoMirrored.Rounded.List,
+                        listType = "All",
+                        progress = 0.8f,
+                        color = red
+                    ),
+                    SystemTaskListsItems(
+                        name = taskLists[3].name,
+                        count = 3,
+                        icon = Icons.Rounded.Star,
+                        listType = "Favorites",
+                        progress = 0.4f,
+                        color = yellow
+                    ),
+                    SystemTaskListsItems(
+                        name = taskLists[4].name,
+                        count = 1,
+                        icon = Icons.Rounded.PersonAdd,
+                        listType = "Assigned to me",
+                        progress = 0.2f,
+                        color = green
+                    ),
+                    SystemTaskListsItems(
+                        name = taskLists[5].name,
+                        count = 19,
+                        icon = Icons.Rounded.ShoppingCart,
+                        listType = "Groceries",
+                        progress = 0.5f,
+                        color = blue
+                    ),
+                )
+                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                    itemList.chunked(2).forEach { rowItems ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            for (item in rowItems) {
+                                Box(modifier = Modifier.weight(1f)) {
+                                    SystemTaskLists(
+                                        count = item.count,
+                                        icon = item.icon,
+                                        listType = item.listType,
+                                        progress = item.progress,
+                                        color = item.color,
+                                        onTask = { onTask(item.name)}
+                                    )
+                                }
+                            }
+                            if (rowItems.size < 2) {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+                        }
+                    }
+                }
             }
 
-            LazyColumn(
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(R.string.my_lists),
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Card(
+                        shape = MaterialTheme.shapes.large,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        taskLists.drop(6).forEachIndexed { index, item ->
+                            val icon = Converter.typeIconConverter(typeString = item.type)
+                            val colorItems = Converter.colorStringConverter(item.colorString)
+                            val colorItem = colorItems[systemThemeIndex]
+                            val itemName = Converter.pageNameConverter(item.name)
+                            UserTaskLists(
+                                index = index,
+                                title = itemName,
+                                icon = icon,
+                                count = 33,
+                                color = colorItem,
+                                onClick = { onTask(item.name) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+
+        //Box to close the FAB menu over the entire screen body
+        AnimatedVisibility(
+            visible = uiState.isHomeFABMenuExpanded,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Box(
                 modifier = Modifier
-                    .fillMaxSize(),
-                contentPadding = innerPadding,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp)
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.1f))
+                    .clickable(
+                        indication = null,
+                        interactionSource = remember { MutableInteractionSource() }
                     ) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        if (page == 0) "Marked" else task_lists.getOrNull(page - 1) ?: "Tasks",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    Spacer(Modifier.weight(1f))
-
-                                    IconButton(
-                                        onClick = { onUiEvent(UiEvent.OpenSortItemSheet) }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.SwapVert,
-                                            contentDescription = "Change sort type"
-                                        )
-                                    }
-
-                                    IconButton(
-                                        onClick = { TODO() }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.MoreVert,
-                                            contentDescription = "More options"
-                                        )
-                                    }
-                                }
-
-                                tasksToShow.filter { !it.isCompleted }.forEach { task ->
-                                    Button(
-                                        onClick = { onTaskDetails(task.id) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            RadioButton(
-                                                onClick = {
-                                                    onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
-                                                },
-                                                selected = task.isCompleted
-                                            )
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(text = task.title, fontSize = 18.sp)
-                                                if (task.description.isNotBlank()) {
-                                                    Text(
-                                                        text = task.description,
-                                                        fontSize = 14.sp,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                                                    contentDescription = "Toggle favorite",
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        onUiEvent(UiEvent.CloseHomeFABMenu)
                     }
-                }
-
-                item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(8.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        "Completed",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    Spacer(Modifier.weight(1f))
-
-                                    IconButton(
-                                        onClick = { TODO() }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Rounded.MoreVert,
-                                            contentDescription = "More options"
-                                        )
-                                    }
-                                }
-
-                                tasksToShow.filter { it.isCompleted }.forEach { task ->
-                                    Button(
-                                        onClick = { onTaskDetails(task.id) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                        ),
-                                        shape = RoundedCornerShape(16.dp)
-                                    ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            RadioButton(
-                                                onClick = {
-                                                    onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
-                                                },
-                                                selected = task.isCompleted
-                                            )
-                                            Column(modifier = Modifier.weight(1f)) {
-                                                Text(text = task.title, fontSize = 18.sp)
-                                                if (task.description.isNotBlank()) {
-                                                    Text(
-                                                        text = task.description,
-                                                        fontSize = 14.sp,
-                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-                                            }
-                                            IconButton(
-                                                onClick = {
-                                                    onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
-                                                }
-                                            ) {
-                                                Icon(
-                                                    imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                                                    contentDescription = "Toggle favorite"
-                                                )
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        if (uiState.isChangingSortType) {
-            SortItemsSheet(
-                onUiEvent = onUiEvent,
-                onDbEvent = onDbEvent,
-                dbState = dbState
             )
         }
+
+
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
-                onUiEvent = onUiEvent
+                onUiEvent = onUiEvent,
+                onClick = {}
             )
         }
-        if (uiState.isAddingTask) {
-            AddTaskBottomSheet(
-                onDbEvent = onDbEvent,
-                onUiEvent = onUiEvent,
-                dbState = dbState,
-                uiState = uiState,
-                currentTab = currentTabName,
-                firstTaskList = task_lists[0],
-                taskLists = task_lists
-            )
+
+        if (taskLists.size > 6) {
+            if (uiState.isAddingTask) {
+                AddTaskBottomSheet(
+                    onDbEvent = onDbEvent,
+                    onUiEvent = onUiEvent,
+                    dbState = dbState,
+                    uiState = uiState,
+                    currentTab = "HOME_SCREEN",
+                    firstUserTaskList = taskLists[6].name,
+                    taskLists = taskLists
+                )
+            }
         }
     }
 }
