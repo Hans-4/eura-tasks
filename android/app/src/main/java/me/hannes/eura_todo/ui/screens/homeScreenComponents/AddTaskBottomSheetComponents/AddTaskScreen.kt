@@ -34,6 +34,7 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
+import me.hannes.eura_todo.ui.pageNameConverter
 import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
 import me.hannes.eura_todo.ui.theme.pink
@@ -57,6 +58,7 @@ fun AddTaskScreen(
     val systemThemeIndex = if (darkTheme) 1 else 0
     val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstTaskList } }
 
+    val listTitle = pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstTaskList })
 
     val red = red[systemThemeIndex]
     val yellow = yellow[systemThemeIndex]
@@ -98,7 +100,7 @@ fun AddTaskScreen(
                 )
             ) {
                 Text(
-                    dbState.taskParentList.ifBlank { firstTaskList },
+                    text = listTitle,
                     color = pageColorList.onSurface
                 )
                 Icon(

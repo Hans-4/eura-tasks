@@ -8,4 +8,7 @@
     <string name="save">Save</string>
     <string name="cancel">Cancel</string>
     <string name="enter_list_name">Enter list name</string>
+    <string name="today">Today</string>
+    <string name="all">All</string>
+    <string name="favorites">Favorites</string>
 </resources>

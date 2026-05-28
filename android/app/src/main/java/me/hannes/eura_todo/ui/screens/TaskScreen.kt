@@ -56,6 +56,7 @@ import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
+import me.hannes.eura_todo.ui.pageNameConverter
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
@@ -80,49 +81,33 @@ fun TaskScreen(
     pageName: String,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    val pagenName = when(pageName) {
-        "SYSTEM_TODAY" -> "Today"
-        "SYSTEM_SCHEDULE" -> "Schedule"
-        "SYSTEM_ALL" -> "All"
-        "SYSTEM_FAVORITES" -> "Favourites"
-        "SYSTEM_ASSIGNED_TO_ME" -> "Assigned to me"
-        "SYSTEM_GROCERIES" -> "Groceries"
-        else -> pageName
-    }
+    val systemThemeIndex = if (darkTheme) 1 else 0
+
+    val red = red[systemThemeIndex]
+    val yellow = yellow[systemThemeIndex]
+    val green = green[systemThemeIndex]
+    val blue = blue[systemThemeIndex]
+    val purple = purple[systemThemeIndex]
+    val pink = pink[systemThemeIndex]
+
+    val pageTitle = pageNameConverter(pageName = pageName)
 
     val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
         initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
     )
 
-    val pageList = taskLists.find { it.name == pageName }
+    val pageList = taskLists.find { it.name == pageTitle }
 
-    val pageColorList = if (pageList != null) {
-        when(pageList.colorString) {
-            "red" -> red
-            "yellow" -> yellow
-            "green" -> green
-            "blue" -> blue
-            "pink" -> pink
-            else -> purple
-        }
-    } else {
-        when(pageName) {
-            "SYSTEM_SCHEDULE" -> pink
-            "SYSTEM_ALL" -> red
-            "SYSTEM_FAVORITES" -> yellow
-            "SYSTEM_ASSIGNED_TO_ME" -> green
-            "SYSTEM_GROCERIES" -> blue
-            else -> purple
-        }
+    val pageColor = when(pageList?.colorString) {
+        "red" -> red
+        "yellow" -> yellow
+        "green" -> green
+        "blue" -> blue
+        "pink" -> pink
+        else -> purple
     }
 
-    val pageColor = if (darkTheme) {
-        pageColorList[1]
-    } else {
-        pageColorList[0]
-    }
-
-    val tasksToShow = dbState.tasks.filter { it.taskList == pageName }
+    val tasksToShow = dbState.tasks.filter { it.taskList == pageTitle }
 
     Scaffold(
         topBar = {
@@ -254,7 +239,7 @@ fun TaskScreen(
             item {
                 Text(
                     modifier = Modifier.padding(start = 16.dp, top = 8.dp),
-                    text = pagenName,
+                    text = pageTitle,
                     fontSize = 32.sp,
                     fontWeight = Bold,
                     color = pageColor.primary
@@ -280,7 +265,7 @@ fun TaskScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    pagenName
+                                    pageTitle
                                 )
 
                                 Spacer(Modifier.weight(1f))
@@ -458,7 +443,7 @@ fun TaskScreen(
                 onUiEvent = onUiEvent,
                 dbState = dbState,
                 uiState = uiState,
-                currentTab = pageName,
+                currentTab = pageTitle,
                 firstTaskList = taskLists[0].name,
                 taskLists = taskLists
             )

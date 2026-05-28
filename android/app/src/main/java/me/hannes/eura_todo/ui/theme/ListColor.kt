@@ -78,10 +78,10 @@ val green = listOf(
     ColorItems(
         name = "green",
         type = "dark",
-        primary = Color(0xFF35693F),
+        primary = Color(0xFF9BD4A0),
         onPrimary = Color(0xFF003915),
-        primaryContainer = Color(0xFFB6F1BB),
-        onPrimaryContainer = Color(0xFF1B5129),
+        primaryContainer = Color(0xFF1B5129),
+        onPrimaryContainer = Color(0xFFB6F1BB),
         surfaceContainer = Color(0xFFEBEFE7),
         onSurface = Color(0xFFE0E4DC),
         onSurfaceVariant = Color(0xFF414941)
@@ -128,7 +128,7 @@ val purple = listOf(
     ColorItems(
         name = "purple",
         type = "dark",
-        primary = Color(0xFF595892),
+        primary = Color(0xFFC2C1FF),
         onPrimary = Color(0xFF2B2A60),
         primaryContainer = Color(0xFF424178),
         onPrimaryContainer = Color(0xFFE2DFFF),

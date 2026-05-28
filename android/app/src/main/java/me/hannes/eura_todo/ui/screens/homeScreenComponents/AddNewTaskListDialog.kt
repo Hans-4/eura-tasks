@@ -52,18 +52,29 @@ fun AddNewTaskListDialog(
     onClick: () -> Unit,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
-    var newListName by remember { mutableStateOf("") }
-    
-    val colors = listOf(
-        red,
-        yellow,
-        green,
-        blue,
-        purple,
-        pink
-    )
+    val systemThemeIndex = if (darkTheme) 1 else 0
 
-    var selectedColor by remember { mutableStateOf("purple") }
+    val red = red[systemThemeIndex]
+    val yellow = yellow[systemThemeIndex]
+    val green = green[systemThemeIndex]
+    val blue = blue[systemThemeIndex]
+    val purple = purple[systemThemeIndex]
+    val pink = pink[systemThemeIndex]
+
+    var newListName by remember { mutableStateOf("") }
+
+    val colorMap = remember {
+        mapOf(
+            "red" to red,
+            "yellow" to yellow,
+            "green" to green,
+            "blue" to blue,
+            "purple" to purple,
+            "pink" to pink
+        )
+    }
+
+    var selectedColor by remember { mutableStateOf("red") }
 
     AlertDialog(
         title =  {Text("Add new list")},
@@ -87,16 +98,14 @@ fun AddNewTaskListDialog(
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(colors) { colors ->
-                        val color = if (darkTheme) {
-                            colors[1]
-                        } else {
-                            colors[0]
-                        }
+                    items(colorMap.entries.toList()) { entry ->
+                        val colorName = entry.key
+                        val colorObject = entry.value
+
                         ColorSelector(
-                            primaryColor = color.primary,
-                            isSelected = selectedColor == color.name,
-                            onSelect = { selectedColor = color.name })
+                            primaryColor = colorObject.primary,
+                            isSelected = selectedColor == colorName,
+                            onSelect = { selectedColor = colorName })
                     }
                 }
             }

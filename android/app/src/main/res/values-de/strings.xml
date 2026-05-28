@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="save">Speichern</string>
+    <string name="all">Alle</string>
+    <string name="favorites">Favoriten</string>
+    <string name="recently_added">Kürzlich Hinzugefügt</string>
+    <string name="title">Titel</string>
 </resources>

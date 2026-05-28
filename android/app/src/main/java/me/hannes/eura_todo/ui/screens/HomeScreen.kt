@@ -300,7 +300,7 @@ fun HomeScreen(
             item {
                 val itemList = listOf(
                     systemTaskListsItems(
-                        name = "SYSTEM_TODAY",
+                        name = taskLists[0].name,
                         count = 14,
                         icon = Icons.Rounded.Today,
                         listType = "Today",
@@ -308,7 +308,7 @@ fun HomeScreen(
                         color = purple
                     ),
                     systemTaskListsItems(
-                        name = "SYSTEM_SCHEDULE",
+                        name = taskLists[1].name,
                         count = 28,
                         icon = Icons.Rounded.Event,
                         listType = "Scheduled",
@@ -316,7 +316,7 @@ fun HomeScreen(
                         color = pink
                     ),
                     systemTaskListsItems(
-                        name = "SYSTEM_ALL",
+                        name = taskLists[2].name,
                         count = 89,
                         icon = Icons.Rounded.List,
                         listType = "All",
@@ -324,7 +324,7 @@ fun HomeScreen(
                         color = red
                     ),
                     systemTaskListsItems(
-                        name = "SYSTEM_FAVORITES",
+                        name = taskLists[3].name,
                         count = 3,
                         icon = Icons.Rounded.Star,
                         listType = "Favorites",
@@ -332,7 +332,7 @@ fun HomeScreen(
                         color = yellow
                     ),
                     systemTaskListsItems(
-                        name = "SYSTEM_ASSIGNED_TO_ME",
+                        name = taskLists[4].name,
                         count = 1,
                         icon = Icons.Rounded.PersonAdd,
                         listType = "Assigned to me",
@@ -340,7 +340,7 @@ fun HomeScreen(
                         color = green
                     ),
                     systemTaskListsItems(
-                        name = "SYSTEM_GROCERIES",
+                        name = taskLists[5].name,
                         count = 19,
                         icon = Icons.Rounded.ShoppingCart,
                         listType = "Groceries",
@@ -374,7 +374,7 @@ fun HomeScreen(
                 }
             }
 
-            items(taskLists) { taskList ->
+            items(taskLists.drop(6)) { taskList ->
                 val itemColor = when(taskList.colorString) {
                     "red" -> red
                     "yellow" -> yellow
@@ -394,7 +394,6 @@ fun HomeScreen(
                     Text(
                         taskList.name)
                 }
-
             }
         }
 

@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
+import me.hannes.eura_todo.ui.pageNameConverter
 import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
 import me.hannes.eura_todo.ui.theme.pink
@@ -53,6 +54,8 @@ fun SelectTaskListScreen(
             }
         }
         items(taskLists) { item ->
+            val listTitle = pageNameConverter(pageName = item.name)
+
             val itemColor = when(item.colorString) {
                 "red" -> red
                 "yellow" -> yellow
@@ -71,7 +74,7 @@ fun SelectTaskListScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(
-                    item.name,
+                    listTitle,
                     modifier = Modifier.fillMaxWidth(),
                     color = itemColor.primary
                 )
