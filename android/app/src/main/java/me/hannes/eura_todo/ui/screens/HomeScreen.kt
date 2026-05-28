@@ -1,5 +1,6 @@
 package me.hannes.eura_todo.ui.screens
 
+import me.hannes.eura_todo.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -10,6 +11,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -17,6 +19,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,13 +30,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
+import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.List
@@ -45,13 +50,14 @@ import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
+import androidx.compose.material3.Card
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -66,8 +72,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -81,6 +88,8 @@ import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.SystemTaskLists
+import me.hannes.eura_todo.ui.screens.homeScreenComponents.UserTaskLists
 import me.hannes.eura_todo.ui.theme.ColorItems
 import me.hannes.eura_todo.ui.theme.blue
 import me.hannes.eura_todo.ui.theme.green
@@ -90,13 +99,20 @@ import me.hannes.eura_todo.ui.theme.red
 import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
-data class systemTaskListsItems(
+data class SystemTaskListsItems(
     val name: String,
     val count: Int,
     val icon: ImageVector,
     val listType: String,
     val progress: Float,
     val color: ColorItems
+)
+
+data class UserTaskListItems(
+    val icon: ImageVector,
+    val title: String,
+     val count: Int,
+    val onClick: (String) -> Unit
 )
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -299,7 +315,7 @@ fun HomeScreen(
         ) {
             item {
                 val itemList = listOf(
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[0].name,
                         count = 14,
                         icon = Icons.Rounded.Today,
@@ -307,7 +323,7 @@ fun HomeScreen(
                         progress = 0.1f,
                         color = purple
                     ),
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[1].name,
                         count = 28,
                         icon = Icons.Rounded.Event,
@@ -315,7 +331,7 @@ fun HomeScreen(
                         progress = 0.3f,
                         color = pink
                     ),
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[2].name,
                         count = 89,
                         icon = Icons.Rounded.List,
@@ -323,7 +339,7 @@ fun HomeScreen(
                         progress = 0.8f,
                         color = red
                     ),
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[3].name,
                         count = 3,
                         icon = Icons.Rounded.Star,
@@ -331,7 +347,7 @@ fun HomeScreen(
                         progress = 0.4f,
                         color = yellow
                     ),
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[4].name,
                         count = 1,
                         icon = Icons.Rounded.PersonAdd,
@@ -339,7 +355,7 @@ fun HomeScreen(
                         progress = 0.2f,
                         color = green
                     ),
-                    systemTaskListsItems(
+                    SystemTaskListsItems(
                         name = taskLists[5].name,
                         count = 19,
                         icon = Icons.Rounded.ShoppingCart,
@@ -374,25 +390,35 @@ fun HomeScreen(
                 }
             }
 
-            items(taskLists.drop(6)) { taskList ->
-                val itemColor = when(taskList.colorString) {
-                    "red" -> red
-                    "yellow" -> yellow
-                    "green" -> green
-                    "blue" -> blue
-                    "purple" -> purple
-                    "pink" -> pink
-                    else -> purple
-                }
-
-                Button(
-                    onClick = { onTask(taskList.name) },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = itemColor.primary
-                    )
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        taskList.name)
+                        text = stringResource(R.string.my_lists),
+                        fontSize = 18.sp,
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+
+                    Card(
+                        shape = MaterialTheme.shapes.large,
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        taskLists.drop(6).forEachIndexed { index, item ->
+                            UserTaskLists(
+                                index = index,
+                                title = item.name,
+                                icon = Icons.Outlined.Notifications,
+                                count = 33,
+                                onClick = { onTask(item.name) }
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -434,74 +460,6 @@ fun HomeScreen(
                 currentTab = "HOME_SCREEN",
                 firstTaskList = taskLists[0].name,
                 taskLists = taskLists
-            )
-        }
-    }
-}
-
-@Composable
-fun SystemTaskLists(
-    count: Int,
-    icon: ImageVector,
-    listType: String,
-    progress: Float,
-    color: ColorItems,
-    onTask: () -> Unit
-) {
-    Button(
-        onClick = { onTask() },
-        modifier = Modifier.fillMaxWidth(),
-        colors = buttonColors(
-            containerColor = color.primaryContainer
-        ),
-        shape = MaterialTheme.shapes.large
-    ) {
-        Column(
-            modifier = Modifier.padding(vertical = 8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Surface(
-                    color = color.primary,
-                    shape = MaterialTheme.shapes.small
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = color.onPrimary,
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .size(24.dp)
-                    )
-                }
-
-                Text(
-                    "$count",
-                    fontSize = 30.sp,
-                    fontWeight = Bold,
-                    color = color.onSurface
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                listType,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier.fillMaxWidth(),
-                color = color.primary,
-                trackColor = color.primary.copy(alpha = 0.2f),
-                strokeCap = StrokeCap.Round,
-                gapSize = 0.dp,
-                drawStopIndicator = {}
             )
         }
     }
