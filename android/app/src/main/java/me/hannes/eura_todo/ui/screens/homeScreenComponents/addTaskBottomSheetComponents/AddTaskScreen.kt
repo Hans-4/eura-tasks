@@ -44,15 +44,15 @@ fun AddTaskScreen(
     dbState: DbState,
     uiState: UiState,
     currentTab: String,
-    firstTaskList: String,
+    firstUserTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
     taskLists: List<TaskList>,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
-    val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstTaskList } }
+    val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstUserTaskList } }
 
-    val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstTaskList })
+    val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstUserTaskList })
 
     val pageColorList = Converter.colorStringConverter(pageList?.colorString)
     val pageColor = pageColorList[systemThemeIndex]
@@ -91,9 +91,17 @@ fun AddTaskScreen(
             }
         }
 
-        val parenList = when (currentTab) {
-            "SYSTEM_FAVORITES" -> dbState.taskParentList.ifBlank { firstTaskList }
-            "HOME_SCREEN" -> dbState.taskParentList.ifBlank { firstTaskList }
+        val parentList = when {
+            currentTab in setOf(
+                "SYSTEM_TODAY",
+                "SYSTEM_SCHEDULE",
+                "SYSTEM_ALL",
+                "SYSTEM_FAVORITES",
+                "SYSTEM_ASSIGNED_TO_ME",
+                "SYSTEM_GROCERIES",
+                "HOME_SCREEN"
+            ) ->
+                dbState.taskParentList.ifBlank { firstUserTaskList }
             else -> currentTab
         }
 
@@ -162,7 +170,7 @@ fun AddTaskScreen(
 
             TextButton(
                 onClick = {
-                    onDbEvent(DbEvent.SetParentList(parenList))
+                    onDbEvent(DbEvent.SetParentList(parentList))
                     onDbEvent(DbEvent.SaveTask)
                     onUiEvent(UiEvent.CloseAddTaskSheet)
                 }

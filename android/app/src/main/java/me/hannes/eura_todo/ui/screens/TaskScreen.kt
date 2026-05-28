@@ -423,7 +423,7 @@ fun TaskScreen(
                 dbState = dbState,
                 uiState = uiState,
                 currentTab = pageName,
-                firstTaskList = taskLists[0].name,
+                firstUserTaskList = taskLists[0].name,
                 taskLists = taskLists
             )
         }

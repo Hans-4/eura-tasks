@@ -450,7 +450,7 @@ fun HomeScreen(
                 dbState = dbState,
                 uiState = uiState,
                 currentTab = "HOME_SCREEN",
-                firstTaskList = taskLists[0].name,
+                firstUserTaskList = taskLists[6].name,
                 taskLists = taskLists
             )
         }

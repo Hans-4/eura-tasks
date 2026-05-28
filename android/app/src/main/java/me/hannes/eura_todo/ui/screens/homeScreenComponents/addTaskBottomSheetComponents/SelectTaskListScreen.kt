@@ -41,7 +41,7 @@ fun SelectTaskListScreen(
                 )
             }
         }
-        items(taskLists) { item ->
+        items(taskLists.drop(6)) { item ->
             val listTitle = Converter.pageNameConverter(pageName = item.name)
 
             val itemColorList = Converter.colorStringConverter(item.colorString)

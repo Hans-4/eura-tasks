@@ -93,12 +93,12 @@ fun UserTaskLists(
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Surface(
-                    color = MaterialTheme.colorScheme.primaryContainer,
+                    color = color.primaryContainer,
                     shape = CircleShape
                 ) {
                     Text(
                         text = "$count",
-                        color = MaterialTheme.colorScheme.onPrimaryContainer,
+                        color = color.onPrimaryContainer,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
                     )
                 }
