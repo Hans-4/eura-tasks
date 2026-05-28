@@ -12,4 +12,13 @@
     <string name="all">All</string>
     <string name="favorites">Favorites</string>
     <string name="my_lists">My Lists</string>
+    <string name="reminders">Reminders</string>
+    <string name="travel">Travel</string>
+    <string name="finance">Finance</string>
+    <string name="shopping">Shopping</string>
+    <string name="other">Other</string>
+    <string name="media">Media</string>
+    <string name="healt">Health</string>
+    <string name="wor">Work</string>
+    <string name="work">Work</string>
 </resources>
