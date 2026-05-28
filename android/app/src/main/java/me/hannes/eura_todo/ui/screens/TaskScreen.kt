@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material.icons.rounded.IosShare
-import androidx.compose.material.icons.rounded.MoreHoriz
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -34,24 +33,33 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.Converter
@@ -60,6 +68,7 @@ import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_todo.ui.screens.taskScreenComponents.ManageListSheet
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -77,6 +86,8 @@ fun TaskScreen(
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
 
+    val scope = rememberCoroutineScope()
+
     val pageTitle = Converter.pageNameConverter(pageName = pageName)
 
     val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
@@ -88,7 +99,23 @@ fun TaskScreen(
     val pageColorList = Converter.colorStringConverter(pageList?.colorString)
     val pageColor = pageColorList[systemThemeIndex]
 
-    val tasksToShow = dbState.tasks.filter { it.taskList == pageName }
+    val tasksToShow = when (pageName) {
+        "SYSTEM_FAVORITES" ->  dbState.tasks.filter { it.isFavorite }
+        else -> dbState.tasks.filter { it.taskList == pageName }
+    }
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
+
+    LaunchedEffect(uiState.isAddingTask) {
+        if (uiState.isAddingTask && taskLists.size <= 6) {
+            snackbarHostState.showSnackbar(
+                message = snackbarMessage,
+                withDismissAction = true
+            )
+            onUiEvent(UiEvent.CloseAddTaskSheet)
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -104,77 +131,65 @@ fun TaskScreen(
                         Text("")
                     },
                     navigationIcon = {
-                        Card(
-                            shape = CircleShape,
-                            elevation = CardDefaults.elevatedCardElevation(
-                                10.dp
-                            ),
-                            modifier = Modifier
-                                .padding(start = 16.dp)
-                                .size(40.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = White
-                            )
+                        IconButton(
+                            onClick = { onNavigateToHome() },
+                            shape = RoundedCornerShape(32.dp),
                         ) {
-                            IconButton(
-                                onClick = { onNavigateToHome() },
-                                shape = RoundedCornerShape(32.dp),
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Rounded.ArrowBackIosNew,
-                                    contentDescription = null
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Rounded.ArrowBackIosNew,
+                                contentDescription = null,
+                                tint = pageColor.primary
+                            )
                         }
                     },
                     actions = {
-                        Card(
-                            shape = RoundedCornerShape(32.dp),
-                            elevation = CardDefaults.elevatedCardElevation(10.dp),
-                            modifier = Modifier
-                                .padding(end = 16.dp)
-                                .width(96.dp)
-                                .height(40.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = White
-                            )
+                        Row(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(horizontal = 8.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.SpaceBetween
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = {TODO()},
+                                shape = CircleShape
                             ) {
-                                IconButton(
-                                    modifier = Modifier.size(32.dp),
-                                    onClick = {TODO()},
-                                    shape = CircleShape
-                                ) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(30.dp),
-                                        imageVector = Icons.Rounded.IosShare,
-                                        contentDescription = null
-                                    )
-                                }
+                                Icon(
+                                    modifier = Modifier
+                                        .size(30.dp),
+                                    imageVector = Icons.Rounded.IosShare,
+                                    contentDescription = null,
+                                    tint = pageColor.primary
+                                )
+                            }
 
-                                IconButton(
-                                    modifier = Modifier.size(32.dp),
-                                    onClick = {TODO()},
-                                    shape = CircleShape
-                                ) {
-                                    Icon(
-                                        modifier = Modifier
-                                            .size(30.dp),
-                                        imageVector = Icons.Rounded.MoreHoriz,
-                                        contentDescription = null
-                                    )
-                                }
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = { onUiEvent(UiEvent.OpenManageListSheet) },
+                                shape = CircleShape
+                            ) {
+                                Icon(
+                                    modifier = Modifier
+                                        .size(30.dp),
+                                    imageVector = Icons.Rounded.MoreVert,
+                                    contentDescription = null,
+                                    tint = pageColor.primary
+                                )
                             }
                         }
                     }
+                )
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(32.dp),
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSurface
                 )
             }
         },
@@ -272,8 +287,8 @@ fun TaskScreen(
                                 Button(
                                     onClick = { onTaskDetails(task.id) },
                                     colors = ButtonDefaults.buttonColors(
-                                        containerColor = pageColor.primaryContainer, //TODO: Search for alternative color. Original color: surfaceVariant
-                                        contentColor = pageColor.onSurfaceVariant
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                                     ),
                                     shape = RoundedCornerShape(16.dp)
                                 ) {
@@ -416,15 +431,33 @@ fun TaskScreen(
                 onClick = {}
             )
         }
-        if (uiState.isAddingTask) {
-            AddTaskBottomSheet(
-                onDbEvent = onDbEvent,
-                onUiEvent = onUiEvent,
-                dbState = dbState,
-                uiState = uiState,
-                currentTab = pageName,
-                firstUserTaskList = taskLists[0].name,
-                taskLists = taskLists
+        if (taskLists.size > 6) {
+            if (uiState.isAddingTask) {
+                AddTaskBottomSheet(
+                    onDbEvent = onDbEvent,
+                    onUiEvent = onUiEvent,
+                    dbState = dbState,
+                    uiState = uiState,
+                    currentTab = pageName,
+                    firstUserTaskList = taskLists[6].name,
+                    taskLists = taskLists
+                )
+            }
+        }
+        if (uiState.isManageListSheetOpen) {
+            ManageListSheet(
+                pageName = pageName,
+                onConfirm = {
+                    pageList?.let {
+                        settingsViewModel.removeItem(it)
+                        scope.launch {
+                            onUiEvent(UiEvent.CloseManageListSheet)
+                            delay(300)
+                            onNavigateToHome()
+                        }
+                    }
+                },
+                onDismiss = { onUiEvent(UiEvent.CloseManageListSheet) }
             )
         }
     }

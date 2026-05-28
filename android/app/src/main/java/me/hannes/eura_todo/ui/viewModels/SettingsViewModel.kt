@@ -27,7 +27,8 @@ class SettingsViewModel(
             "SYSTEM_ALL|ALL|red",
             "SYSTEM_FAVORITES|FAVORITES|yellow",
             "SYSTEM_ASSIGNED_TO_ME|ASSIGNED_TO_ME|green",
-            "SYSTEM_GROCERIES|GROCERIES|blue"
+            "SYSTEM_GROCERIES|GROCERIES|blue",
+            "MY_TASKS|OTHER|purple"
         )
         val INITIAL_DIREKT_LIST = listOf(
             TaskList(
@@ -60,6 +61,11 @@ class SettingsViewModel(
                 type = "GROCERIES",
                 colorString = "blue",
             ),
+            TaskList(
+                name = "MY_TASKS",
+                type = "OTHER",
+                colorString = "purple"
+            )
         )
     }
 
@@ -103,7 +109,7 @@ class SettingsViewModel(
         viewModelScope.launch {
             dataStore.edit { prefs ->
                 val currentSet = prefs[SettingsKeys.TASK_LISTS] ?: INITIAL_INDIREKT_LIST.toSet()
-                val entryToRemove = "${taskList.name}|${taskList.colorString}"
+                val entryToRemove = "${taskList.name}|${taskList.type}|${taskList.colorString}"
                 prefs[SettingsKeys.TASK_LISTS] = currentSet - entryToRemove
             }
         }

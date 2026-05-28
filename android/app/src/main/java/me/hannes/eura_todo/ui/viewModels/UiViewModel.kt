@@ -118,6 +118,21 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseManageListSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageListSheetOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenManageListSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageListSheetOpen = true
+                    )
+                }
+            }
         }
     }
 }

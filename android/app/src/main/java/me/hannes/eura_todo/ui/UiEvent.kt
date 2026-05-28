@@ -15,4 +15,6 @@ sealed interface UiEvent {
     object CloseConfirmDeletionDialog: UiEvent
     object OpenHomeFABMenu: UiEvent
     object CloseHomeFABMenu: UiEvent
+    object OpenManageListSheet: UiEvent
+    object CloseManageListSheet: UiEvent
 }

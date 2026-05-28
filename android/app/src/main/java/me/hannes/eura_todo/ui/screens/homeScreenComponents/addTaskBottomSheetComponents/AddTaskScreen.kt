@@ -1,5 +1,6 @@
 package me.hannes.eura_todo.ui.screens.homeScreenComponents.addTaskBottomSheetComponents
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -33,6 +34,7 @@ import me.hannes.eura_todo.R
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.db.DbState
 import me.hannes.eura_todo.ui.Converter
+import me.hannes.eura_todo.ui.SYSTEM_LISTS
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
 import me.hannes.eura_todo.ui.viewModels.TaskList
@@ -49,7 +51,9 @@ fun AddTaskScreen(
     taskLists: List<TaskList>,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    Log.d("Check", "First Entry:  ${firstUserTaskList}")
     val systemThemeIndex = if (darkTheme) 1 else 0
+
     val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstUserTaskList } }
 
     val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstUserTaskList })
@@ -69,7 +73,7 @@ fun AddTaskScreen(
     Column(
         modifier = Modifier.fillMaxWidth()
     ) {
-        if (currentTab == "SYSTEM_FAVORITES" || currentTab == "HOME_SCREEN") {
+        if (currentTab in SYSTEM_LISTS) {
             Button(
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -92,16 +96,7 @@ fun AddTaskScreen(
         }
 
         val parentList = when {
-            currentTab in setOf(
-                "SYSTEM_TODAY",
-                "SYSTEM_SCHEDULE",
-                "SYSTEM_ALL",
-                "SYSTEM_FAVORITES",
-                "SYSTEM_ASSIGNED_TO_ME",
-                "SYSTEM_GROCERIES",
-                "HOME_SCREEN"
-            ) ->
-                dbState.taskParentList.ifBlank { firstUserTaskList }
+            currentTab in SYSTEM_LISTS -> dbState.taskParentList.ifBlank { firstUserTaskList }
             else -> currentTab
         }
 

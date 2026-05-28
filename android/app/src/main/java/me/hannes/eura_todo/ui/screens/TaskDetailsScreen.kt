@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 import me.hannes.eura_todo.db.DbEvent
 import me.hannes.eura_todo.ui.UiEvent
 import me.hannes.eura_todo.ui.UiState
-import me.hannes.eura_todo.ui.screens.TaskDetailsScreenComponents.DeleteTaskAlertDialog
+import me.hannes.eura_todo.ui.screens.taskDetailsScreenComponents.DeleteTaskAlertDialog
 
 @Composable
 fun TaskDetailsScreen(

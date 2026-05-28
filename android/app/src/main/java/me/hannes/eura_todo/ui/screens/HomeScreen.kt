@@ -30,6 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.AccountCircle
@@ -53,6 +54,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -137,6 +141,19 @@ fun HomeScreen(
     val totalTabs = 1 + taskLists.size
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
+
+    LaunchedEffect(uiState.isAddingTask) {
+        if (uiState.isAddingTask && taskLists.size <= 6) {
+            snackbarHostState.showSnackbar(
+                message = snackbarMessage,
+                withDismissAction = true
+            )
+            onUiEvent(UiEvent.CloseAddTaskSheet)
+        }
+    }
 
     LaunchedEffect(Unit) {
         val savedIndex = settingsViewModel.selectedListIndex.first()
@@ -243,6 +260,17 @@ fun HomeScreen(
                         }
                 )
 
+            }
+        },
+        snackbarHost = {
+            SnackbarHost(hostState = snackbarHostState) { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    shape = RoundedCornerShape(32.dp),
+                    dismissActionContentColor = MaterialTheme.colorScheme.onSurface
+                )
             }
         },
         floatingActionButton = {
@@ -401,9 +429,10 @@ fun HomeScreen(
                             val icon = Converter.typeIconConverter(typeString = item.type)
                             val colorItems = Converter.colorStringConverter(item.colorString)
                             val colorItem = colorItems[systemThemeIndex]
+                            val itemName = Converter.pageNameConverter(item.name)
                             UserTaskLists(
                                 index = index,
-                                title = item.name,
+                                title = itemName,
                                 icon = icon,
                                 count = 33,
                                 color = colorItem,
@@ -443,16 +472,18 @@ fun HomeScreen(
             )
         }
 
-        if (uiState.isAddingTask) {
-            AddTaskBottomSheet(
-                onDbEvent = onDbEvent,
-                onUiEvent = onUiEvent,
-                dbState = dbState,
-                uiState = uiState,
-                currentTab = "HOME_SCREEN",
-                firstUserTaskList = taskLists[6].name,
-                taskLists = taskLists
-            )
+        if (taskLists.size > 6) {
+            if (uiState.isAddingTask) {
+                AddTaskBottomSheet(
+                    onDbEvent = onDbEvent,
+                    onUiEvent = onUiEvent,
+                    dbState = dbState,
+                    uiState = uiState,
+                    currentTab = "HOME_SCREEN",
+                    firstUserTaskList = taskLists[6].name,
+                    taskLists = taskLists
+                )
+            }
         }
     }
 }
