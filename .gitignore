@@ -11,7 +11,7 @@ build/
 *.iws
 .modules.xml
 
-# Local configuration (DO NOT COMMIT)
+# Local configuration
 local.properties
 
 # Secrets & Signing
@@ -20,7 +20,7 @@ local.properties
 *.p12
 google-services.json
 
-# Gradle Wrapper (MUST COMMIT THESE FOR CI)
+# Gradle Wrapper
 !gradle/wrapper/gradle-wrapper.jar
 !gradle/wrapper/gradle-wrapper.properties
 
