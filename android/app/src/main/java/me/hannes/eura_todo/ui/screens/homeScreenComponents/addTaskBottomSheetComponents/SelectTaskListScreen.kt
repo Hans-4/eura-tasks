@@ -44,8 +44,10 @@ fun SelectTaskListScreen(
         items(taskLists.drop(6)) { item ->
             val listTitle = Converter.pageNameConverter(pageName = item.name)
 
-            val itemColorList = Converter.colorStringConverter(item.colorString)
-            val itemColor = itemColorList[systemThemeIndex]
+            val itemColor = Converter.colorStringConverter(
+                systemThemeIndex = systemThemeIndex,
+                colorString = item.colorString
+            )
 
             TextButton(
                 onClick = {

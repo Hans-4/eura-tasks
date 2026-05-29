@@ -58,8 +58,10 @@ fun AddTaskScreen(
 
     val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstUserTaskList })
 
-    val pageColorList = Converter.colorStringConverter(pageList?.colorString)
-    val pageColor = pageColorList[systemThemeIndex]
+    val pageColor = Converter.colorStringConverter(
+        systemThemeIndex = systemThemeIndex,
+        colorString = pageList?.colorString
+    )
 
     val isFavorite = dbState.todoIsFavorite
     val isLockedAsFavorite = currentTab == "SYSTEM_FAVORITES"
