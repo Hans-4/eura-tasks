@@ -14,6 +14,7 @@ data class TodoEntity(
     val time: String,
     val taskList: String,
     val creationTime: Instant,
+    val uuid: String = java.util.UUID.randomUUID().toString(),
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

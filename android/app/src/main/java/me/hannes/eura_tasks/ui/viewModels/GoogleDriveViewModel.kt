@@ -13,16 +13,27 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import me.hannes.eura_tasks.db.TodoEntity
 import java.util.Collections
+import kotlin.time.Instant
+
+data class TodoSyncModel(
+    val uuid: String,
+    val title: String,
+    val description: String,
+    val isFavorite: Boolean,
+    val isCompleted: Boolean,
+    val date: String,
+    val time: String,
+    val creationTime: Instant
+)
 
 class GoogleDriveViewModel : ViewModel() {
     private var driveService: Drive? = null
-
-    fun isDriveReady(): Boolean = driveService != null
 
     fun initDriveService(context: Context, account: GoogleSignInAccount) {
         val credential = GoogleAccountCredential.usingOAuth2(
@@ -45,67 +56,91 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    // 3. Find or Create Folder (returns the ID)
     private suspend fun getOrCreateTasksFolderId(): String? = withContext(Dispatchers.IO) {
         try {
-            // Search for folder named 'tasks'
-            val query = "name = 'tasks' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-            val result = driveService?.files()?.list()?.setQ(query)?.setFields("files(id, name)")?.execute()
-            val folder = result?.files?.firstOrNull()
+            // 1. Get or Create the MAIN folder ("eura-tasks")
+            val mainFolderQuery = "name = 'eura-tasks' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            val mainResult = driveService?.files()?.list()?.setQ(mainFolderQuery)?.execute()
+            var mainFolderId = mainResult?.files?.firstOrNull()?.id
 
-            if (folder != null) {
-                Log.d("eura-tasks", "Found existing folder: ${folder.id}")
-                return@withContext folder.id
+            if (mainFolderId == null) {
+                val metadata = com.google.api.services.drive.model.File().apply {
+                    name = "eura-tasks"
+                    mimeType = "application/vnd.google-apps.folder"
+                }
+                mainFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
+                Log.d("eura-tasks", "Created Main Folder: $mainFolderId")
             }
 
-            // Create it if not found
-            val metadata = com.google.api.services.drive.model.File().apply {
-                name = "tasks"
-                mimeType = "application/vnd.google-apps.folder"
+            // 2. Get or Create the SUB-folder ("tasks") inside "eura-tasks"
+            val subFolderQuery = "name = 'tasks' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
+            var subFolderId = subResult?.files?.firstOrNull()?.id
+
+            if (subFolderId == null) {
+                val metadata = com.google.api.services.drive.model.File().apply {
+                    name = "tasks"
+                    mimeType = "application/vnd.google-apps.folder"
+                    parents = listOf(mainFolderId!!)
+                }
+                subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
+                Log.d("eura-tasks", "Created Sub-Folder: $subFolderId")
             }
-            val newFolder = driveService?.files()?.create(metadata)?.setFields("id")?.execute()
-            Log.d("eura-tasks", "Created NEW folder: ${newFolder?.id}")
-            newFolder?.id
+
+            return@withContext subFolderId
         } catch (e: Exception) {
-            Log.e("eura-tasks", "Folder Error: ${e.message}")
+            Log.e("eura-tasks", "Deep folder creation failed: ${e.message}")
             null
         }
     }
 
-    // 4. The Sync Function
     fun syncAllTasks(tasks: List<TodoEntity>) {
-        if (driveService == null) {
-            Log.e("eura-tasks", "Sync failed: driveService is null")
-            return
-        }
-
         viewModelScope.launch(Dispatchers.IO) {
-            val folderId = getOrCreateTasksFolderId()
+            val folderId = getOrCreateTasksFolderId() ?: return@launch
 
             tasks.forEach { entity ->
                 try {
-                    val fileName = "task_${entity.id}.json"
-                    val jsonContent = Gson().toJson(entity)
+                    // Filename is now based on the stable UUID
+                    val fileName = "task_${entity.uuid}.json"
+                    val syncModel = TodoSyncModel(
+                        uuid = entity.uuid,
+                        title = entity.title,
+                        description = entity.description,
+                        isFavorite = entity.isFavorite,
+                        isCompleted = entity.isCompleted,
+                        date = entity.date,
+                        time = entity.time,
+                        creationTime = entity.creationTime
+                    )
 
-                    // Search if file exists to update it
+                    val gson = GsonBuilder()
+                        .registerTypeAdapter(Instant::class.java, com.google.gson.JsonSerializer<Instant> { src, _, _ ->
+                            com.google.gson.JsonPrimitive(src.toString())
+                        })
+                        .create()
+
+                    val jsonContent = gson.toJson(syncModel)
+
                     val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
                     val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
 
                     val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
 
                     if (existingFile != null) {
+                        // Update existing version
                         driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
-                        Log.d("eura-tasks", "Updated: $fileName (ID: ${existingFile.id})")
+                        Log.d("eura-tasks", "Updated: $fileName")
                     } else {
+                        // Create new file
                         val metadata = com.google.api.services.drive.model.File().apply {
                             name = fileName
-                            parents = if (folderId != null) listOf(folderId) else null
+                            parents = listOf(folderId)
                         }
-                        val newFile = driveService?.files()?.create(metadata, contentStream)?.setFields("id")?.execute()
-                        Log.d("eura-tasks", "Created: $fileName (ID: ${newFile?.id})")
+                        driveService?.files()?.create(metadata, contentStream)?.execute()
+                        Log.d("eura-tasks", "Created: $fileName")
                     }
                 } catch (e: Exception) {
-                    Log.e("eura-tasks", "Failed to sync task ${entity.id}: ${e.message}")
+                    Log.e("eura-tasks", "Sync failed for ${entity.uuid}: ${e.message}")
                 }
             }
         }
