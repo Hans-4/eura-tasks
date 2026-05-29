@@ -32,17 +32,11 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.rounded.AccountCircle
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
 import androidx.compose.material.icons.rounded.Checklist
-import androidx.compose.material.icons.rounded.Event
-import androidx.compose.material.icons.rounded.PersonAdd
 import androidx.compose.material.icons.rounded.Search
-import androidx.compose.material.icons.rounded.ShoppingCart
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.Today
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
@@ -69,9 +63,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,23 +82,7 @@ import me.hannes.eura_todo.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.SystemTaskLists
 import me.hannes.eura_todo.ui.screens.homeScreenComponents.UserTaskLists
-import me.hannes.eura_todo.ui.theme.ColorItems
-import me.hannes.eura_todo.ui.theme.blue
-import me.hannes.eura_todo.ui.theme.green
-import me.hannes.eura_todo.ui.theme.pink
-import me.hannes.eura_todo.ui.theme.purple
-import me.hannes.eura_todo.ui.theme.red
-import me.hannes.eura_todo.ui.theme.yellow
 import me.hannes.eura_todo.ui.viewModels.SettingsViewModel
-
-data class SystemTaskListsItems(
-    val name: String,
-    val count: Int,
-    val icon: ImageVector,
-    val listType: String,
-    val progress: Float,
-    val color: ColorItems
-)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,14 +95,13 @@ fun HomeScreen(
     settingsViewModel: SettingsViewModel = viewModel(),
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
+        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
+    )
+
     val systemThemeIndex = if (darkTheme) 1 else 0
 
-    val red = red[systemThemeIndex]
-    val yellow = yellow[systemThemeIndex]
-    val green = green[systemThemeIndex]
-    val blue = blue[systemThemeIndex]
-    val purple = purple[systemThemeIndex]
-    val pink = pink[systemThemeIndex]
+    val noUserList = taskLists.size <= 6
 
     val topBarHeight = 110.dp
 
@@ -134,10 +111,6 @@ fun HomeScreen(
         label = "FAB Rotation"
     )
 
-    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
-    )
-
     val totalTabs = 1 + taskLists.size
 
     val pagerState = rememberPagerState(pageCount = { totalTabs })
@@ -145,7 +118,7 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
 
-    LaunchedEffect(uiState.isAddingTask) {
+    LaunchedEffect(uiState.isAddingTask && noUserList) {
         if (uiState.isAddingTask && taskLists.size <= 6) {
             snackbarHostState.showSnackbar(
                 message = snackbarMessage,
@@ -330,70 +303,30 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                val itemList = listOf(
-                    SystemTaskListsItems(
-                        name = taskLists[0].name,
-                        count = 14,
-                        icon = Icons.Rounded.Today,
-                        listType = "Today",
-                        progress = 0.1f,
-                        color = purple
-                    ),
-                    SystemTaskListsItems(
-                        name = taskLists[1].name,
-                        count = 28,
-                        icon = Icons.Rounded.Event,
-                        listType = "Scheduled",
-                        progress = 0.3f,
-                        color = pink
-                    ),
-                    SystemTaskListsItems(
-                        name = taskLists[2].name,
-                        count = 89,
-                        icon = Icons.AutoMirrored.Rounded.List,
-                        listType = "All",
-                        progress = 0.8f,
-                        color = red
-                    ),
-                    SystemTaskListsItems(
-                        name = taskLists[3].name,
-                        count = 3,
-                        icon = Icons.Rounded.Star,
-                        listType = "Favorites",
-                        progress = 0.4f,
-                        color = yellow
-                    ),
-                    SystemTaskListsItems(
-                        name = taskLists[4].name,
-                        count = 1,
-                        icon = Icons.Rounded.PersonAdd,
-                        listType = "Assigned to me",
-                        progress = 0.2f,
-                        color = green
-                    ),
-                    SystemTaskListsItems(
-                        name = taskLists[5].name,
-                        count = 19,
-                        icon = Icons.Rounded.ShoppingCart,
-                        listType = "Groceries",
-                        progress = 0.5f,
-                        color = blue
-                    ),
-                )
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    itemList.chunked(2).forEach { rowItems ->
+                    taskLists
+                        .take(6)
+                        .chunked(2)
+                        .forEach { rowItems ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             for (item in rowItems) {
+                                val icon = Converter.systemTypeConverter(item.type)
+                                val color = Converter.colorStringConverter(
+                                    systemThemeIndex = systemThemeIndex,
+                                    colorString = item.colorString
+                                )
+                                val title = Converter.pageNameConverter(pageName = item.name)
+
                                 Box(modifier = Modifier.weight(1f)) {
                                     SystemTaskLists(
-                                        count = item.count,
-                                        icon = item.icon,
-                                        listType = item.listType,
-                                        progress = item.progress,
-                                        color = item.color,
+                                        count = 14,
+                                        icon = icon,
+                                        title = title,
+                                        progress = 0.4f,
+                                        color = color,
                                         onTask = { onTask(item.name)}
                                     )
                                 }
@@ -417,28 +350,41 @@ fun HomeScreen(
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
 
-                    Card(
-                        shape = MaterialTheme.shapes.large,
-                        border = BorderStroke(
-                            width = 1.dp,
-                            brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
-                        ),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        taskLists.drop(6).forEachIndexed { index, item ->
-                            val icon = Converter.typeIconConverter(typeString = item.type)
-                            val colorItems = Converter.colorStringConverter(item.colorString)
-                            val colorItem = colorItems[systemThemeIndex]
-                            val itemName = Converter.pageNameConverter(item.name)
-                            UserTaskLists(
-                                index = index,
-                                title = itemName,
-                                icon = icon,
-                                count = 33,
-                                color = colorItem,
-                                onClick = { onTask(item.name) }
-                            )
+                    if (!noUserList) {
+                        Card(
+                            shape = MaterialTheme.shapes.large,
+                            border = BorderStroke(
+                                width = 1.dp,
+                                brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
+                            ),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            taskLists.drop(6).forEachIndexed { index, item ->
+                                val icon = Converter.typeIconConverter(typeString = item.type)
+                                val colorItem = Converter.colorStringConverter(
+                                    systemThemeIndex = systemThemeIndex,
+                                    colorString = item.colorString
+                                )
+                                val itemName = Converter.pageNameConverter(item.name)
+
+                                UserTaskLists(
+                                    index = index,
+                                    title = itemName,
+                                    icon = icon,
+                                    count = 33,
+                                    color = colorItem,
+                                    onClick = { onTask(item.name) }
+                                )
+                            }
                         }
+                    } else {
+                        Text(
+                            text = "No Lists",
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .padding(top = 104.dp)
+                                .fillMaxWidth()
+                        )
                     }
                 }
             }
@@ -472,7 +418,7 @@ fun HomeScreen(
             )
         }
 
-        if (taskLists.size > 6) {
+        if (!noUserList) {
             if (uiState.isAddingTask) {
                 AddTaskBottomSheet(
                     onDbEvent = onDbEvent,

@@ -96,8 +96,10 @@ fun TaskScreen(
 
     val pageList = taskLists.find { it.name == pageName }
 
-    val pageColorList = Converter.colorStringConverter(pageList?.colorString)
-    val pageColor = pageColorList[systemThemeIndex]
+    val pageColor = Converter.colorStringConverter(
+        systemThemeIndex = systemThemeIndex,
+        colorString = pageList?.colorString
+    )
 
     val tasksToShow = when (pageName) {
         "SYSTEM_FAVORITES" ->  dbState.tasks.filter { it.isFavorite }

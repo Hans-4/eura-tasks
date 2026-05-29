@@ -1,6 +1,7 @@
 package me.hannes.eura_todo.ui
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.List
 import androidx.compose.material.icons.outlined.BugReport
 import androidx.compose.material.icons.outlined.Checklist
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -10,6 +11,11 @@ import androidx.compose.material.icons.outlined.MonetizationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Work
+import androidx.compose.material.icons.rounded.Event
+import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material.icons.rounded.Star
+import androidx.compose.material.icons.rounded.Today
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -41,6 +47,18 @@ class Converter() {
         }
 
         @Composable
+        fun systemTypeConverter(typeString: String): ImageVector {
+            return when (typeString) {
+                "TODAY" -> Icons.Rounded.Today
+                "SCHEDULE" -> Icons.Rounded.Event
+                "ALL" -> Icons.AutoMirrored.Rounded.List
+                "FAVORITES" -> Icons.Rounded.Star
+                "ASSIGNED_TO_ME" -> Icons.Rounded.PersonAdd
+                "GROCERIES" -> Icons.Rounded.ShoppingCart
+                else -> Icons.Outlined.BugReport
+            }
+        }
+        @Composable
         fun typeIconConverter(typeString: String): ImageVector {
             return when (typeString) {
                 "REMINDERS" -> Icons.Outlined.Notifications
@@ -56,7 +74,17 @@ class Converter() {
         }
 
         @Composable
-        fun colorStringConverter(colorString: String?): List<ColorItems> {
+        fun colorStringConverter(
+            systemThemeIndex: Int,
+            colorString: String?
+        ): ColorItems {
+            val red = red[systemThemeIndex]
+            val yellow = yellow[systemThemeIndex]
+            val green = green[systemThemeIndex]
+            val blue = blue[systemThemeIndex]
+            val purple = purple[systemThemeIndex]
+            val pink = pink[systemThemeIndex]
+
             return when(colorString) {
                 "red" -> red
                 "yellow" -> yellow

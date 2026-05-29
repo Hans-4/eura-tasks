@@ -29,7 +29,7 @@ import me.hannes.eura_todo.ui.theme.ColorItems
 fun SystemTaskLists(
     count: Int,
     icon: ImageVector,
-    listType: String,
+    title: String,
     progress: Float,
     color: ColorItems,
     onTask: () -> Unit
@@ -74,7 +74,7 @@ fun SystemTaskLists(
             Spacer(modifier = Modifier.height(4.dp))
 
             Text(
-                listType,
+                title,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
