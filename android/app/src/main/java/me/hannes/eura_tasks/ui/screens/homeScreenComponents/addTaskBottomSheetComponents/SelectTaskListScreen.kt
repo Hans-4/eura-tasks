@@ -3,6 +3,7 @@ package me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetC
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material3.Icon
@@ -11,16 +12,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
-import me.hannes.eura_tasks.ui.viewModels.TaskList
 
 @Composable
 fun SelectTaskListScreen(
     onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    taskLists: List<TaskList>,
+    taskLists: List<UserListEntity>,
     onNavigateBackToAddTaskScreen: () -> Unit,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {

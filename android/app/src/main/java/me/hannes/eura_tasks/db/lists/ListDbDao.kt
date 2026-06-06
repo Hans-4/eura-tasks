@@ -21,4 +21,7 @@ interface ListDbDao {
     suspend fun getListUuidById(id: Int): String
     @Query("SELECT uuid FROM user_lists WHERE id = :name")
     suspend fun getListUuidByName(name: String): String
+
+    @Query("DELETE FROM deleted_user_lists WHERE deletionDate < :cutoffTimestamp")
+    suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 }

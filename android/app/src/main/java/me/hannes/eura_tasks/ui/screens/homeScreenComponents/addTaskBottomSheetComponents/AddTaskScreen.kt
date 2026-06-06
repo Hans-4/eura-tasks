@@ -31,13 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.SYSTEM_LISTS
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
-import me.hannes.eura_tasks.ui.viewModels.TaskList
 
 @Composable
 fun AddTaskScreen(
@@ -48,7 +48,7 @@ fun AddTaskScreen(
     currentTab: String,
     firstUserTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
-    taskLists: List<TaskList>,
+    taskLists: List<UserListEntity>,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
     Log.d("Check", "First Entry:  ${firstUserTaskList}")

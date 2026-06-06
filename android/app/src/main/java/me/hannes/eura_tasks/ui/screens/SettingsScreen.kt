@@ -104,7 +104,7 @@ fun SettingsScreen(
                                     }
                                 }
                             }
-
+                            /* TODO: Fix
                             googleDriveViewModel.syncUserLists(
                                 localLists = taskLists
                             ) { cloudLists ->
@@ -121,6 +121,7 @@ fun SettingsScreen(
                                 isSyncing = false
                                 Log.d("eura-tasks", "Two-way sync complete!")
                             }
+                            */
                         }
                     },
                     enabled = !isSyncing,

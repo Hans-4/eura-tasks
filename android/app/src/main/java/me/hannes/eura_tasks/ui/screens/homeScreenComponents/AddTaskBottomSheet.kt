@@ -16,13 +16,13 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.AddTaskScreen
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.SelectTaskListScreen
-import me.hannes.eura_tasks.ui.viewModels.TaskList
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +33,7 @@ fun AddTaskBottomSheet(
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,
-    taskLists: List<TaskList>
+    taskLists: List<UserListEntity>
 ) {
     ModalBottomSheet(
         modifier = Modifier

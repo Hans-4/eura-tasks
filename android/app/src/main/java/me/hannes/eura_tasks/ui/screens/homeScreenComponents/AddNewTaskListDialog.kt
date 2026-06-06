@@ -56,8 +56,10 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.theme.ColorItems
 import me.hannes.eura_tasks.ui.theme.blue
@@ -66,7 +68,6 @@ import me.hannes.eura_tasks.ui.theme.pink
 import me.hannes.eura_tasks.ui.theme.purple
 import me.hannes.eura_tasks.ui.theme.red
 import me.hannes.eura_tasks.ui.theme.yellow
-import me.hannes.eura_tasks.ui.viewModels.SettingsViewModel
 
 data class TypeItems(
     val icon: ImageVector,
@@ -75,10 +76,12 @@ data class TypeItems(
     val color: ColorItems
 )
 
+//TODO: Switch to new view model saving system
 @Composable
 fun AddNewTaskListDialog(
     onUiEvent: (UiEvent) -> Unit,
-    settingsViewModel: SettingsViewModel = viewModel(),
+    onListDbEvent: (ListDbEvent) -> Unit,
+    listDbState: ListDbState,
     onClick: () -> Unit,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
@@ -103,8 +106,6 @@ fun AddNewTaskListDialog(
             "pink" to pink
         )
     }
-
-
 
     val typeItemList = listOf(
         TypeItems(
@@ -168,8 +169,10 @@ fun AddNewTaskListDialog(
         text = {
             Column{
                 TextField(
-                    value = newListName,
-                    onValueChange = { newListName = it },
+                    value = listDbState.listTitle,
+                    onValueChange = {
+                        onListDbEvent(ListDbEvent.SetListTitle(it))
+                    },
                     placeholder = {
                         Text(
                             stringResource(R.string.enter_list_name)
@@ -245,11 +248,7 @@ fun AddNewTaskListDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    settingsViewModel.addItem(
-                        name = newListName,
-                        type = selectedItem?.identificationTitle ?: "OTHER",
-                        color = selectedColor
-                    )
+                    onListDbEvent(ListDbEvent.SaveList)
                     onUiEvent(UiEvent.CloseAddTaskListDialog)
                 }
             ) {

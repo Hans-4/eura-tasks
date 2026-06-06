@@ -16,7 +16,7 @@ import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.db.tasks.DeletedTasksEntity
 import me.hannes.eura_tasks.db.tasks.TodoEntity
-import me.hannes.eura_tasks.db.tasks.dbFunctions.cleanUpOldData
+import me.hannes.eura_tasks.db.cleanUpOldTasks
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -72,7 +72,7 @@ class TaskDbViewModel(
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)
-                    cleanUpOldData(dao)
+                    cleanUpOldTasks(dao)
                 }
                 _state.update { it.copy(
                     todoTitle = "",

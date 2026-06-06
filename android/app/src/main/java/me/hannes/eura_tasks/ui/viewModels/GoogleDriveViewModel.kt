@@ -17,6 +17,7 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TodoEntity
 import java.util.Collections
 import kotlin.time.Instant
@@ -285,7 +286,7 @@ class GoogleDriveViewModel : ViewModel() {
     /**
      * Downloads the single JSON file tracking custom application sublists from the 'lists' folder.
      */
-    suspend fun downloadUserLists(): List<TaskList> = withContext(Dispatchers.IO) {
+    suspend fun downloadUserLists(): List<UserListEntity> = withContext(Dispatchers.IO) {
         if (driveService == null) {
             Log.e("eura-tasks", "Drive Service not initialized")
             return@withContext emptyList()
@@ -302,8 +303,8 @@ class GoogleDriveViewModel : ViewModel() {
                 driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
 
                 val jsonString = outputStream.toString()
-                val typeToken = object : TypeToken<List<TaskList>>() {}.type
-                return@withContext gson.fromJson<List<TaskList>>(jsonString, typeToken) ?: emptyList()
+                val typeToken = object : TypeToken<List<UserListEntity>>() {}.type
+                return@withContext gson.fromJson<List<UserListEntity>>(jsonString, typeToken) ?: emptyList()
             }
         } catch (e: Exception) {
             Log.e("eura-tasks", "Failed to download custom task lists file: ${e.message}")
@@ -314,7 +315,7 @@ class GoogleDriveViewModel : ViewModel() {
     /**
      * Two-way sync wrapper for user metadata configuration lists inside the 'lists' folder.
      */
-    fun syncUserLists(localLists: List<TaskList>, onComplete: (List<TaskList>) -> Unit) {
+    fun syncUserLists(localLists: List<UserListEntity>, onComplete: (List<UserListEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             // TARGETING: lists folder
             val folderId = getOrCreateListsFolderId() ?: return@launch

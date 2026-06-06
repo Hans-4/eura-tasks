@@ -423,6 +423,8 @@ fun HomeScreen(
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent,
+                onListDbEvent = onListDbEvent,
+                listDbState = listDbState,
                 onClick = {}
             )
         }

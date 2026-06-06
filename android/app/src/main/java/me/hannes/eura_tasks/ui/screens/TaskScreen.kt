@@ -428,6 +428,8 @@ fun TaskScreen(
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent,
+                onListDbEvent = onListDbEvent,
+                listDbState = listDbState,
                 onClick = {}
             )
         }
