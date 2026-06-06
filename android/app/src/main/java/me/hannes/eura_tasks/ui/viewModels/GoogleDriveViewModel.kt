@@ -13,10 +13,11 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.gson.GsonBuilder
+import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import me.hannes.eura_tasks.db.TodoEntity
+import me.hannes.eura_tasks.db.tasks.TodoEntity
 import java.util.Collections
 import kotlin.time.Instant
 
@@ -66,9 +67,11 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    private suspend fun getOrCreateTasksFolderId(): String? = withContext(Dispatchers.IO) {
+    /**
+     * Helper to retrieve or create the root "eura-tasks" folder ID
+     */
+    private suspend fun getOrCreateMainFolderId(): String? = withContext(Dispatchers.IO) {
         try {
-            // 1. Get or Create the MAIN folder ("eura-tasks")
             val mainFolderQuery = "name = 'eura-tasks' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
             val mainResult = driveService?.files()?.list()?.setQ(mainFolderQuery)?.execute()
             var mainFolderId = mainResult?.files?.firstOrNull()?.id
@@ -81,8 +84,19 @@ class GoogleDriveViewModel : ViewModel() {
                 mainFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
                 Log.d("eura-tasks", "Created Main Folder: $mainFolderId")
             }
+            return@withContext mainFolderId
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Main folder creation failed: ${e.message}")
+            null
+        }
+    }
 
-            // 2. Get or Create the SUB-folder ("tasks") inside "eura-tasks"
+    /**
+     * Resolves the folder ID for the "tasks" subfolder
+     */
+    private suspend fun getOrCreateTasksFolderId(): String? = withContext(Dispatchers.IO) {
+        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext null
+        try {
             val subFolderQuery = "name = 'tasks' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
             val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
             var subFolderId = subResult?.files?.firstOrNull()?.id
@@ -91,15 +105,40 @@ class GoogleDriveViewModel : ViewModel() {
                 val metadata = com.google.api.services.drive.model.File().apply {
                     name = "tasks"
                     mimeType = "application/vnd.google-apps.folder"
-                    parents = listOf(mainFolderId!!)
+                    parents = listOf(mainFolderId)
                 }
                 subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
-                Log.d("eura-tasks", "Created Sub-Folder: $subFolderId")
+                Log.d("eura-tasks", "Created Tasks Sub-Folder: $subFolderId")
             }
-
             return@withContext subFolderId
         } catch (e: Exception) {
-            Log.e("eura-tasks", "Deep folder creation failed: ${e.message}")
+            Log.e("eura-tasks", "Tasks folder creation failed: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * NEW: Resolves the folder ID for the "lists" subfolder
+     */
+    private suspend fun getOrCreateListsFolderId(): String? = withContext(Dispatchers.IO) {
+        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext null
+        try {
+            val subFolderQuery = "name = 'lists' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
+            var subFolderId = subResult?.files?.firstOrNull()?.id
+
+            if (subFolderId == null) {
+                val metadata = com.google.api.services.drive.model.File().apply {
+                    name = "lists"
+                    mimeType = "application/vnd.google-apps.folder"
+                    parents = listOf(mainFolderId)
+                }
+                subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
+                Log.d("eura-tasks", "Created Lists Sub-Folder: $subFolderId")
+            }
+            return@withContext subFolderId
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Lists folder creation failed: ${e.message}")
             null
         }
     }
@@ -222,7 +261,6 @@ class GoogleDriveViewModel : ViewModel() {
                 val fileName = "task_${uuid}.json"
                 val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
 
-                // Look up the file in Drive to get its unique Drive File ID
                 val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
 
                 if (existingFile != null && existingFile.id != null) {
@@ -240,6 +278,75 @@ class GoogleDriveViewModel : ViewModel() {
             } catch (e: Exception) {
                 Log.e("eura-tasks", "Error deleting file for UUID $uuid: ${e.message}")
                 withContext(Dispatchers.Main) { onResult(false) }
+            }
+        }
+    }
+
+    /**
+     * Downloads the single JSON file tracking custom application sublists from the 'lists' folder.
+     */
+    suspend fun downloadUserLists(): List<TaskList> = withContext(Dispatchers.IO) {
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
+
+        try {
+            // TARGETING: lists folder
+            val folderId = getOrCreateListsFolderId() ?: return@withContext emptyList()
+            val query = "name = 'lists.json' and '$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
+
+            if (existingFile != null) {
+                val outputStream = java.io.ByteArrayOutputStream()
+                driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
+
+                val jsonString = outputStream.toString()
+                val typeToken = object : TypeToken<List<TaskList>>() {}.type
+                return@withContext gson.fromJson<List<TaskList>>(jsonString, typeToken) ?: emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Failed to download custom task lists file: ${e.message}")
+        }
+        return@withContext emptyList()
+    }
+
+    /**
+     * Two-way sync wrapper for user metadata configuration lists inside the 'lists' folder.
+     */
+    fun syncUserLists(localLists: List<TaskList>, onComplete: (List<TaskList>) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // TARGETING: lists folder
+            val folderId = getOrCreateListsFolderId() ?: return@launch
+
+            // 1. Download Remote Data
+            val remoteLists = downloadUserLists()
+
+            // 2. Serialize and Upload Local State Overwriting Remote
+            try {
+                val jsonContent = gson.toJson(localLists)
+                val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+
+                val query = "name = 'lists.json' and '$folderId' in parents and trashed = false"
+                val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
+
+                if (existingFile != null) {
+                    driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
+                    Log.d("eura-tasks", "Updated lists.json on cloud storage container.")
+                } else {
+                    val metadata = com.google.api.services.drive.model.File().apply {
+                        name = "lists.json"
+                        parents = listOf(folderId)
+                    }
+                    driveService?.files()?.create(metadata, contentStream)?.execute()
+                    Log.d("eura-tasks", "Created lists.json configuration schema mapping.")
+                }
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Failed uploading local updates back to cloud configurations: ${e.message}")
+            }
+
+            withContext(Dispatchers.Main) {
+                onComplete(remoteLists)
             }
         }
     }

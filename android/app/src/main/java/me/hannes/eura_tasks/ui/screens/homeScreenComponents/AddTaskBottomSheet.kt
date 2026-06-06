@@ -16,8 +16,8 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.TaskDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.AddTaskScreen
@@ -27,7 +27,7 @@ import me.hannes.eura_tasks.ui.viewModels.TaskList
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskBottomSheet(
-    onDbEvent: (DbEvent) -> Unit,
+    onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     dbState: TaskDbState,
     uiState: UiState,

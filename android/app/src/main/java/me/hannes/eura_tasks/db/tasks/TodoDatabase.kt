@@ -1,11 +1,9 @@
-package me.hannes.eura_tasks.db
+package me.hannes.eura_tasks.db.tasks
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import me.hannes.eura_tasks.db.DeletedTasksEntity
-import me.hannes.eura_tasks.db.TaskDbDao
-import me.hannes.eura_tasks.db.TodoEntity
+import me.hannes.eura_tasks.db.Converters
 
 @Database(
     entities = [TodoEntity::class, DeletedTasksEntity::class],

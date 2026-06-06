@@ -21,16 +21,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.SortType
-import me.hannes.eura_tasks.db.TaskDbState
-import me.hannes.eura_tasks.db.DbEvent
+import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.tasks.TaskDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.UiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SortItemsSheet(
     onUiEvent: (UiEvent) -> Unit,
-    onDbEvent: (DbEvent) -> Unit,
+    onDbEvent: (TaskDbEvent) -> Unit,
     dbState: TaskDbState
 ) {
     ModalBottomSheet(
@@ -48,7 +48,7 @@ fun SortItemsSheet(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = {onDbEvent(DbEvent.SortTodos(sortType))},
+                    onClick = {onDbEvent(TaskDbEvent.SortTodos(sortType))},
                     shape = RoundedCornerShape(0.dp)
                 ) {
                     Row(

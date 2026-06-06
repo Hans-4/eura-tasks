@@ -41,7 +41,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -55,13 +54,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.TaskDbState
+import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -69,18 +68,18 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SortItemsSheet
 import me.hannes.eura_tasks.ui.screens.taskScreenComponents.ManageListSheet
-import me.hannes.eura_tasks.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskScreen(
     onUiEvent: (UiEvent) -> Unit,
-    onDbEvent: (DbEvent) -> Unit,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
+    onListDbEvent: (ListDbEvent) -> Unit,
     onNavigateToHome: () -> Unit,
     onTaskDetails: (Int) -> Unit,
     uiState: UiState,
-    dbState: TaskDbState,
-    settingsViewModel: SettingsViewModel = viewModel(),
+    taskDbState: TaskDbState,
+    listDbState: ListDbState,
     pageName: String,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
@@ -90,9 +89,7 @@ fun TaskScreen(
 
     val pageTitle = Converter.pageNameConverter(pageName = pageName)
 
-    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
-    )
+    val taskLists = listDbState.userLists
 
     val pageList = taskLists.find { it.name == pageName }
 
@@ -102,9 +99,9 @@ fun TaskScreen(
     )
 
     val tasksToShow = when (pageName) {
-        "SYSTEM_ALL" -> dbState.tasks
-        "SYSTEM_FAVORITES" ->  dbState.tasks.filter { it.isFavorite }
-        else -> dbState.tasks.filter { it.taskList == pageName }
+        "SYSTEM_ALL" -> taskDbState.tasks
+        "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
+        else -> taskDbState.tasks.filter { it.taskList == pageName }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -303,7 +300,7 @@ fun TaskScreen(
                                     ) {
                                         RadioButton(
                                             onClick = {
-                                                onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
+                                                onTaskDbEvent(TaskDbEvent.SetIsCompleted(!task.isCompleted, task))
                                             },
                                             selected = task.isCompleted
                                         )
@@ -319,7 +316,7 @@ fun TaskScreen(
                                         }
                                         IconButton(
                                             onClick = {
-                                                onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
+                                                onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(!task.isFavorite, task))
                                             }
                                         ) {
                                             Icon(
@@ -388,7 +385,7 @@ fun TaskScreen(
                                     ) {
                                         RadioButton(
                                             onClick = {
-                                                onDbEvent(DbEvent.SetIsCompleted(!task.isCompleted, task))
+                                                onTaskDbEvent(TaskDbEvent.SetIsCompleted(!task.isCompleted, task))
                                             },
                                             selected = task.isCompleted
                                         )
@@ -404,7 +401,7 @@ fun TaskScreen(
                                         }
                                         IconButton(
                                             onClick = {
-                                                onDbEvent(DbEvent.SetTodoIsFavorite(!task.isFavorite, task))
+                                                onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(!task.isFavorite, task))
                                             }
                                         ) {
                                             Icon(
@@ -424,8 +421,8 @@ fun TaskScreen(
         if (uiState.isChangingSortType) {
             SortItemsSheet(
                 onUiEvent = onUiEvent,
-                onDbEvent = onDbEvent,
-                dbState = dbState
+                onDbEvent = onTaskDbEvent,
+                dbState = taskDbState
             )
         }
         if (uiState.isAddingNewTaskList) {
@@ -437,9 +434,9 @@ fun TaskScreen(
         if (taskLists.size > 6) {
             if (uiState.isAddingTask) {
                 AddTaskBottomSheet(
-                    onDbEvent = onDbEvent,
+                    onDbEvent = onTaskDbEvent,
                     onUiEvent = onUiEvent,
-                    dbState = dbState,
+                    dbState = taskDbState,
                     uiState = uiState,
                     currentTab = pageName,
                     firstUserTaskList = taskLists[6].name,
@@ -452,7 +449,7 @@ fun TaskScreen(
                 pageName = pageName,
                 onConfirm = {
                     pageList?.let {
-                        settingsViewModel.removeItem(it)
+                        onListDbEvent(ListDbEvent.DeleteListByName(pageName)) //TODO: Refactor to deletion by id
                         scope.launch {
                             onUiEvent(UiEvent.CloseManageListSheet)
                             delay(300)

@@ -13,24 +13,28 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.hannes.eura_tasks.db.TaskDbState
-import me.hannes.eura_tasks.db.DbEvent
+import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.screens.HomeScreen
 import me.hannes.eura_tasks.ui.screens.SettingsScreen
 import me.hannes.eura_tasks.ui.screens.TaskDetailsScreen
 import me.hannes.eura_tasks.ui.screens.TaskScreen
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.settingsChildrenScreens.LinkGoogleAccountScreen
-import me.hannes.eura_tasks.ui.viewModels.DbViewModel
+import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 
 @Composable
 fun AppNavHost(
-    dbState: TaskDbState,
+    taskDbState: TaskDbState,
+    listDbState: ListDbState,
     uiState: UiState,
-    onDbEvent: (DbEvent) -> Unit,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
+    onListDbEvent: (ListDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    dbViewModel: DbViewModel,
+    dbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel
 ) {
     val navController = rememberNavController()
@@ -58,9 +62,11 @@ fun AppNavHost(
             }
         ) {
             HomeScreen(
-                dbState = dbState,
+                taskDbState = taskDbState,
+                listDbState = listDbState,
                 uiState = uiState,
-                onDbEvent = onDbEvent,
+                onTaskDbEvent = onTaskDbEvent,
+                onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
                 onTask = { listName -> navController.navigate("taskLists/$listName")},
                 onSettings = { navController.navigate("settings")}
@@ -85,7 +91,8 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                localTasks = dbState.tasks,
+                localTasks = taskDbState.tasks,
+                listDbState = listDbState,
                 dbViewModel = dbViewModel,
                 googleDriveViewModel = googleDriveViewModel
             )
@@ -132,9 +139,11 @@ fun AppNavHost(
             val listName = backStackEntry.arguments?.getString("listName").toString()
             TaskScreen(
                 pageName = listName,
-                dbState = dbState,
+                taskDbState = taskDbState,
+                listDbState = listDbState,
                 uiState = uiState,
-                onDbEvent = onDbEvent,
+                onTaskDbEvent = onTaskDbEvent,
+                onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
                 onNavigateToHome = {navController.popBackStack()},
                 onTaskDetails = { taskId -> navController.navigate("taskDetails/$taskId") },
@@ -153,7 +162,7 @@ fun AppNavHost(
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
             TaskDetailsScreen(
                 taskId = taskId,
-                onDbEvent = onDbEvent,
+                onDbEvent = onTaskDbEvent,
                 onClose = { navController.popBackStack() },
                 uiState = uiState,
                 onUiEvent = onUiEvent

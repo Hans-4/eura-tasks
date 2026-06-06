@@ -58,7 +58,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -69,12 +68,12 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.flow.first
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.TaskDbState
+import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.lists.systemTaskList
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -83,23 +82,21 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SystemTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserTaskLists
-import me.hannes.eura_tasks.ui.viewModels.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
-    onDbEvent: (DbEvent) -> Unit,
+    listDbState: ListDbState,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
+    onListDbEvent: (ListDbEvent) -> Unit,
     onTask: (String) -> Unit,
     onSettings: () -> Unit,
     uiState: UiState,
-    dbState: TaskDbState,
-    settingsViewModel: SettingsViewModel = viewModel(),
-    darkTheme: Boolean = isSystemInDarkTheme()
+    taskDbState: TaskDbState,
+    darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
-    val taskLists by settingsViewModel.itemList.collectAsStateWithLifecycle(
-        initialValue = SettingsViewModel.INITIAL_DIREKT_LIST
-    )
+    val taskLists = listDbState.userLists
 
     val systemThemeIndex = if (darkTheme) 1 else 0
 
@@ -127,17 +124,6 @@ fun HomeScreen(
                 withDismissAction = true
             )
             onUiEvent(UiEvent.CloseAddTaskSheet)
-        }
-    }
-
-    LaunchedEffect(Unit) {
-        val savedIndex = settingsViewModel.selectedListIndex.first()
-        if (savedIndex > 0) {
-            snapshotFlow { pagerState.pageCount }.first { it > savedIndex }
-            pagerState.scrollToPage(savedIndex)
-        }
-        snapshotFlow { pagerState.currentPage }.collect { currentPage ->
-            settingsViewModel.setSelectedListIndex(currentPage)
         }
     }
 
@@ -306,15 +292,15 @@ fun HomeScreen(
         ) {
             item {
                 Column(modifier = Modifier.padding(vertical = 8.dp)) {
-                    taskLists
+                    systemTaskList
                         .take(6)
                         .chunked(2)
-                        .forEach { rowItems ->
+                        .forEach { list ->
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            for (item in rowItems) {
+                            for (item in list) {
                                 val icon = Converter.systemTypeConverter(item.type)
                                 val color = Converter.colorStringConverter(
                                     systemThemeIndex = systemThemeIndex,
@@ -324,12 +310,12 @@ fun HomeScreen(
 
                                 val (completedTaskCount, totalTaskCount) = when (item.name) {
                                     "SYSTEM_ALL" -> Pair(
-                                        dbState.tasks.filter { it.isCompleted }.size,
-                                        dbState.tasks.size
+                                        taskDbState.tasks.filter { it.isCompleted }.size,
+                                        taskDbState.tasks.size
                                     )
                                     "SYSTEM_FAVORITES" -> Pair(
-                                        dbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
-                                        dbState.tasks.filter { it.isFavorite }.size
+                                        taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
+                                        taskDbState.tasks.filter { it.isFavorite }.size
                                     )
                                     else -> Pair(0, 0)
                                 }
@@ -353,7 +339,7 @@ fun HomeScreen(
                                     )
                                 }
                             }
-                            if (rowItems.size < 2) {
+                            if (list.size < 2) {
                                 Spacer(modifier = Modifier.weight(1f))
                             }
                         }
@@ -388,7 +374,7 @@ fun HomeScreen(
                                     colorString = item.colorString
                                 )
                                 val itemName = Converter.pageNameConverter(item.name)
-                                val taskListCount = dbState.tasks.filter { it.taskList == item.name }.size
+                                val taskListCount = taskDbState.tasks.filter { it.taskList == item.name }.size
 
                                 UserTaskLists(
                                     index = index,
@@ -444,9 +430,9 @@ fun HomeScreen(
         if (!noUserList) {
             if (uiState.isAddingTask) {
                 AddTaskBottomSheet(
-                    onDbEvent = onDbEvent,
+                    onDbEvent = onTaskDbEvent,
                     onUiEvent = onUiEvent,
-                    dbState = dbState,
+                    dbState = taskDbState,
                     uiState = uiState,
                     currentTab = "HOME_SCREEN",
                     firstUserTaskList = taskLists[6].name,

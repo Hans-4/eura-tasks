@@ -1,4 +1,4 @@
-package me.hannes.eura_tasks.db
+package me.hannes.eura_tasks.db.tasks
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,8 +6,6 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
-import me.hannes.eura_tasks.db.DeletedTasksEntity
-import me.hannes.eura_tasks.db.TodoEntity
 
 @Dao
 interface TaskDbDao {

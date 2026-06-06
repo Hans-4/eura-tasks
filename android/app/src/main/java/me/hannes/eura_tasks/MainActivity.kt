@@ -10,16 +10,18 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import me.hannes.eura_tasks.db.TodoDatabase
+import me.hannes.eura_tasks.db.lists.ListDatabase
+import me.hannes.eura_tasks.db.tasks.TodoDatabase
 import me.hannes.eura_tasks.ui.AppNavHost
 import me.hannes.eura_tasks.ui.theme.EuraToDoTheme
 import me.hannes.eura_tasks.ui.viewModels.UiViewModel
-import me.hannes.eura_tasks.ui.viewModels.DbViewModel
+import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
+import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 
 class MainActivity : ComponentActivity() {
 
-    private val db by lazy {
+    private val taskDb by lazy {
         Room.databaseBuilder(
             applicationContext,
             TodoDatabase::class.java,
@@ -28,11 +30,30 @@ class MainActivity : ComponentActivity() {
             .fallbackToDestructiveMigration()
             .build()
     }
-    private val dbViewModel by viewModels<DbViewModel>(
+    private val listDb by lazy {
+        Room.databaseBuilder(
+            applicationContext,
+            ListDatabase::class.java,
+            "lists.db"
+        )
+            .build()
+    }
+
+    private val taskDbViewModel by viewModels<TaskDbViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return DbViewModel(db.dao) as T
+                    return TaskDbViewModel(taskDb.dao) as T
+                }
+            }
+        }
+    )
+
+    private val listDbViewModel by viewModels<ListDbViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return ListDbViewModel(listDb.dao) as T
                 }
             }
         }
@@ -56,14 +77,17 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             EuraToDoTheme {
-                val state by dbViewModel.state.collectAsState()
+                val taskState by taskDbViewModel.state.collectAsState()
+                val listState by listDbViewModel.state.collectAsState()
                 val uiState by uiViewModel.state.collectAsState()
                 AppNavHost(
-                    dbState = state,
+                    taskDbState = taskState,
+                    listDbState = listState,
                     uiState = uiState,
-                    onDbEvent = dbViewModel::onEvent,
+                    onTaskDbEvent = taskDbViewModel::onEvent,
+                    onListDbEvent = listDbViewModel::onEvent,
                     onUiEvent = uiViewModel::onEvent,
-                    dbViewModel = dbViewModel,
+                    dbViewModel = taskDbViewModel,
                     googleDriveViewModel = googleDriveViewModel
                 )
             }

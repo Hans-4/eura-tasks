@@ -10,7 +10,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import me.hannes.eura_tasks.db.DbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.screens.taskDetailsScreenComponents.DeleteTaskAlertDialog
@@ -19,7 +19,7 @@ import me.hannes.eura_tasks.ui.screens.taskDetailsScreenComponents.DeleteTaskAle
 fun TaskDetailsScreen(
     taskId: Int?,
     onClose: () -> Unit,
-    onDbEvent: (DbEvent) -> Unit,
+    onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState
 ) {
@@ -44,7 +44,7 @@ fun TaskDetailsScreen(
         DeleteTaskAlertDialog(
             onConfirm = {
                 taskId?.let { id ->
-                    onDbEvent(DbEvent.DeleteTodoById(id))
+                    onDbEvent(TaskDbEvent.DeleteTodoById(id))
                     scope.launch {
                         onUiEvent(UiEvent.CloseConfirmDeletionDialog)
                         delay(300)

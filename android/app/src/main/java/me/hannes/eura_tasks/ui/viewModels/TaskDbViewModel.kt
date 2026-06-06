@@ -10,19 +10,19 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.hannes.eura_tasks.db.SortType
-import me.hannes.eura_tasks.db.TaskDbDao
-import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.TaskDbState
-import me.hannes.eura_tasks.db.DeletedTasksEntity
-import me.hannes.eura_tasks.db.TodoEntity
-import me.hannes.eura_tasks.db.dbFunctions.cleanUpOldData
+import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.tasks.TaskDbDao
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
+import me.hannes.eura_tasks.db.tasks.DeletedTasksEntity
+import me.hannes.eura_tasks.db.tasks.TodoEntity
+import me.hannes.eura_tasks.db.tasks.dbFunctions.cleanUpOldData
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class DbViewModel(
+class TaskDbViewModel(
     private val dao: TaskDbDao
 ): ViewModel() {
 
@@ -46,9 +46,9 @@ class DbViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskDbState())
 
-    fun onEvent(event: DbEvent) {
+    fun onEvent(event: TaskDbEvent) {
         when(event) {
-            DbEvent.SaveTask -> {
+            TaskDbEvent.SaveTask -> {
                 val title = state.value.todoTitle
                 val description = state.value.todoDescription
                 val favorite = state.value.todoIsFavorite
@@ -86,14 +86,14 @@ class DbViewModel(
                 }
             }
 
-            is DbEvent.SetDate -> {
+            is TaskDbEvent.SetDate -> {
                 _state.update {
                     it.copy(
                         todoDate = event.date
                     )
                 }
             }
-            is DbEvent.SetIsCompleted -> {
+            is TaskDbEvent.SetIsCompleted -> {
                 if (event.todo != null) {
                     viewModelScope.launch {
                         dao.upsertTask(event.todo.copy(isCompleted = event.isCompleted))
@@ -106,21 +106,21 @@ class DbViewModel(
                     }
                 }
             }
-            is DbEvent.SetTime -> {
+            is TaskDbEvent.SetTime -> {
                 _state.update {
                     it.copy(
                         todoTime = event.time
                     )
                 }
             }
-            is DbEvent.SetTodoDescription -> {
+            is TaskDbEvent.SetTodoDescription -> {
                 _state.update {
                     it.copy(
                         todoDescription = event.description
                     )
                 }
             }
-            is DbEvent.SetTodoIsFavorite -> {
+            is TaskDbEvent.SetTodoIsFavorite -> {
                 if (event.todo != null) {
                     viewModelScope.launch {
                         dao.upsertTask(event.todo.copy(isFavorite = event.isFavorite))
@@ -133,17 +133,17 @@ class DbViewModel(
                     }
                 }
             }
-            is DbEvent.SetTodoTitle -> {
+            is TaskDbEvent.SetTodoTitle -> {
                 _state.update {
                     it.copy(
                         todoTitle = event.title
                     )
                 }
             }
-            is DbEvent.SortTodos -> {
+            is TaskDbEvent.SortTodos -> {
                 _sortType.value = event.sortType
             }
-            is DbEvent.SelectTaskList -> {
+            is TaskDbEvent.SelectTaskList -> {
                 _state.update {
                     it.copy(
                         taskParentList = event.listType
@@ -155,12 +155,7 @@ class DbViewModel(
                     )
                 }
             }
-            is DbEvent.DeleteTodo -> {
-                viewModelScope.launch {
-                    dao.deleteTodo(event.deleteTodo)
-                }
-            }
-            is DbEvent.DeleteTodoById -> {
+            is TaskDbEvent.DeleteTodoById -> {
                 val currentDateTime: Instant = Clock.System.now()
 
                 viewModelScope.launch {
@@ -172,7 +167,7 @@ class DbViewModel(
                     dao.deleteTodoById(event.id)
                 }
             }
-            is DbEvent.SetParentList -> {
+            is TaskDbEvent.SetParentList -> {
                 _state.update {
                     it.copy(
                         taskParentList = event.parentList

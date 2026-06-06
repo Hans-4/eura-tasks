@@ -31,8 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.TaskDbState
+import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.SYSTEM_LISTS
 import me.hannes.eura_tasks.ui.UiEvent
@@ -41,7 +41,7 @@ import me.hannes.eura_tasks.ui.viewModels.TaskList
 
 @Composable
 fun AddTaskScreen(
-    onDbEvent: (DbEvent) -> Unit,
+    onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     dbState: TaskDbState,
     uiState: UiState,
@@ -68,7 +68,7 @@ fun AddTaskScreen(
 
     LaunchedEffect(currentTab) {
         if (isLockedAsFavorite) {
-            onDbEvent(DbEvent.SetTodoIsFavorite(isFavorite = true, todo = null))
+            onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, todo = null))
         }
     }
 
@@ -106,7 +106,7 @@ fun AddTaskScreen(
             modifier = Modifier.fillMaxWidth(),
             value = dbState.todoTitle,
             onValueChange = {
-                onDbEvent(DbEvent.SetTodoTitle(it))
+                onDbEvent(TaskDbEvent.SetTodoTitle(it))
             },
             placeholder = {
                 Text(text = "Title")
@@ -125,7 +125,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth(),
                 value = dbState.todoDescription,
                 onValueChange = {
-                    onDbEvent(DbEvent.SetTodoDescription(it))
+                    onDbEvent(TaskDbEvent.SetTodoDescription(it))
                 },
                 placeholder = {
                     Text(text = "Description")
@@ -153,7 +153,7 @@ fun AddTaskScreen(
 
             IconButton(
                 onClick = {
-                    onDbEvent(DbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, todo = null))
+                    onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, todo = null))
                 },
                 enabled = !isLockedAsFavorite
             ) {
@@ -167,8 +167,8 @@ fun AddTaskScreen(
 
             TextButton(
                 onClick = {
-                    onDbEvent(DbEvent.SetParentList(parentList))
-                    onDbEvent(DbEvent.SaveTask)
+                    onDbEvent(TaskDbEvent.SetParentList(parentList))
+                    onDbEvent(TaskDbEvent.SaveTask)
                     onUiEvent(UiEvent.CloseAddTaskSheet)
                 }
             ) {
