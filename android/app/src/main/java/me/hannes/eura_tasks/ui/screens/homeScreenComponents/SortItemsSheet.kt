@@ -22,7 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.SortType
-import me.hannes.eura_tasks.db.DbState
+import me.hannes.eura_tasks.db.TaskDbState
 import me.hannes.eura_tasks.db.DbEvent
 import me.hannes.eura_tasks.ui.UiEvent
 
@@ -31,7 +31,7 @@ import me.hannes.eura_tasks.ui.UiEvent
 fun SortItemsSheet(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (DbEvent) -> Unit,
-    dbState: DbState
+    dbState: TaskDbState
 ) {
     ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),

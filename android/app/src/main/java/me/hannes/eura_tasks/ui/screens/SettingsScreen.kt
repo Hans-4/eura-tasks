@@ -1,6 +1,6 @@
 package me.hannes.eura_tasks.ui.screens
 
-import androidx.compose.foundation.layout.PaddingValues
+import android.util.Log
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -28,9 +28,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.db.TodoEntity
+import me.hannes.eura_tasks.ui.viewModels.DbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -38,8 +38,9 @@ import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 fun SettingsScreen(
     onLinkGoogleAccount: () -> Unit,
     onClose: () -> Unit,
-    driveViewModel: GoogleDriveViewModel = viewModel(),
-    localTasks: List<TodoEntity>
+    localTasks: List<TodoEntity>,
+    dbViewModel: DbViewModel,
+    googleDriveViewModel: GoogleDriveViewModel
 ) {
     var isSyncing by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -47,7 +48,7 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        driveViewModel.checkExistingLogin(context)
+        googleDriveViewModel.checkExistingLogin(context)
     }
 
     Scaffold(
@@ -84,12 +85,27 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         isSyncing = true
-                        scope.launch {
-                            driveViewModel.syncAllTasks(localTasks)
-                            isSyncing = false
+                        // Start the Two-Way Sync
+                        googleDriveViewModel.syncWithDatabase(localTasks) { cloudTasks ->
+                            // This runs when the cloud work is done
+                            scope.launch {
+                                cloudTasks.forEach { task ->
+                                    // Only insert if it doesn't exist locally
+                                    if (!dbViewModel.exists(task.uuid)) {
+                                        if (!dbViewModel.deleted(task.uuid)) {
+                                                dbViewModel.insertTask(task)
+                                            } else {
+                                                googleDriveViewModel.deleteTaskFile(task.uuid)
+                                            }
+                                    }
+                                }
+                                isSyncing = false
+                                Log.d("eura-tasks", "Two-way sync complete!")
+                            }
                         }
                     },
-                    enabled = !isSyncing
+                    enabled = !isSyncing,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     if (isSyncing) {
                         CircularProgressIndicator(
@@ -100,7 +116,7 @@ fun SettingsScreen(
                         Spacer(Modifier.width(8.dp))
                         Text("Syncing...")
                     } else {
-                        Text("Push Tasks to Google Drive")
+                        Text("Sync with Google Drive")
                     }
                 }
             }

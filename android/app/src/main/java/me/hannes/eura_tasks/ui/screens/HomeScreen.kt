@@ -74,7 +74,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.flow.first
 import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.DbState
+import me.hannes.eura_tasks.db.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -93,7 +93,7 @@ fun HomeScreen(
     onTask: (String) -> Unit,
     onSettings: () -> Unit,
     uiState: UiState,
-    dbState: DbState,
+    dbState: TaskDbState,
     settingsViewModel: SettingsViewModel = viewModel(),
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {

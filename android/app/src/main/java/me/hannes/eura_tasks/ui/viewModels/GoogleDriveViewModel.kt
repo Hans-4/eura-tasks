@@ -12,7 +12,6 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
-import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,6 +26,7 @@ data class TodoSyncModel(
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
+    val taskList: String,
     val date: String,
     val time: String,
     val creationTime: Instant
@@ -34,6 +34,16 @@ data class TodoSyncModel(
 
 class GoogleDriveViewModel : ViewModel() {
     private var driveService: Drive? = null
+
+    // Consistent GSON for all methods
+    private val gson = GsonBuilder()
+        .registerTypeAdapter(Instant::class.java, com.google.gson.JsonSerializer<Instant> { src, _, _ ->
+            com.google.gson.JsonPrimitive(src.toString())
+        })
+        .registerTypeAdapter(Instant::class.java, com.google.gson.JsonDeserializer { json, _, _ ->
+            Instant.parse(json.asString)
+        })
+        .create()
 
     fun initDriveService(context: Context, account: GoogleSignInAccount) {
         val credential = GoogleAccountCredential.usingOAuth2(
@@ -94,13 +104,66 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    fun syncAllTasks(tasks: List<TodoEntity>) {
+    /**
+     * Downloads all tasks from Google Drive and converts them to TodoEntity
+     */
+    suspend fun downloadAllTasks(): List<TodoEntity> = withContext(Dispatchers.IO) {
+        val downloadedTasks = mutableListOf<TodoEntity>()
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
+
+        try {
+            val folderId = getOrCreateTasksFolderId() ?: return@withContext emptyList()
+
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+
+            fileList.forEach { file ->
+                try {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
+
+                    val jsonString = outputStream.toString()
+                    val syncModel = gson.fromJson(jsonString, TodoSyncModel::class.java)
+
+                    downloadedTasks.add(
+                        TodoEntity(
+                            uuid = syncModel.uuid,
+                            title = syncModel.title,
+                            description = syncModel.description,
+                            isFavorite = syncModel.isFavorite,
+                            isCompleted = syncModel.isCompleted,
+                            date = syncModel.date,
+                            time = syncModel.time,
+                            creationTime = syncModel.creationTime,
+                            taskList = syncModel.taskList
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to download/parse file ${file.name}: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Download list failed: ${e.message}")
+        }
+        return@withContext downloadedTasks
+    }
+
+    /**
+     * Two-way sync: Downloads all tasks from cloud, and uploads local tasks to cloud.
+     */
+    fun syncWithDatabase(localTasks: List<TodoEntity>, onComplete: (List<TodoEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val folderId = getOrCreateTasksFolderId() ?: return@launch
 
-            tasks.forEach { entity ->
+            // --- STEP 1: DOWNLOAD (PULL) ---
+            val downloadedTasks = downloadAllTasks()
+
+            // --- STEP 2: UPLOAD (PUSH) ---
+            localTasks.forEach { entity ->
                 try {
-                    // Filename is now based on the stable UUID
                     val fileName = "task_${entity.uuid}.json"
                     val syncModel = TodoSyncModel(
                         uuid = entity.uuid,
@@ -110,28 +173,19 @@ class GoogleDriveViewModel : ViewModel() {
                         isCompleted = entity.isCompleted,
                         date = entity.date,
                         time = entity.time,
-                        creationTime = entity.creationTime
+                        creationTime = entity.creationTime,
+                        taskList = entity.taskList
                     )
-
-                    val gson = GsonBuilder()
-                        .registerTypeAdapter(Instant::class.java, com.google.gson.JsonSerializer<Instant> { src, _, _ ->
-                            com.google.gson.JsonPrimitive(src.toString())
-                        })
-                        .create()
-
                     val jsonContent = gson.toJson(syncModel)
-
-                    val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
-                    val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
-
                     val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
 
+                    val checkQuery = "name = '$fileName' and '$folderId' in parents and trashed = false"
+                    val existingFile = driveService?.files()?.list()?.setQ(checkQuery)?.execute()?.files?.firstOrNull()
+
                     if (existingFile != null) {
-                        // Update existing version
                         driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
                         Log.d("eura-tasks", "Updated: $fileName")
                     } else {
-                        // Create new file
                         val metadata = com.google.api.services.drive.model.File().apply {
                             name = fileName
                             parents = listOf(folderId)
@@ -140,8 +194,52 @@ class GoogleDriveViewModel : ViewModel() {
                         Log.d("eura-tasks", "Created: $fileName")
                     }
                 } catch (e: Exception) {
-                    Log.e("eura-tasks", "Sync failed for ${entity.uuid}: ${e.message}")
+                    Log.e("eura-tasks", "Upload failed for ${entity.uuid}: ${e.message}")
                 }
+            }
+
+            withContext(Dispatchers.Main) {
+                onComplete(downloadedTasks)
+            }
+        }
+    }
+
+    fun deleteTaskFile(uuid: String, onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            if (driveService == null) {
+                Log.e("eura-tasks", "Drive Service not initialized")
+                withContext(Dispatchers.Main) { onResult(false) }
+                return@launch
+            }
+
+            try {
+                val folderId = getOrCreateTasksFolderId()
+                if (folderId == null) {
+                    withContext(Dispatchers.Main) { onResult(false) }
+                    return@launch
+                }
+
+                val fileName = "task_${uuid}.json"
+                val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
+
+                // Look up the file in Drive to get its unique Drive File ID
+                val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
+
+                if (existingFile != null && existingFile.id != null) {
+                    val trashedMetadata = com.google.api.services.drive.model.File().apply {
+                        trashed = true
+                    }
+                    driveService?.files()?.update(existingFile.id, trashedMetadata)?.execute()
+                    Log.d("eura-tasks", "Moved to trash: $fileName")
+
+                    withContext(Dispatchers.Main) { onResult(true) }
+                } else {
+                    Log.w("eura-tasks", "Delete failed: File $fileName not found on Drive.")
+                    withContext(Dispatchers.Main) { onResult(false) }
+                }
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Error deleting file for UUID $uuid: ${e.message}")
+                withContext(Dispatchers.Main) { onResult(false) }
             }
         }
     }

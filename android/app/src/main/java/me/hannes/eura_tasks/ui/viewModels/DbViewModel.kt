@@ -10,12 +10,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.SortType
 import me.hannes.eura_tasks.db.TaskDbDao
 import me.hannes.eura_tasks.db.DbEvent
 import me.hannes.eura_tasks.db.TaskDbState
-import me.hannes.eura_tasks.db.deletedTasks.DeletedTasksEntity
-import me.hannes.eura_tasks.db.tasks.TodoEntity
+import me.hannes.eura_tasks.db.DeletedTasksEntity
+import me.hannes.eura_tasks.db.TodoEntity
+import me.hannes.eura_tasks.db.dbFunctions.cleanUpOldData
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -71,6 +72,7 @@ class DbViewModel(
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)
+                    cleanUpOldData(dao)
                 }
                 _state.update { it.copy(
                     todoTitle = "",
@@ -182,6 +184,10 @@ class DbViewModel(
 
     suspend fun exists(uuid: String): Boolean {
         return dao.exists(uuid)
+    }
+
+    suspend fun deleted(uuid: String): Boolean {
+        return dao.deleted(uuid)
     }
 
     /**

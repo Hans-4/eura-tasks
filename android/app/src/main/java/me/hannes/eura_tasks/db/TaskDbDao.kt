@@ -6,8 +6,8 @@ import androidx.room.Query
 import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
-import me.hannes.eura_tasks.db.deletedTasks.DeletedTasksEntity
-import me.hannes.eura_tasks.db.tasks.TodoEntity
+import me.hannes.eura_tasks.db.DeletedTasksEntity
+import me.hannes.eura_tasks.db.TodoEntity
 
 @Dao
 interface TaskDbDao {
@@ -19,6 +19,8 @@ interface TaskDbDao {
     suspend fun update(todo: TodoEntity)
     @Delete
     suspend fun deleteTodo(todo: TodoEntity)
+    @Query("DELETE FROM deleted_tasks WHERE deletionDate < :cutoffTimestamp")
+    suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT uuid FROM tasks WHERE id = :id")
     suspend fun getTaskUuid(id: Int): String
     @Query("DELETE FROM tasks WHERE id = :id")
@@ -33,4 +35,6 @@ interface TaskDbDao {
     fun getAllTasksByDateAsc(): Flow<List<TodoEntity>>
     @Query("SELECT EXISTS(SELECT 1 FROM tasks WHERE uuid = :uuid)")
     suspend fun exists(uuid: String): Boolean
+    @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
+    suspend fun deleted(uuid: String): Boolean
 }
