@@ -3,14 +3,17 @@ package me.hannes.eura_tasks.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import me.hannes.eura_tasks.db.deletedTasks.DeletedTasksEntity
+import me.hannes.eura_tasks.db.TaskDbDao
+import me.hannes.eura_tasks.db.tasks.TodoEntity
 
 @Database(
-    entities = [TodoEntity::class],
+    entities = [TodoEntity::class, DeletedTasksEntity::class],
     version = 1
 )
 @TypeConverters(
     Converters::class
 )
 abstract class TodoDatabase: RoomDatabase() {
-    abstract val dao: DbDao
+    abstract val dao: TaskDbDao
 }

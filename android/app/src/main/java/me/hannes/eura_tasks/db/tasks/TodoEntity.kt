@@ -1,7 +1,8 @@
-package me.hannes.eura_tasks.db
+package me.hannes.eura_tasks.db.tasks
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.util.UUID
 import kotlin.time.Instant
 
 @Entity(tableName = "tasks")
@@ -14,7 +15,7 @@ data class TodoEntity(
     val time: String,
     val taskList: String,
     val creationTime: Instant,
-    val uuid: String = java.util.UUID.randomUUID().toString(),
+    val uuid: String = UUID.randomUUID().toString(),
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

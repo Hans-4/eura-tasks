@@ -13,22 +13,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.hannes.eura_tasks.db.DbState
+import me.hannes.eura_tasks.db.TaskDbState
 import me.hannes.eura_tasks.db.DbEvent
 import me.hannes.eura_tasks.ui.screens.HomeScreen
 import me.hannes.eura_tasks.ui.screens.SettingsScreen
 import me.hannes.eura_tasks.ui.screens.TaskDetailsScreen
 import me.hannes.eura_tasks.ui.screens.TaskScreen
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.settingsChildrenScreens.LinkGoogleAccountScreen
+import me.hannes.eura_tasks.ui.viewModels.DbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 
 @Composable
 fun AppNavHost(
-    dbState: DbState,
+    dbState: TaskDbState,
     uiState: UiState,
     onDbEvent: (DbEvent) -> Unit,
-    onUiEvent: (UiEvent) -> Unit
+    onUiEvent: (UiEvent) -> Unit,
+    dbViewModel: DbViewModel,
+    googleDriveViewModel: GoogleDriveViewModel
 ) {
     val navController = rememberNavController()
 
@@ -82,8 +85,9 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                driveViewModel = viewModel(),
-                localTasks = dbState.tasks
+                localTasks = dbState.tasks,
+                dbViewModel = dbViewModel,
+                googleDriveViewModel = googleDriveViewModel
             )
         }
 

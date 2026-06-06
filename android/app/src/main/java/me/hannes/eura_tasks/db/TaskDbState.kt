@@ -1,6 +1,9 @@
 package me.hannes.eura_tasks.db
 
-data class DbState(
+import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.tasks.TodoEntity
+
+data class TaskDbState(
     val tasks: List<TodoEntity> = emptyList(),
     val todoTitle: String = "",
     val todoDescription: String = "",

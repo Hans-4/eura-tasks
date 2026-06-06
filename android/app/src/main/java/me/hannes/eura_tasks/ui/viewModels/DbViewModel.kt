@@ -10,18 +10,19 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.hannes.eura_tasks.db.SortType
-import me.hannes.eura_tasks.db.DbDao
+import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.TaskDbDao
 import me.hannes.eura_tasks.db.DbEvent
-import me.hannes.eura_tasks.db.DbState
-import me.hannes.eura_tasks.db.TodoEntity
+import me.hannes.eura_tasks.db.TaskDbState
+import me.hannes.eura_tasks.db.deletedTasks.DeletedTasksEntity
+import me.hannes.eura_tasks.db.tasks.TodoEntity
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class DbViewModel(
-    private val dao: DbDao
+    private val dao: TaskDbDao
 ): ViewModel() {
 
     private val _sortType = MutableStateFlow(SortType.ID)
@@ -36,13 +37,13 @@ class DbViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _uiState = MutableStateFlow(UiState())
-    private val _state = MutableStateFlow(DbState())
+    private val _state = MutableStateFlow(TaskDbState())
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
             sortType = sortType
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DbState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskDbState())
 
     fun onEvent(event: DbEvent) {
         when(event) {
@@ -158,7 +159,14 @@ class DbViewModel(
                 }
             }
             is DbEvent.DeleteTodoById -> {
+                val currentDateTime: Instant = Clock.System.now()
+
                 viewModelScope.launch {
+                    val deletedTask = DeletedTasksEntity(
+                        deletedUuid = dao.getTaskUuid(event.id),
+                        deletionDate = currentDateTime
+                    )
+                    dao.upsertDeletedTask(deletedTask)
                     dao.deleteTodoById(event.id)
                 }
             }
@@ -169,6 +177,19 @@ class DbViewModel(
                     )
                 }
             }
+        }
+    }
+
+    suspend fun exists(uuid: String): Boolean {
+        return dao.exists(uuid)
+    }
+
+    /**
+     * Helper for the Cloud Sync: Insert a task downloaded from Drive
+     */
+    fun insertTask(task: TodoEntity) {
+        viewModelScope.launch {
+            dao.upsertTask(task)
         }
     }
 }

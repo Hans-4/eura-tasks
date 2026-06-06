@@ -1,5 +1,8 @@
 package me.hannes.eura_tasks.db
 
+import me.hannes.eura_tasks.db.tasks.SortType
+import me.hannes.eura_tasks.db.tasks.TodoEntity
+
 sealed interface DbEvent {
     object SaveTask: DbEvent
     data class SetTodoTitle(val title: String): DbEvent

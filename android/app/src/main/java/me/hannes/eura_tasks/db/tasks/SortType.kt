@@ -1,4 +1,4 @@
-package me.hannes.eura_tasks.db
+package me.hannes.eura_tasks.db.tasks
 
 enum class SortType {
     ID,

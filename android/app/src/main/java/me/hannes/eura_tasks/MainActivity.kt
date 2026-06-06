@@ -15,6 +15,7 @@ import me.hannes.eura_tasks.ui.AppNavHost
 import me.hannes.eura_tasks.ui.theme.EuraToDoTheme
 import me.hannes.eura_tasks.ui.viewModels.UiViewModel
 import me.hannes.eura_tasks.ui.viewModels.DbViewModel
+import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -47,6 +48,8 @@ class MainActivity : ComponentActivity() {
         }
     )
 
+    private val googleDriveViewModel by viewModels<GoogleDriveViewModel>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -59,7 +62,9 @@ class MainActivity : ComponentActivity() {
                     dbState = state,
                     uiState = uiState,
                     onDbEvent = dbViewModel::onEvent,
-                    onUiEvent = uiViewModel::onEvent
+                    onUiEvent = uiViewModel::onEvent,
+                    dbViewModel = dbViewModel,
+                    googleDriveViewModel = googleDriveViewModel
                 )
             }
         }
