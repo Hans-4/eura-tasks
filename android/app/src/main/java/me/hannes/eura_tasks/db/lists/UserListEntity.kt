@@ -6,10 +6,10 @@ import java.util.UUID
 
 @Entity(tableName = "user_lists")
 data class UserListEntity(
-    val name: String,
-    val type: String,
-    val colorString: String,
+    override val name: String,
+    override val type: String,
+    override val colorString: String,
     val uuid: String = UUID.randomUUID().toString(),
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
-)
+) : TaskList

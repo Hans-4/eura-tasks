@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -59,6 +60,7 @@ import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.lists.systemTaskList
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
@@ -91,12 +93,18 @@ fun TaskScreen(
 
     val taskLists = listDbState.userLists
 
-    val pageList = taskLists.find { it.name == pageName }
+    val pageList = remember(pageName, taskLists) {
+        taskLists.find { it.name == pageName } ?: systemTaskList.find { it.name == pageName }
+    }
+
+    Log.d("List", "$pageList")
 
     val pageColor = Converter.colorStringConverter(
         systemThemeIndex = systemThemeIndex,
         colorString = pageList?.colorString
     )
+
+    Log.d("Color", "$pageColor")
 
     val tasksToShow = when (pageName) {
         "SYSTEM_ALL" -> taskDbState.tasks
@@ -108,7 +116,7 @@ fun TaskScreen(
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
 
     LaunchedEffect(uiState.isAddingTask) {
-        if (uiState.isAddingTask && taskLists.size <= 6) {
+        if (uiState.isAddingTask && taskLists.isEmpty()) {
             snackbarHostState.showSnackbar(
                 message = snackbarMessage,
                 withDismissAction = true
@@ -433,7 +441,7 @@ fun TaskScreen(
                 onClick = {}
             )
         }
-        if (taskLists.size > 6) {
+        if (taskLists.isNotEmpty()) {
             if (uiState.isAddingTask) {
                 AddTaskBottomSheet(
                     onDbEvent = onTaskDbEvent,
@@ -441,7 +449,7 @@ fun TaskScreen(
                     dbState = taskDbState,
                     uiState = uiState,
                     currentTab = pageName,
-                    firstUserTaskList = taskLists[6].name,
+                    firstUserTaskList = taskLists.first().name,
                     taskLists = taskLists
                 )
             }

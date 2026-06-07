@@ -19,9 +19,10 @@ interface ListDbDao {
     suspend fun deleteListByName(name: String)
     @Query("SELECT uuid FROM user_lists WHERE id = :id")
     suspend fun getListUuidById(id: Int): String
-    @Query("SELECT uuid FROM user_lists WHERE id = :name")
+    @Query("SELECT uuid FROM user_lists WHERE name = :name")
     suspend fun getListUuidByName(name: String): String
-
+    @Query("SELECT * FROM user_lists")
+    fun getAllLists(): kotlinx.coroutines.flow.Flow<List<UserListEntity>>
     @Query("DELETE FROM deleted_user_lists WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 }

@@ -100,7 +100,7 @@ fun HomeScreen(
 
     val systemThemeIndex = if (darkTheme) 1 else 0
 
-    val noUserList = taskLists.size <= 6
+    val noUserList = taskLists.isEmpty()
 
     val topBarHeight = 90.dp
 
@@ -118,7 +118,7 @@ fun HomeScreen(
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
 
     LaunchedEffect(uiState.isAddingTask && noUserList) {
-        if (uiState.isAddingTask && taskLists.size <= 6) {
+        if (uiState.isAddingTask && taskLists.isEmpty()) {
             snackbarHostState.showSnackbar(
                 message = snackbarMessage,
                 withDismissAction = true
@@ -367,7 +367,7 @@ fun HomeScreen(
                             ),
                             modifier = Modifier.fillMaxWidth(),
                         ) {
-                            taskLists.drop(6).forEachIndexed { index, item ->
+                            taskLists.forEachIndexed { index, item ->
                                 val icon = Converter.typeIconConverter(typeString = item.type)
                                 val colorItem = Converter.colorStringConverter(
                                     systemThemeIndex = systemThemeIndex,
@@ -437,7 +437,7 @@ fun HomeScreen(
                     dbState = taskDbState,
                     uiState = uiState,
                     currentTab = "HOME_SCREEN",
-                    firstUserTaskList = taskLists[6].name,
+                    firstUserTaskList = taskLists.first().name,
                     taskLists = taskLists
                 )
             }

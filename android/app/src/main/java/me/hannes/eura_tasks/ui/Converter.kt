@@ -86,11 +86,11 @@ class Converter() {
             val pink = pink[systemThemeIndex]
 
             return when(colorString) {
-                "red" -> red
-                "yellow" -> yellow
-                "green" -> green
-                "blue" -> blue
-                "pink" -> pink
+                "RED" -> red
+                "YELLOW" -> yellow
+                "GREEN" -> green
+                "BLUE" -> blue
+                "PINK" -> pink
                 else -> purple
             }
         }

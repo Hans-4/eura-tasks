@@ -238,7 +238,7 @@ fun AddNewTaskListDialog(
                 )
 
                 ListPreview(
-                    title = newListName,
+                    title = listDbState.listTitle,
                     icon = selectedItem?.icon ?: Icons.Rounded.BugReport,
                     color = colorMap[selectedColor] ?: purple
                 )

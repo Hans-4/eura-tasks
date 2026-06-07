@@ -3,6 +3,9 @@ package me.hannes.eura_tasks.ui.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.db.cleanUpOldLists
@@ -17,14 +20,18 @@ import kotlin.time.Instant
 class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
 
     private val _state = MutableStateFlow(ListDbState())
-    val state = _state
+    val state = combine(_state, dao.getAllLists()) { state, userLists ->
+        state.copy(
+            userLists = userLists
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ListDbState())
 
     fun onEvent(event: ListDbEvent) {
         when(event) {
             ListDbEvent.SaveList ->  {
                 val title = state.value.listTitle
-                val type = state.value.listType
-                val color = state.value.listColor
+                val type = "OTHER" //state.value.listType
+                val color = "purple" //state.value.listColor
 
                 if (title.isBlank() || type.isBlank() || color.isBlank()) {
                     return
