@@ -34,6 +34,13 @@ data class TodoSyncModel(
     val creationTime: Instant
 )
 
+data class ListSyncModel (
+    val title: String,
+    val type: String,
+    val color: String,
+    val uuid: String
+)
+
 class GoogleDriveViewModel : ViewModel() {
     private var driveService: Drive? = null
 
@@ -92,54 +99,25 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Resolves the folder ID for the "tasks" subfolder
-     */
-    private suspend fun getOrCreateTasksFolderId(): String? = withContext(Dispatchers.IO) {
+    private suspend fun getOrCreateSubFolderId(folderName: String): String? = withContext(Dispatchers.IO) {
         val mainFolderId = getOrCreateMainFolderId() ?: return@withContext null
         try {
-            val subFolderQuery = "name = 'tasks' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            val subFolderQuery = "name = '$folderName' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
             val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
             var subFolderId = subResult?.files?.firstOrNull()?.id
 
             if (subFolderId == null) {
                 val metadata = com.google.api.services.drive.model.File().apply {
-                    name = "tasks"
+                    name = folderName
                     mimeType = "application/vnd.google-apps.folder"
                     parents = listOf(mainFolderId)
                 }
                 subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
-                Log.d("eura-tasks", "Created Tasks Sub-Folder: $subFolderId")
+                Log.d("eura-tasks", "Created Sub-Folder: $subFolderId")
             }
             return@withContext subFolderId
         } catch (e: Exception) {
-            Log.e("eura-tasks", "Tasks folder creation failed: ${e.message}")
-            null
-        }
-    }
-
-    /**
-     * NEW: Resolves the folder ID for the "lists" subfolder
-     */
-    private suspend fun getOrCreateListsFolderId(): String? = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext null
-        try {
-            val subFolderQuery = "name = 'lists' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
-            val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
-            var subFolderId = subResult?.files?.firstOrNull()?.id
-
-            if (subFolderId == null) {
-                val metadata = com.google.api.services.drive.model.File().apply {
-                    name = "lists"
-                    mimeType = "application/vnd.google-apps.folder"
-                    parents = listOf(mainFolderId)
-                }
-                subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
-                Log.d("eura-tasks", "Created Lists Sub-Folder: $subFolderId")
-            }
-            return@withContext subFolderId
-        } catch (e: Exception) {
-            Log.e("eura-tasks", "Lists folder creation failed: ${e.message}")
+            Log.e("eura-tasks", "Folder creation failed: ${e.message}")
             null
         }
     }
@@ -155,7 +133,7 @@ class GoogleDriveViewModel : ViewModel() {
         }
 
         try {
-            val folderId = getOrCreateTasksFolderId() ?: return@withContext emptyList()
+            val folderId = getOrCreateSubFolderId("tasks") ?: return@withContext emptyList()
 
             val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
             val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
@@ -196,7 +174,7 @@ class GoogleDriveViewModel : ViewModel() {
      */
     fun syncWithDatabase(localTasks: List<TodoEntity>, onComplete: (List<TodoEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val folderId = getOrCreateTasksFolderId() ?: return@launch
+            val folderId = getOrCreateSubFolderId("tasks") ?: return@launch
 
             // --- STEP 1: DOWNLOAD (PULL) ---
             val downloadedTasks = downloadAllTasks()
@@ -253,7 +231,7 @@ class GoogleDriveViewModel : ViewModel() {
             }
 
             try {
-                val folderId = getOrCreateTasksFolderId()
+                val folderId = getOrCreateSubFolderId("tasks")
                 if (folderId == null) {
                     withContext(Dispatchers.Main) { onResult(false) }
                     return@launch
@@ -294,7 +272,7 @@ class GoogleDriveViewModel : ViewModel() {
 
         try {
             // TARGETING: lists folder
-            val folderId = getOrCreateListsFolderId() ?: return@withContext emptyList()
+            val folderId = getOrCreateSubFolderId("lists") ?: return@withContext emptyList()
             val query = "name = 'lists.json' and '$folderId' in parents and mimeType = 'application/json' and trashed = false"
             val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
 
@@ -318,7 +296,7 @@ class GoogleDriveViewModel : ViewModel() {
     fun syncUserLists(localLists: List<UserListEntity>, onComplete: (List<UserListEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             // TARGETING: lists folder
-            val folderId = getOrCreateListsFolderId() ?: return@launch
+            val folderId = getOrCreateSubFolderId("lists") ?: return@launch
 
             // 1. Download Remote Data
             val remoteLists = downloadUserLists()

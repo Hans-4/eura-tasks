@@ -133,6 +133,20 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+            UiEvent.CloseListWithSimilarNameWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isListWithSimilarNameWarningDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenListWithSimilarNameWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isListWithSimilarNameWarningDialogOpen = true
+                    )
+                }
+            }
         }
     }
 }

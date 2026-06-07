@@ -8,5 +8,6 @@ data class UiState(
     val isAddingDescription: Boolean = false,
     val isConfirmingDeletion: Boolean = false,
     val isHomeFABMenuExpanded: Boolean = false,
-    val isManageListSheetOpen: Boolean = false
+    val isManageListSheetOpen: Boolean = false,
+    val isListWithSimilarNameWarningDialogOpen: Boolean = false,
 )

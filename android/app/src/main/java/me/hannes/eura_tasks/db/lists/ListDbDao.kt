@@ -25,4 +25,6 @@ interface ListDbDao {
     fun getAllLists(): kotlinx.coroutines.flow.Flow<List<UserListEntity>>
     @Query("DELETE FROM deleted_user_lists WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
+    @Query("SELECT EXISTS(SELECT 1 FROM user_lists WHERE LOWER(name) = LOWER(:title))")
+    suspend fun searchForExistingTitle(title: String): Boolean
 }

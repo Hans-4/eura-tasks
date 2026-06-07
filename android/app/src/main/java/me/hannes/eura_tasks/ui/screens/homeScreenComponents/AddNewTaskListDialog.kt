@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens.homeScreenComponents
 
+import android.util.Log
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -94,16 +95,14 @@ fun AddNewTaskListDialog(
     val purple = purple[systemThemeIndex]
     val pink = pink[systemThemeIndex]
 
-    var newListName by remember { mutableStateOf("") }
-
     val colorMap = remember {
         mapOf(
-            "red" to red,
-            "yellow" to yellow,
-            "green" to green,
-            "blue" to blue,
-            "purple" to purple,
-            "pink" to pink
+            "RED" to red,
+            "YELLOW" to yellow,
+            "GREEN" to green,
+            "BLUE" to blue,
+            "PURPLE" to purple,
+            "PINK" to pink
         )
     }
 
@@ -158,11 +157,7 @@ fun AddNewTaskListDialog(
         ),
     )
 
-    var selectedColor by remember { mutableStateOf("red") }
-
-    var selectedType by remember { mutableStateOf("REMINDERS") }
-
-    val selectedItem = typeItemList.find { it.identificationTitle == selectedType }
+    val selectedItem = typeItemList.find { it.identificationTitle == listDbState.listType }
 
     AlertDialog(
         title =  {Text("Add new list")},
@@ -198,8 +193,8 @@ fun AddNewTaskListDialog(
                                         icon = item.icon,
                                         title = item.title,
                                         color = item.color,
-                                        isSelected = selectedType == item.identificationTitle,
-                                        onSelect = { selectedType = item.identificationTitle }
+                                        isSelected = listDbState.listType == item.identificationTitle,
+                                        onSelect = { onListDbEvent(ListDbEvent.SetListType(item.identificationTitle)) }
                                     )
                                 }
                             }
@@ -227,8 +222,8 @@ fun AddNewTaskListDialog(
 
                         ColorSelector(
                             primaryColor = colorObject.primary,
-                            isSelected = selectedColor == colorName,
-                            onSelect = { selectedColor = colorName })
+                            isSelected = listDbState.listColor == colorName,
+                            onSelect = { onListDbEvent(ListDbEvent.SetListColor(colorName)) })
                     }
                 }
 
@@ -240,7 +235,7 @@ fun AddNewTaskListDialog(
                 ListPreview(
                     title = listDbState.listTitle,
                     icon = selectedItem?.icon ?: Icons.Rounded.BugReport,
-                    color = colorMap[selectedColor] ?: purple
+                    color = colorMap[listDbState.listColor] ?: purple
                 )
             }
         },

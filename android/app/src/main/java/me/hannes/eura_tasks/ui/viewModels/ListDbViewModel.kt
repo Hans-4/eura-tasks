@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,11 +15,13 @@ import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
+import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
 
+    private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(ListDbState())
     val state = combine(_state, dao.getAllLists()) { state, userLists ->
         state.copy(
@@ -30,11 +33,21 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
         when(event) {
             ListDbEvent.SaveList ->  {
                 val title = state.value.listTitle
-                val type = "OTHER" //state.value.listType
-                val color = "purple" //state.value.listColor
+                val type = state.value.listType
+                val color = state.value.listColor
 
                 if (title.isBlank() || type.isBlank() || color.isBlank()) {
                     return
+                }
+
+                viewModelScope.launch {
+                    if (dao.searchForExistingTitle(title)) {
+                        _uiState.update {
+                            it.copy(
+                                isListWithSimilarNameWarningDialogOpen = true
+                            )
+                        }
+                    }
                 }
 
                 val list = UserListEntity(

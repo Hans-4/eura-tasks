@@ -17,4 +17,6 @@ sealed interface UiEvent {
     object CloseHomeFABMenu: UiEvent
     object OpenManageListSheet: UiEvent
     object CloseManageListSheet: UiEvent
+    object OpenListWithSimilarNameWarningDialog: UiEvent
+    object CloseListWithSimilarNameWarningDialog: UiEvent
 }

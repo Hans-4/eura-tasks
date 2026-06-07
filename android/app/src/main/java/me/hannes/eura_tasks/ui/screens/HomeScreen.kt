@@ -82,6 +82,7 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SystemTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserTaskLists
+import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ListWithSimilarNameWarningDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -441,6 +442,14 @@ fun HomeScreen(
                     taskLists = taskLists
                 )
             }
+        }
+
+        Log.d("Ui State", uiState.isListWithSimilarNameWarningDialogOpen.toString())
+
+        if (uiState.isListWithSimilarNameWarningDialogOpen) {
+            ListWithSimilarNameWarningDialog(
+                onUiEvent = onUiEvent
+            )
         }
     }
 }
