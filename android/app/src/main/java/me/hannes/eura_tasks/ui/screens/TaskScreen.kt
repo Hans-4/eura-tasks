@@ -69,6 +69,7 @@ import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SortItemsSheet
+import me.hannes.eura_tasks.ui.screens.taskScreenComponents.DeleteAllTasksInListAlert
 import me.hannes.eura_tasks.ui.screens.taskScreenComponents.ManageListSheet
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -458,16 +459,25 @@ fun TaskScreen(
             ManageListSheet(
                 pageName = pageName,
                 onConfirm = {
+                    onUiEvent(UiEvent.OpenDeleteAllTasksWarningDialog)
+                },
+                onDismiss = { onUiEvent(UiEvent.CloseManageListSheet) }
+            )
+        }
+        if (uiState.isDeleteAllTasksWarningDialogOpen) {
+            DeleteAllTasksInListAlert(
+                onConfirm = {
                     pageList?.let {
                         onListDbEvent(ListDbEvent.DeleteListByName(pageName))
                         scope.launch {
+                            onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)
                             onUiEvent(UiEvent.CloseManageListSheet)
                             delay(300)
                             onNavigateToHome()
                         }
                     }
                 },
-                onDismiss = { onUiEvent(UiEvent.CloseManageListSheet) }
+                onDismiss = {onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)}
             )
         }
     }

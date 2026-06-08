@@ -19,4 +19,6 @@ sealed interface UiEvent {
     object CloseManageListSheet: UiEvent
     object OpenListWithSimilarNameWarningDialog: UiEvent
     object CloseListWithSimilarNameWarningDialog: UiEvent
+    object OpenDeleteAllTasksWarningDialog: UiEvent
+    object CloseDeleteAllTasksWarningDialog: UiEvent
 }

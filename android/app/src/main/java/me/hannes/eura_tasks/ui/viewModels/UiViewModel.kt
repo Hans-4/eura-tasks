@@ -147,6 +147,20 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+            UiEvent.CloseDeleteAllTasksWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllTasksWarningDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenDeleteAllTasksWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllTasksWarningDialogOpen = true
+                    )
+                }
+            }
         }
     }
 }
