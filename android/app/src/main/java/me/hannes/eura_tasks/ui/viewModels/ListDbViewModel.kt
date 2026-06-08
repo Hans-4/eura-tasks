@@ -1,6 +1,5 @@
 package me.hannes.eura_tasks.ui.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,13 +14,12 @@ import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
-import me.hannes.eura_tasks.ui.UiState
+import me.hannes.eura_tasks.ui.UiEvent
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
 
-    private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(ListDbState())
     val state = combine(_state, dao.getAllLists()) { state, userLists ->
         state.copy(
@@ -29,12 +27,12 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ListDbState())
 
-    fun onEvent(event: ListDbEvent) {
+    fun onEvent(event: ListDbEvent, onUiEvent: (UiEvent) -> Unit) {
         when(event) {
             ListDbEvent.SaveList ->  {
-                val title = state.value.listTitle
-                val type = state.value.listType
-                val color = state.value.listColor
+                val title = _state.value.listTitle.trim()
+                val type = _state.value.listType
+                val color = _state.value.listColor
 
                 if (title.isBlank() || type.isBlank() || color.isBlank()) {
                     return
@@ -42,22 +40,24 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
 
                 viewModelScope.launch {
                     if (dao.searchForExistingTitle(title)) {
-                        _uiState.update {
+                        onUiEvent(UiEvent.OpenListWithSimilarNameWarningDialog)
+                    } else {
+                        val list = UserListEntity(
+                            name = title,
+                            type = type,
+                            colorString = color
+                        )
+                        dao.upsertList(list)
+                        _state.update { 
                             it.copy(
-                                isListWithSimilarNameWarningDialogOpen = true
-                            )
+                                listTitle = "",
+                                listType = "OTHER",
+                                listColor = "RED"
+                            ) 
                         }
+                        cleanUpOldLists(dao)
+                        onUiEvent(UiEvent.CloseAddTaskListDialog)
                     }
-                }
-
-                val list = UserListEntity(
-                    name = title,
-                    type = type,
-                    colorString = color
-                )
-                viewModelScope.launch {
-                    dao.upsertList(list)
-                    cleanUpOldLists(dao)
                 }
             }
             is ListDbEvent.SetListColor -> {

@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                     listDbState = listState,
                     uiState = uiState,
                     onTaskDbEvent = taskDbViewModel::onEvent,
-                    onListDbEvent = listDbViewModel::onEvent,
+                    onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onUiEvent = uiViewModel::onEvent,
                     dbViewModel = taskDbViewModel,
                     googleDriveViewModel = googleDriveViewModel
