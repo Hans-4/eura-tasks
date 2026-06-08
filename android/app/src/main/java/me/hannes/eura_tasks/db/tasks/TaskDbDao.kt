@@ -35,4 +35,6 @@ interface TaskDbDao {
     suspend fun exists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
+    @Query("DELETE FROM tasks WHERE taskList = :listName")
+    suspend fun deleteTasksByListName(listName: String)
 }

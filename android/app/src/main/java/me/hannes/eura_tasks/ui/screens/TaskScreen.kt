@@ -459,7 +459,7 @@ fun TaskScreen(
                 pageName = pageName,
                 onConfirm = {
                     pageList?.let {
-                        onListDbEvent(ListDbEvent.DeleteListByName(pageName)) //TODO: Refactor to deletion by id
+                        onListDbEvent(ListDbEvent.DeleteListByName(pageName))
                         scope.launch {
                             onUiEvent(UiEvent.CloseManageListSheet)
                             delay(300)

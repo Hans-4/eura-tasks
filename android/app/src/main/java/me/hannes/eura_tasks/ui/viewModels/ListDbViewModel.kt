@@ -14,14 +14,17 @@ import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
+import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.ui.UiEvent
 import kotlin.time.Clock
 import kotlin.time.Instant
 
-class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
-
+class ListDbViewModel(
+    private val listDao: ListDbDao,
+    private val taskDao: TaskDbDao
+    ): ViewModel() {
     private val _state = MutableStateFlow(ListDbState())
-    val state = combine(_state, dao.getAllLists()) { state, userLists ->
+    val state = combine(_state, listDao.getAllLists()) { state, userLists ->
         state.copy(
             userLists = userLists
         )
@@ -39,7 +42,7 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
                 }
 
                 viewModelScope.launch {
-                    if (dao.searchForExistingTitle(title)) {
+                    if (listDao.searchForExistingTitle(title)) {
                         onUiEvent(UiEvent.OpenListWithSimilarNameWarningDialog)
                     } else {
                         val list = UserListEntity(
@@ -47,7 +50,7 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
                             type = type,
                             colorString = color
                         )
-                        dao.upsertList(list)
+                        listDao.upsertList(list)
                         _state.update { 
                             it.copy(
                                 listTitle = "",
@@ -55,7 +58,7 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
                                 listColor = "RED"
                             ) 
                         }
-                        cleanUpOldLists(dao)
+                        cleanUpOldLists(listDao)
                         onUiEvent(UiEvent.CloseAddTaskListDialog)
                     }
                 }
@@ -81,28 +84,16 @@ class ListDbViewModel(private val dao: ListDbDao): ViewModel() {
                     )
                 }
             }
-            is ListDbEvent.DeleteListById -> {
-                val currentDateTime: Instant = Clock.System.now()
-
-                viewModelScope.launch {
-                    val deletedList = DeletedUserListEntity(
-                        deletedUuid = dao.getListUuidById(event.id),
-                        deletionDate = currentDateTime
-                    )
-                    dao.upsertDeletedList(deletedList)
-                    dao.deleteListById(event.id)
-                }
-            }
-
             is ListDbEvent.DeleteListByName -> {
                 val currentDateTime: Instant = Clock.System.now()
                 viewModelScope.launch {
                     val deletedList = DeletedUserListEntity(
-                        deletedUuid = dao.getListUuidByName(event.name),
+                        deletedUuid = listDao.getListUuidByName(event.name),
                         deletionDate = currentDateTime
                     )
-                    dao.upsertDeletedList(deletedList)
-                    dao.deleteListByName(event.name)
+                    taskDao.deleteTasksByListName(event.name)
+                    listDao.upsertDeletedList(deletedList)
+                    listDao.deleteListByName(event.name)
                 }
             }
         }

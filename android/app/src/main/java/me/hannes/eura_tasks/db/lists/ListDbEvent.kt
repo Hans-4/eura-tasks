@@ -7,6 +7,5 @@ sealed interface ListDbEvent {
     data class SetListTitle(val title: String): ListDbEvent
     data class SetListType(val type: String): ListDbEvent
     data class SetListColor(val color: String): ListDbEvent
-    data class DeleteListById(val id: Int): ListDbEvent
     data class DeleteListByName(val name: String): ListDbEvent
 }
