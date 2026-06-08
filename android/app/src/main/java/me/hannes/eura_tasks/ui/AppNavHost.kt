@@ -9,7 +9,6 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -24,6 +23,7 @@ import me.hannes.eura_tasks.ui.screens.TaskScreen
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.settingsChildrenScreens.LinkGoogleAccountScreen
 import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
+import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 
 
 @Composable
@@ -35,11 +35,11 @@ fun AppNavHost(
     onListDbEvent: (ListDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     dbViewModel: TaskDbViewModel,
+    listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel
 ) {
     val navController = rememberNavController()
 
-    val driveViewModel: GoogleDriveViewModel = viewModel()
     val context = LocalContext.current
 
     NavHost(
@@ -91,9 +91,9 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                localTasks = taskDbState.tasks,
                 listDbState = listDbState,
                 dbViewModel = dbViewModel,
+                listDbViewModel = listDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
             )
         }
@@ -116,7 +116,7 @@ fun AppNavHost(
             LinkGoogleAccountScreen(
                 onClose = { navController.popBackStack() },
                 onSuccess = { account ->
-                    driveViewModel.initDriveService(context, account)
+                    googleDriveViewModel.initDriveService(context, account)
                 }
             )
         }

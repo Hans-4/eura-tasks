@@ -98,4 +98,18 @@ class ListDbViewModel(
             }
         }
     }
+
+    /**
+     * Helper for the Cloud Sync: Insert a list downloaded from Drive
+     */
+    fun insertList(name: String, type: String, color: String) {
+        viewModelScope.launch {
+            val list = UserListEntity(
+                name = name,
+                type = type,
+                colorString = color
+            )
+            listDao.upsertList(list)
+        }
+    }
 }

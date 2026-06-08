@@ -69,7 +69,15 @@ class MainActivity : ComponentActivity() {
         }
     )
 
-    private val googleDriveViewModel by viewModels<GoogleDriveViewModel>()
+    private val googleDriveViewModel by viewModels<GoogleDriveViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return GoogleDriveViewModel(taskDb.dao, listDb.dao) as T
+                }
+            }
+        }
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +96,7 @@ class MainActivity : ComponentActivity() {
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onUiEvent = uiViewModel::onEvent,
                     dbViewModel = taskDbViewModel,
+                    listDbViewModel = listDbViewModel,
                     googleDriveViewModel = googleDriveViewModel
                 )
             }

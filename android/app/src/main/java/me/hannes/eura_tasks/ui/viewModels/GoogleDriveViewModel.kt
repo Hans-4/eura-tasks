@@ -17,7 +17,10 @@ import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.first
+import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.UserListEntity
+import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.db.tasks.TodoEntity
 import java.util.Collections
 import kotlin.time.Instant
@@ -41,7 +44,10 @@ data class ListSyncModel (
     val uuid: String
 )
 
-class GoogleDriveViewModel : ViewModel() {
+class GoogleDriveViewModel(
+    private val taskDao: TaskDbDao,
+    private val listDao: ListDbDao
+) : ViewModel() {
     private var driveService: Drive? = null
 
     // Consistent GSON for all methods
@@ -75,9 +81,6 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Helper to retrieve or create the root "eura-tasks" folder ID
-     */
     private suspend fun getOrCreateMainFolderId(): String? = withContext(Dispatchers.IO) {
         try {
             val mainFolderQuery = "name = 'eura-tasks' and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
@@ -99,10 +102,12 @@ class GoogleDriveViewModel : ViewModel() {
         }
     }
 
-    private suspend fun getOrCreateSubFolderId(folderName: String): String? = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext null
+    private suspend fun getOrCreateSubFolderId(
+        folderName: String,
+        parentFolder: String
+    ): String? = withContext(Dispatchers.IO) {
         try {
-            val subFolderQuery = "name = '$folderName' and '$mainFolderId' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
+            val subFolderQuery = "name = '$folderName' and '$parentFolder' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false"
             val subResult = driveService?.files()?.list()?.setQ(subFolderQuery)?.execute()
             var subFolderId = subResult?.files?.firstOrNull()?.id
 
@@ -110,7 +115,7 @@ class GoogleDriveViewModel : ViewModel() {
                 val metadata = com.google.api.services.drive.model.File().apply {
                     name = folderName
                     mimeType = "application/vnd.google-apps.folder"
-                    parents = listOf(mainFolderId)
+                    parents = listOf(parentFolder)
                 }
                 subFolderId = driveService?.files()?.create(metadata)?.setFields("id")?.execute()?.id
                 Log.d("eura-tasks", "Created Sub-Folder: $subFolderId")
@@ -133,7 +138,12 @@ class GoogleDriveViewModel : ViewModel() {
         }
 
         try {
-            val folderId = getOrCreateSubFolderId("tasks") ?: return@withContext emptyList()
+            val localTasks = taskDao.getAllTasksByIdAsc().first()
+
+            val folderId = getOrCreateSubFolderId(
+                folderName = "tasks",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+                ) ?: return@withContext emptyList()
 
             val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
             val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
@@ -172,14 +182,24 @@ class GoogleDriveViewModel : ViewModel() {
     /**
      * Two-way sync: Downloads all tasks from cloud, and uploads local tasks to cloud.
      */
-    fun syncWithDatabase(localTasks: List<TodoEntity>, onComplete: (List<TodoEntity>) -> Unit) {
+    fun syncWithDatabase(onComplete: (List<TodoEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
-            val folderId = getOrCreateSubFolderId("tasks") ?: return@launch
+            val folderId = getOrCreateSubFolderId(
+                folderName = "tasks",
+                parentFolder = getOrCreateMainFolderId() ?: run {
+                    withContext(Dispatchers.Main) { onComplete(emptyList()) }
+                    return@launch
+                }
+            ) ?: run {
+                withContext(Dispatchers.Main) { onComplete(emptyList()) }
+                return@launch
+            }
 
             // --- STEP 1: DOWNLOAD (PULL) ---
             val downloadedTasks = downloadAllTasks()
 
             // --- STEP 2: UPLOAD (PUSH) ---
+            val localTasks = taskDao.getAllTasksByIdAsc().first()
             localTasks.forEach { entity ->
                 try {
                     val fileName = "task_${entity.uuid}.json"
@@ -231,7 +251,13 @@ class GoogleDriveViewModel : ViewModel() {
             }
 
             try {
-                val folderId = getOrCreateSubFolderId("tasks")
+                val folderId = getOrCreateSubFolderId(
+                    folderName = "tasks",
+                    parentFolder = getOrCreateMainFolderId() ?: run {
+                        withContext(Dispatchers.Main) { onResult(false) }
+                        return@launch
+                    }
+                )
                 if (folderId == null) {
                     withContext(Dispatchers.Main) { onResult(false) }
                     return@launch
@@ -271,8 +297,12 @@ class GoogleDriveViewModel : ViewModel() {
         }
 
         try {
+            val localLists = listDao.getAllLists().first()
             // TARGETING: lists folder
-            val folderId = getOrCreateSubFolderId("lists") ?: return@withContext emptyList()
+            val folderId = getOrCreateSubFolderId(
+                folderName = "lists",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+            ) ?: return@withContext emptyList()
             val query = "name = 'lists.json' and '$folderId' in parents and mimeType = 'application/json' and trashed = false"
             val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
 
@@ -281,8 +311,16 @@ class GoogleDriveViewModel : ViewModel() {
                 driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
 
                 val jsonString = outputStream.toString()
-                val typeToken = object : TypeToken<List<UserListEntity>>() {}.type
-                return@withContext gson.fromJson<List<UserListEntity>>(jsonString, typeToken) ?: emptyList()
+                val typeToken = object : TypeToken<List<ListSyncModel>>() {}.type
+                val syncLists = gson.fromJson<List<ListSyncModel>>(jsonString, typeToken) ?: emptyList()
+                return@withContext syncLists.map { model ->
+                    UserListEntity(
+                        name = model.title,
+                        type = model.type,
+                        colorString = model.color,
+                        uuid = model.uuid
+                    )
+                }
             }
         } catch (e: Exception) {
             Log.e("eura-tasks", "Failed to download custom task lists file: ${e.message}")
@@ -293,17 +331,36 @@ class GoogleDriveViewModel : ViewModel() {
     /**
      * Two-way sync wrapper for user metadata configuration lists inside the 'lists' folder.
      */
-    fun syncUserLists(localLists: List<UserListEntity>, onComplete: (List<UserListEntity>) -> Unit) {
+    fun syncUserLists(onComplete: (List<UserListEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             // TARGETING: lists folder
-            val folderId = getOrCreateSubFolderId("lists") ?: return@launch
+            val folderId = getOrCreateSubFolderId(
+                folderName = "lists",
+                parentFolder = getOrCreateMainFolderId() ?: run {
+                    withContext(Dispatchers.Main) { onComplete(emptyList()) }
+                    return@launch
+                }
+            ) ?: run {
+                withContext(Dispatchers.Main) { onComplete(emptyList()) }
+                return@launch
+            }
 
             // 1. Download Remote Data
             val remoteLists = downloadUserLists()
 
+            val localLists = listDao.getAllLists().first()
+
             // 2. Serialize and Upload Local State Overwriting Remote
             try {
-                val jsonContent = gson.toJson(localLists)
+                val syncLists = localLists.map { entity ->
+                    ListSyncModel(
+                        title = entity.name,
+                        type = entity.type,
+                        color = entity.colorString,
+                        uuid = entity.uuid
+                    )
+                }
+                val jsonContent = gson.toJson(syncLists)
                 val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
 
                 val query = "name = 'lists.json' and '$folderId' in parents and trashed = false"

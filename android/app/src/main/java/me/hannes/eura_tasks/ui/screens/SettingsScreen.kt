@@ -30,18 +30,18 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.db.lists.ListDbState
-import me.hannes.eura_tasks.db.tasks.TodoEntity
 import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
+import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onLinkGoogleAccount: () -> Unit,
     onClose: () -> Unit,
-    localTasks: List<TodoEntity>,
     dbViewModel: TaskDbViewModel,
     listDbState: ListDbState,
+    listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
 ) {
     var isSyncing by remember { mutableStateOf(false) }
@@ -90,7 +90,7 @@ fun SettingsScreen(
                     onClick = {
                         isSyncing = true
                         // Start the Two-Way Sync
-                        googleDriveViewModel.syncWithDatabase(localTasks) { cloudTasks ->
+                        googleDriveViewModel.syncWithDatabase { cloudTasks ->
                             // This runs when the cloud work is done
                             scope.launch {
                                 cloudTasks.forEach { task ->
@@ -104,14 +104,11 @@ fun SettingsScreen(
                                     }
                                 }
                             }
-                            /* TODO: Fix
-                            googleDriveViewModel.syncUserLists(
-                                localLists = taskLists
-                            ) { cloudLists ->
+                            googleDriveViewModel.syncUserLists { cloudLists ->
                                 cloudLists.forEach { remoteList ->
                                     // Only add if it doesn't exist locally
                                     if (taskLists.none { it.name == remoteList.name }) {
-                                        settingsViewModel.addItem(
+                                        listDbViewModel.insertList(
                                             remoteList.name,
                                             remoteList.type,
                                             remoteList.colorString
@@ -121,7 +118,6 @@ fun SettingsScreen(
                                 isSyncing = false
                                 Log.d("eura-tasks", "Two-way sync complete!")
                             }
-                            */
                         }
                     },
                     enabled = !isSyncing,
