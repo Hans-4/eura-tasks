@@ -15,7 +15,7 @@ import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.db.tasks.DeletedTasksEntity
-import me.hannes.eura_tasks.db.tasks.TodoEntity
+import me.hannes.eura_tasks.db.tasks.TaskEntity
 import me.hannes.eura_tasks.db.cleanUpOldTasks
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
@@ -60,13 +60,12 @@ class TaskDbViewModel(
                     return
                 }
 
-                val task = TodoEntity(
+                val task = TaskEntity(
                     title = title,
                     description = description,
                     isFavorite = favorite,
                     isCompleted = false,
-                    date = "21.07.2026",
-                    time = "19:30",
+                    dueDateTime = null,
                     taskList = parentList,
                     creationTime = currentDateTime
                 )
@@ -180,7 +179,7 @@ class TaskDbViewModel(
     /**
      * Helper for the Cloud Sync: Insert a task downloaded from Drive
      */
-    fun insertTask(task: TodoEntity) {
+    fun insertTask(task: TaskEntity) {
         viewModelScope.launch {
             dao.upsertTask(task)
         }

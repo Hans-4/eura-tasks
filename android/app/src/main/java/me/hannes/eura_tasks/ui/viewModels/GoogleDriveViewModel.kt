@@ -23,19 +23,19 @@ import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.DeletedTasksEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbDao
-import me.hannes.eura_tasks.db.tasks.TodoEntity
+import me.hannes.eura_tasks.db.tasks.TaskEntity
+import java.time.LocalDateTime
 import java.util.Collections
 import kotlin.time.Instant
 
-data class TodoSyncModel(
+data class TaskSyncModel(
     val uuid: String,
     val title: String,
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
     val taskList: String,
-    val date: String,
-    val time: String,
+    val dueDateTime: LocalDateTime?,
     val creationTime: Instant
 )
 
@@ -64,11 +64,14 @@ class GoogleDriveViewModel(
         .registerTypeAdapter(Instant::class.java, com.google.gson.JsonDeserializer { json, _, _ ->
             Instant.parse(json.asString)
         })
+        .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonSerializer<java.time.LocalDateTime> { src, _, _ ->
+            com.google.gson.JsonPrimitive(src.toString())
+        })
+        .registerTypeAdapter(java.time.LocalDateTime::class.java, com.google.gson.JsonDeserializer { json, _, _ ->
+            java.time.LocalDateTime.parse(json.asString)
+        })
         .create()
 
-    /**
-     * Initializes the Drive service with the provided account.
-     */
     fun initDriveService(context: Context, account: GoogleSignInAccount) {
         val credential = GoogleAccountCredential.usingOAuth2(
             context, Collections.singleton(DriveScopes.DRIVE_FILE)
@@ -83,9 +86,6 @@ class GoogleDriveViewModel(
         Log.d("eura-tasks", "Drive Service Ready for: ${account.email}")
     }
 
-    /**
-     * Checks if there is an existing Google sign-in and initializes the Drive service.
-     */
     fun checkExistingLogin(context: Context) {
         val account = GoogleSignIn.getLastSignedInAccount(context)
         if (account != null) {
@@ -219,9 +219,6 @@ class GoogleDriveViewModel(
         }
     }
 
-    /**
-     * Synchronizes deleted user lists with Google Drive.
-     */
     fun syncDeletedUserLists(onComplete: (List<DeletedUserListEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val mainFolderId = getOrCreateMainFolderId() ?: return@launch
@@ -250,9 +247,6 @@ class GoogleDriveViewModel(
         }
     }
 
-    /**
-     * Synchronizes user lists with Google Drive.
-     */
     fun syncUserLists(onComplete: (List<UserListEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val mainFolderId = getOrCreateMainFolderId() ?: return@launch
@@ -288,9 +282,6 @@ class GoogleDriveViewModel(
         }
     }
 
-    /**
-     * Synchronizes deleted tasks with Google Drive.
-     */
     fun syncDeletedTasks(onComplete: (List<DeletedTasksEntity>) -> Unit) {
         viewModelScope.launch(Dispatchers.IO) {
             val mainFolderId = getOrCreateMainFolderId() ?: return@launch
@@ -319,11 +310,8 @@ class GoogleDriveViewModel(
         }
     }
 
-    /**
-     * Downloads all tasks from Google Drive.
-     */
-    suspend fun downloadAllTasks(): List<TodoEntity> = withContext(Dispatchers.IO) {
-        val downloadedTasks = mutableListOf<TodoEntity>()
+    suspend fun downloadAllTasks(): List<TaskEntity> = withContext(Dispatchers.IO) {
+        val downloadedTasks = mutableListOf<TaskEntity>()
         if (driveService == null) {
             Log.e("eura-tasks", "Drive Service not initialized")
             return@withContext emptyList()
@@ -344,17 +332,16 @@ class GoogleDriveViewModel(
                     driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
 
                     val jsonString = outputStream.toString()
-                    val syncModel = gson.fromJson(jsonString, TodoSyncModel::class.java)
+                    val syncModel = gson.fromJson(jsonString, TaskSyncModel::class.java)
 
                     downloadedTasks.add(
-                        TodoEntity(
+                        TaskEntity(
                             uuid = syncModel.uuid,
                             title = syncModel.title,
                             description = syncModel.description,
                             isFavorite = syncModel.isFavorite,
                             isCompleted = syncModel.isCompleted,
-                            date = syncModel.date,
-                            time = syncModel.time,
+                            dueDateTime = syncModel.dueDateTime,
                             creationTime = syncModel.creationTime,
                             taskList = syncModel.taskList
                         )
@@ -369,9 +356,6 @@ class GoogleDriveViewModel(
         return@withContext downloadedTasks
     }
 
-    /**
-     * Deletes a task file from Google Drive.
-     */
     fun deleteTaskFile(uuid: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch(Dispatchers.IO) {
             if (driveService == null) {
@@ -415,9 +399,6 @@ class GoogleDriveViewModel(
         }
     }
 
-    /**
-     * Triggers a complete sync of all data: lists, deleted lists, tasks, and deleted tasks.
-     */
     fun startFullSync(
         taskDbViewModel: TaskDbViewModel,
         listDbViewModel: ListDbViewModel,
@@ -503,14 +484,13 @@ class GoogleDriveViewModel(
                             localTasks.forEach { entity ->
                                 try {
                                     val fileName = "task_${entity.uuid}.json"
-                                    val syncModel = TodoSyncModel(
+                                    val syncModel = TaskSyncModel(
                                         uuid = entity.uuid,
                                         title = entity.title,
                                         description = entity.description,
                                         isFavorite = entity.isFavorite,
                                         isCompleted = entity.isCompleted,
-                                        date = entity.date,
-                                        time = entity.time,
+                                        dueDateTime = entity.dueDateTime,
                                         creationTime = entity.creationTime,
                                         taskList = entity.taskList
                                     )
@@ -553,11 +533,29 @@ class GoogleDriveViewModel(
                             val localActiveTaskUuids =
                                 taskDao.getAllTasksByIdAsc().first().map { it.uuid }.toSet()
 
+                            // Get names of lists that are currently available locally
+                            val localActiveListNames = listDao.getAllLists().first().map { it.name }.toMutableSet()
+
                             cloudTasks.forEach { task ->
                                 if (task.uuid in allDeletedTaskUuids) {
                                     deleteTaskFile(task.uuid)
                                     Log.d("eura-tasks", "Cloud task file ${task.uuid} matched a tombstone. Purging from Drive.")
                                 } else if (task.uuid !in localActiveTaskUuids) {
+
+                                    // CHECK: Does the target list exist locally?
+                                    if (task.taskList !in localActiveListNames) {
+                                        Log.w("eura-tasks", "List '${task.taskList}' missing for downloaded task. Auto-creating list.")
+
+                                        // Synchronously insert the missing list into Room first
+                                        listDbViewModel.insertListSynchronously(
+                                            name = task.taskList,
+                                            type = "OTHER",
+                                            color = "PURPLE"
+                                        )
+                                        // Track it locally so we don't accidentally re-create it on subsequent tasks
+                                        localActiveListNames.add(task.taskList)
+                                    }
+
                                     taskDbViewModel.insertTask(task)
                                     Log.d("eura-tasks", "Downloaded new cloud task: ${task.title}")
                                 }

@@ -8,6 +8,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers
 import me.hannes.eura_tasks.db.cleanUpOldLists
 import me.hannes.eura_tasks.db.lists.DeletedUserListEntity
 import me.hannes.eura_tasks.db.lists.ListDbDao
@@ -16,13 +18,14 @@ import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.ui.UiEvent
+import java.util.UUID
 import kotlin.time.Clock
 import kotlin.time.Instant
 
 class ListDbViewModel(
     private val listDao: ListDbDao,
     private val taskDao: TaskDbDao
-    ): ViewModel() {
+): ViewModel() {
     private val _state = MutableStateFlow(ListDbState())
     val state = combine(_state, listDao.getAllLists()) { state, userLists ->
         state.copy(
@@ -51,12 +54,12 @@ class ListDbViewModel(
                             colorString = color
                         )
                         listDao.upsertList(list)
-                        _state.update { 
+                        _state.update {
                             it.copy(
                                 listTitle = "",
                                 listType = "OTHER",
                                 listColor = "RED"
-                            ) 
+                            )
                         }
                         cleanUpOldLists(listDao)
                         onUiEvent(UiEvent.CloseAddTaskListDialog)
@@ -117,5 +120,23 @@ class ListDbViewModel(
             )
             listDao.upsertList(list)
         }
+    }
+
+    /**
+     * Synchronously inserts a missing list from cloud task processing thread context
+     */
+    suspend fun insertListSynchronously(
+        name: String,
+        type: String,
+        color: String,
+        uuid: String = UUID.randomUUID().toString()
+    ) = withContext(Dispatchers.IO) {
+        val list = UserListEntity(
+            name = name,
+            type = type,
+            colorString = color,
+            uuid = uuid
+        )
+        listDao.upsertList(list)
     }
 }

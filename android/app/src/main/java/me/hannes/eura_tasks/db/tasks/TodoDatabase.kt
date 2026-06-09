@@ -6,7 +6,7 @@ import androidx.room.TypeConverters
 import me.hannes.eura_tasks.db.Converters
 
 @Database(
-    entities = [TodoEntity::class, DeletedTasksEntity::class],
+    entities = [TaskEntity::class, DeletedTasksEntity::class],
     version = 1
 )
 @TypeConverters(

@@ -2,17 +2,17 @@ package me.hannes.eura_tasks.db.tasks
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.time.Instant
 
 @Entity(tableName = "tasks")
-data class TodoEntity(
+data class TaskEntity(
     val title: String,
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
-    val date: String, //TODO: Eventually make to one val and replace data type with LocalDateTime
-    val time: String,
+    val dueDateTime: LocalDateTime?,
     val taskList: String,
     val creationTime: Instant,
     val uuid: String = UUID.randomUUID().toString(),

@@ -1,7 +1,7 @@
 package me.hannes.eura_tasks.db.tasks
 
 data class TaskDbState(
-    val tasks: List<TodoEntity> = emptyList(),
+    val tasks: List<TaskEntity> = emptyList(),
     val todoTitle: String = "",
     val todoDescription: String = "",
     val todoIsFavorite: Boolean = false,
