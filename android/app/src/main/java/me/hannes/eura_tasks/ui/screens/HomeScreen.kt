@@ -213,7 +213,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(100.dp)
-                        .background(Color.Black.copy(alpha = 0.8f))
+                        .background(Color.Black.copy(alpha = 0.5f))
                         .clickable(
                             indication = null,
                             interactionSource = remember { MutableInteractionSource() }
@@ -410,7 +410,7 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.1f))
+                    .background(Color.Black.copy(alpha = 0.5f))
                     .clickable(
                         indication = null,
                         interactionSource = remember { MutableInteractionSource() }

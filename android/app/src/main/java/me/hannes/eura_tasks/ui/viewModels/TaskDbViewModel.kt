@@ -177,14 +177,6 @@ class TaskDbViewModel(
         }
     }
 
-    suspend fun exists(uuid: String): Boolean {
-        return dao.exists(uuid)
-    }
-
-    suspend fun deleted(uuid: String): Boolean {
-        return dao.deleted(uuid)
-    }
-
     /**
      * Helper for the Cloud Sync: Insert a task downloaded from Drive
      */

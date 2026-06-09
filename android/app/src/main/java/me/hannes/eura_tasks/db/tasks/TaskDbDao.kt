@@ -17,6 +17,8 @@ interface TaskDbDao {
     suspend fun update(todo: TodoEntity)
     @Delete
     suspend fun deleteTodo(todo: TodoEntity)
+    @Query("SELECT * FROM deleted_tasks")
+    suspend fun getAllDeletedTasks(): List<DeletedTasksEntity>
     @Query("DELETE FROM deleted_tasks WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT uuid FROM tasks WHERE id = :id")
@@ -32,7 +34,7 @@ interface TaskDbDao {
     @Query("SELECT * FROM tasks ORDER BY date ASC")
     fun getAllTasksByDateAsc(): Flow<List<TodoEntity>>
     @Query("SELECT EXISTS(SELECT 1 FROM tasks WHERE uuid = :uuid)")
-    suspend fun exists(uuid: String): Boolean
+    suspend fun taskExists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
     @Query("DELETE FROM tasks WHERE taskList = :listName")

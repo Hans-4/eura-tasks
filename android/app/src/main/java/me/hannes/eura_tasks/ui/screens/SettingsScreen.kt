@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
@@ -39,7 +38,7 @@ import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 fun SettingsScreen(
     onLinkGoogleAccount: () -> Unit,
     onClose: () -> Unit,
-    dbViewModel: TaskDbViewModel,
+    taskDbViewModel: TaskDbViewModel,
     listDbState: ListDbState,
     listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
@@ -50,6 +49,7 @@ fun SettingsScreen(
     val context = LocalContext.current
 
     val taskLists = listDbState.userLists
+    val deletedTaskList = listDbState.deletedUserList
 
     LaunchedEffect(Unit) {
         googleDriveViewModel.checkExistingLogin(context)
@@ -89,36 +89,15 @@ fun SettingsScreen(
                 Button(
                     onClick = {
                         isSyncing = true
-                        // Start the Two-Way Sync
-                        googleDriveViewModel.syncWithDatabase { cloudTasks ->
-                            // This runs when the cloud work is done
-                            scope.launch {
-                                cloudTasks.forEach { task ->
-                                    // Only insert if it doesn't exist locally
-                                    if (!dbViewModel.exists(task.uuid)) {
-                                        if (!dbViewModel.deleted(task.uuid)) {
-                                            dbViewModel.insertTask(task)
-                                        } else {
-                                            googleDriveViewModel.deleteTaskFile(task.uuid)
-                                        }
-                                    }
-                                }
-                            }
-                            googleDriveViewModel.syncUserLists { cloudLists ->
-                                cloudLists.forEach { remoteList ->
-                                    // Only add if it doesn't exist locally
-                                    if (taskLists.none { it.name == remoteList.name }) {
-                                        listDbViewModel.insertList(
-                                            remoteList.name,
-                                            remoteList.type,
-                                            remoteList.colorString
-                                        )
-                                    }
-                                }
+                        // Everything runs cleanly inside the ViewModel now
+                        googleDriveViewModel.startFullSync(
+                            taskDbViewModel = taskDbViewModel,
+                            listDbViewModel = listDbViewModel,
+                            onComplete = {
                                 isSyncing = false
                                 Log.d("eura-tasks", "Two-way sync complete!")
                             }
-                        }
+                        )
                     },
                     enabled = !isSyncing,
                     modifier = Modifier.fillMaxWidth()

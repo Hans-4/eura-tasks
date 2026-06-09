@@ -102,12 +102,18 @@ class ListDbViewModel(
     /**
      * Helper for the Cloud Sync: Insert a list downloaded from Drive
      */
-    fun insertList(name: String, type: String, color: String) {
+    fun insertList(
+        name: String,
+        type: String,
+        color: String,
+        uuid: String
+    ) {
         viewModelScope.launch {
             val list = UserListEntity(
                 name = name,
                 type = type,
-                colorString = color
+                colorString = color,
+                uuid = uuid
             )
             listDao.upsertList(list)
         }

@@ -92,7 +92,7 @@ fun AppNavHost(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
                 listDbState = listDbState,
-                dbViewModel = dbViewModel,
+                taskDbViewModel = dbViewModel,
                 listDbViewModel = listDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
             )
