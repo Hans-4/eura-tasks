@@ -25,4 +25,5 @@
     <string name="there_is_no_user_list_please_add_one_first">There is no user list. Please add one first.</string>
     <string name="ok">OK</string>
     <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
 </resources>

@@ -21,4 +21,6 @@ sealed interface UiEvent {
     object CloseListWithSimilarNameWarningDialog: UiEvent
     object OpenDeleteAllTasksWarningDialog: UiEvent
     object CloseDeleteAllTasksWarningDialog: UiEvent
+    object OpenListConflictWarningAlertOpen: UiEvent
+    object CloseListConflictWarningAlertOpen: UiEvent
 }

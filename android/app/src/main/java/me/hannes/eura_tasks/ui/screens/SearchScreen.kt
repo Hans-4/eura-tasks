@@ -25,8 +25,6 @@ fun SearchScreen(
     onSearch: (String) -> Unit,
     searchResults: List<String>,
 ) {
-
-
     var expanded by rememberSaveable { mutableStateOf(false) }
 
         SearchBar(

@@ -161,6 +161,20 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+            UiEvent.CloseListConflictWarningAlertOpen -> {
+                _state.update {
+                    it.copy(
+                        isListConflictWarningAlertOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenListConflictWarningAlertOpen -> {
+                _state.update {
+                    it.copy(
+                        isListConflictWarningAlertOpen = true
+                    )
+                }
+            }
         }
     }
 }

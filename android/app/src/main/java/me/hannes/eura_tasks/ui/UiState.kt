@@ -10,5 +10,6 @@ data class UiState(
     val isHomeFABMenuExpanded: Boolean = false,
     val isManageListSheetOpen: Boolean = false,
     val isListWithSimilarNameWarningDialogOpen: Boolean = false,
-    val isDeleteAllTasksWarningDialogOpen: Boolean = false
+    val isDeleteAllTasksWarningDialogOpen: Boolean = false,
+    val isListConflictWarningAlertOpen: Boolean = false
 )
