@@ -14,9 +14,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.ListDbEvent
-import me.hannes.eura_tasks.db.lists.ListDbState
-import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.screens.HomeScreen
 import me.hannes.eura_tasks.ui.screens.SearchScreen
@@ -32,13 +31,12 @@ import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 
 @Composable
 fun AppNavHost(
-    taskDbState: TaskDbState,
-    listDbState: ListDbState,
+    dbState: DbState,
     uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    dbViewModel: TaskDbViewModel,
+    taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel
 ) {
@@ -78,8 +76,7 @@ fun AppNavHost(
             }
         ) {
             HomeScreen(
-                taskDbState = taskDbState,
-                listDbState = listDbState,
+                dbState = dbState,
                 uiState = uiState,
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,
@@ -108,9 +105,9 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                listDbState = listDbState,
-                taskDbViewModel = dbViewModel,
+                dbState = dbState,
                 listDbViewModel = listDbViewModel,
+                taskDbViewModel = taskDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
             )
         }
@@ -176,8 +173,7 @@ fun AppNavHost(
             val listName = backStackEntry.arguments?.getString("listName").toString()
             TaskScreen(
                 pageName = listName,
-                taskDbState = taskDbState,
-                listDbState = listDbState,
+                dbState = dbState,
                 uiState = uiState,
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,

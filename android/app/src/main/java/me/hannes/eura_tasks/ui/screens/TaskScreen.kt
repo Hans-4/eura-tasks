@@ -58,11 +58,10 @@ import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.ListDbEvent
-import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.systemTaskList
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
-import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -81,8 +80,7 @@ fun TaskScreen(
     onNavigateToHome: () -> Unit,
     onTaskDetails: (Int) -> Unit,
     uiState: UiState,
-    taskDbState: TaskDbState,
-    listDbState: ListDbState,
+    dbState: DbState,
     pageName: String,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
@@ -92,7 +90,7 @@ fun TaskScreen(
 
     val pageTitle = Converter.pageNameConverter(pageName = pageName)
 
-    val taskLists = listDbState.userLists
+    val taskLists = dbState.userLists
 
     val pageList = remember(pageName, taskLists) {
         taskLists.find { it.name == pageName } ?: systemTaskList.find { it.name == pageName }
@@ -108,9 +106,9 @@ fun TaskScreen(
     Log.d("Color", "$pageColor")
 
     val tasksToShow = when (pageName) {
-        "SYSTEM_ALL" -> taskDbState.tasks
-        "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
-        else -> taskDbState.tasks.filter { it.taskList == pageName }
+        "SYSTEM_ALL" -> dbState.tasks
+        "SYSTEM_FAVORITES" ->  dbState.tasks.filter { it.isFavorite }
+        else -> dbState.tasks.filter { it.taskList == pageName }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -431,14 +429,14 @@ fun TaskScreen(
             SortItemsSheet(
                 onUiEvent = onUiEvent,
                 onDbEvent = onTaskDbEvent,
-                dbState = taskDbState
+                dbState = dbState
             )
         }
         if (uiState.isAddingNewTaskList) {
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent,
                 onListDbEvent = onListDbEvent,
-                listDbState = listDbState,
+                dbState = dbState,
                 onClick = {}
             )
         }
@@ -447,7 +445,7 @@ fun TaskScreen(
                 AddTaskBottomSheet(
                     onDbEvent = onTaskDbEvent,
                     onUiEvent = onUiEvent,
-                    dbState = taskDbState,
+                    dbState = dbState,
                     uiState = uiState,
                     currentTab = pageName,
                     firstUserTaskList = taskLists.first().name,

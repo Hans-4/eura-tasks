@@ -28,7 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import me.hannes.eura_tasks.db.lists.ListDbState
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
@@ -38,9 +38,9 @@ import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 fun SettingsScreen(
     onLinkGoogleAccount: () -> Unit,
     onClose: () -> Unit,
-    taskDbViewModel: TaskDbViewModel,
-    listDbState: ListDbState,
+    dbState: DbState,
     listDbViewModel: ListDbViewModel,
+    taskDbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
 ) {
     var isSyncing by remember { mutableStateOf(false) }
@@ -48,8 +48,8 @@ fun SettingsScreen(
 
     val context = LocalContext.current
 
-    val taskLists = listDbState.userLists
-    val deletedTaskList = listDbState.deletedUserList
+    val taskLists = dbState.userLists
+    val deletedTaskList = dbState.deletedUserList
 
     LaunchedEffect(Unit) {
         googleDriveViewModel.checkExistingLogin(context)

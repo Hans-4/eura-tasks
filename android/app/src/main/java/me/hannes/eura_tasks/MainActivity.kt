@@ -89,13 +89,12 @@ class MainActivity : ComponentActivity() {
                 val listState by listDbViewModel.state.collectAsState()
                 val uiState by uiViewModel.state.collectAsState()
                 AppNavHost(
-                    taskDbState = taskState,
-                    listDbState = listState,
+                    dbState = taskState,
                     uiState = uiState,
                     onTaskDbEvent = taskDbViewModel::onEvent,
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onUiEvent = uiViewModel::onEvent,
-                    dbViewModel = taskDbViewModel,
+                    taskDbViewModel = taskDbViewModel,
                     listDbViewModel = listDbViewModel,
                     googleDriveViewModel = googleDriveViewModel
                 )

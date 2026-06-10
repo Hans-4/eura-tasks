@@ -16,9 +16,9 @@ import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
-import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetComponents.AddTaskScreen
@@ -29,7 +29,7 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetCo
 fun AddTaskBottomSheet(
     onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    dbState: TaskDbState,
+    dbState: DbState,
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,

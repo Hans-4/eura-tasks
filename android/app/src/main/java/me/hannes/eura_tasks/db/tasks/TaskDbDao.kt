@@ -39,4 +39,6 @@ interface TaskDbDao {
     suspend fun deleted(uuid: String): Boolean
     @Query("DELETE FROM tasks WHERE taskList = :listName")
     suspend fun deleteTasksByListName(listName: String)
+    @Query("SELECT * FROM tasks WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
+    suspend fun searchForTasks(query: String): List<TaskEntity>
 }

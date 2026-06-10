@@ -58,8 +58,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.ListDbEvent
-import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.theme.ColorItems
 import me.hannes.eura_tasks.ui.theme.blue
@@ -81,7 +81,7 @@ data class TypeItems(
 fun AddNewTaskListDialog(
     onUiEvent: (UiEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
-    listDbState: ListDbState,
+    dbState: DbState,
     onClick: () -> Unit,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
@@ -161,14 +161,14 @@ fun AddNewTaskListDialog(
         ),
     )
 
-    val selectedItem = typeItemList.find { it.identificationTitle == listDbState.listType }
+    val selectedItem = typeItemList.find { it.identificationTitle == dbState.listType }
 
     AlertDialog(
         title =  {Text("Add new list")},
         text = {
             Column{
                 TextField(
-                    value = listDbState.listTitle,
+                    value = dbState.listTitle,
                     onValueChange = {
                         onListDbEvent(ListDbEvent.SetListTitle(it))
                     },
@@ -198,7 +198,7 @@ fun AddNewTaskListDialog(
                                         icon = item.icon,
                                         title = item.title,
                                         color = item.color,
-                                        isSelected = listDbState.listType == item.identificationTitle,
+                                        isSelected = dbState.listType == item.identificationTitle,
                                         onSelect = { onListDbEvent(ListDbEvent.SetListType(item.identificationTitle)) }
                                     )
                                 }
@@ -227,7 +227,7 @@ fun AddNewTaskListDialog(
 
                         ColorSelector(
                             primaryColor = colorObject.primary,
-                            isSelected = listDbState.listColor == colorName,
+                            isSelected = dbState.listColor == colorName,
                             onSelect = { onListDbEvent(ListDbEvent.SetListColor(colorName)) })
                     }
                 }
@@ -238,9 +238,9 @@ fun AddNewTaskListDialog(
                 )
 
                 ListPreview(
-                    title = listDbState.listTitle,
+                    title = dbState.listTitle,
                     icon = selectedItem?.icon ?: Icons.Rounded.BugReport,
-                    color = colorMap[listDbState.listColor] ?: purple
+                    color = colorMap[dbState.listColor] ?: purple
                 )
             }
         },

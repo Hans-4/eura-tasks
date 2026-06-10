@@ -34,9 +34,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
-import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.SYSTEM_LISTS
 import me.hannes.eura_tasks.ui.UiEvent
@@ -46,7 +46,7 @@ import me.hannes.eura_tasks.ui.UiState
 fun AddTaskScreen(
     onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    dbState: TaskDbState,
+    dbState: DbState,
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,
