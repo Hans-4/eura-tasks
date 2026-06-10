@@ -26,8 +26,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
@@ -51,6 +54,11 @@ fun AddTaskScreen(
     taskLists: List<UserListEntity>,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     Log.d("Check", "First Entry:  ${firstUserTaskList}")
     val systemThemeIndex = if (darkTheme) 1 else 0
 
@@ -103,7 +111,9 @@ fun AddTaskScreen(
         }
 
         TextField(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .focusRequester(focusRequester)
+                .fillMaxWidth(),
             value = dbState.todoTitle,
             onValueChange = {
                 onDbEvent(TaskDbEvent.SetTodoTitle(it))
@@ -111,7 +121,7 @@ fun AddTaskScreen(
             placeholder = {
                 Text(text = "Title")
             },
-            singleLine = true
+            singleLine = true,
         )
 
         AnimatedVisibility(

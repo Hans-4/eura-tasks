@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -41,6 +40,7 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -53,7 +53,6 @@ import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -93,6 +92,7 @@ fun HomeScreen(
     onListDbEvent: (ListDbEvent) -> Unit,
     onTask: (String) -> Unit,
     onSettings: () -> Unit,
+    onSearch: () -> Unit,
     uiState: UiState,
     taskDbState: TaskDbState,
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -103,17 +103,13 @@ fun HomeScreen(
 
     val noUserList = taskLists.isEmpty()
 
-    val topBarHeight = 90.dp
+    val topBarHeight = 100.dp
 
     val rotation by animateFloatAsState(
         targetValue = if (uiState.isHomeFABMenuExpanded) 45f else 0f,
         animationSpec = spring(stiffness = Spring.StiffnessLow),
         label = "FAB Rotation"
     )
-
-    val totalTabs = 1 + taskLists.size
-
-    val pagerState = rememberPagerState(pageCount = { totalTabs })
 
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
@@ -131,97 +127,82 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            Column{
-                CenterAlignedTopAppBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(topBarHeight),
-                    colors = TopAppBarDefaults.topAppBarColors(
-                    ),
-                    title = {
-                        Box(
-                            modifier = Modifier.fillMaxHeight(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                "Tasks",
-                                fontWeight = Bold
-                            )
-                        }
-                    },
-                    actions = {
-                        Box(
-                            modifier = Modifier
-                                .padding(end = 16.dp)
-                                .fillMaxHeight(),
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = { onSettings() },
-                                colors = IconButtonDefaults.iconButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.primaryContainer
-                                )
+            Card(
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column {
+                    CenterAlignedTopAppBar(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(topBarHeight),
+                        title = {
+                            Box(
+                                modifier = Modifier.fillMaxHeight(),
+                                contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    modifier = Modifier.fillMaxSize(),
-                                    imageVector = Icons.Rounded.AccountCircle,
-                                    contentDescription = "Account"
+                                Text(
+                                    "Tasks",
+                                    fontWeight = Bold
                                 )
                             }
+                        },
+                        actions = {
+                            Box(
+                                modifier = Modifier
+                                    .padding(end = 16.dp)
+                                    .fillMaxHeight(),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                IconButton(
+                                    modifier = Modifier.size(32.dp),
+                                    onClick = { onSettings() },
+                                    colors = IconButtonDefaults.iconButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        contentColor = MaterialTheme.colorScheme.primaryContainer
+                                    )
+                                ) {
+                                    Icon(
+                                        modifier = Modifier.fillMaxSize(),
+                                        imageVector = Icons.Rounded.AccountCircle,
+                                        contentDescription = "Account"
+                                    )
+                                }
+                            }
                         }
-                    }
-                )
+                    )
 
-                Button(
-                    onClick = {TODO()},
-                    colors = buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onSecondary,
-                        contentColor = MaterialTheme.colorScheme.outline
-                    ),
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
+                    Spacer(modifier = Modifier.height(4.dp))
+
+                    Button(
+                        onClick = { onSearch() },
+                        colors = buttonColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer,
+                            contentColor = MaterialTheme.colorScheme.outline
+                        ),
+                        shape = CircleShape,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 8.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Rounded.Search,
-                            contentDescription = null
-                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Rounded.Search,
+                                contentDescription = null
+                            )
 
-                        Spacer(modifier = Modifier.width(4.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
 
-                        Text(
-                            "Search in Tasks..."
-                        )
+                            Text(
+                                "Search in Tasks..."
+                            )
+                        }
                     }
                 }
-            }
-
-            //Box to close the FAB menu over the entire top bar
-            AnimatedVisibility(
-                visible = uiState.isHomeFABMenuExpanded,
-                enter = fadeIn(),
-                exit = fadeOut()
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(100.dp)
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .clickable(
-                            indication = null,
-                            interactionSource = remember { MutableInteractionSource() }
-                        ) {
-                            onUiEvent(UiEvent.CloseHomeFABMenu)
-                        }
-                )
-
             }
         },
         snackbarHost = {

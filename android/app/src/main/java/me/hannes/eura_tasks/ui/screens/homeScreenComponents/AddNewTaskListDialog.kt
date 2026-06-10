@@ -43,11 +43,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.SolidColor
@@ -82,6 +85,11 @@ fun AddNewTaskListDialog(
     onClick: () -> Unit,
     darkTheme: Boolean = isSystemInDarkTheme()
 ) {
+    val focusRequester = remember { FocusRequester() }
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
     val systemThemeIndex = if (darkTheme) 1 else 0
 
     val red = red[systemThemeIndex]
@@ -169,7 +177,8 @@ fun AddNewTaskListDialog(
                             stringResource(R.string.enter_list_name)
                         )
                     },
-                    singleLine = true
+                    singleLine = true,
+                    modifier = Modifier.focusRequester(focusRequester)
                 )
 
                 Text(

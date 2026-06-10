@@ -19,6 +19,7 @@ import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.ui.screens.HomeScreen
+import me.hannes.eura_tasks.ui.screens.SearchScreen
 import me.hannes.eura_tasks.ui.screens.SettingsScreen
 import me.hannes.eura_tasks.ui.screens.TaskDetailsScreen
 import me.hannes.eura_tasks.ui.screens.TaskScreen
@@ -84,7 +85,8 @@ fun AppNavHost(
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
                 onTask = { listName -> navController.navigate("taskLists/$listName")},
-                onSettings = { navController.navigate("settings")}
+                onSettings = { navController.navigate("settings")},
+                onSearch = { navController.navigate("search") }
             )
         }
 
@@ -110,6 +112,26 @@ fun AppNavHost(
                 taskDbViewModel = dbViewModel,
                 listDbViewModel = listDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
+            )
+        }
+
+        composable(
+            route = "search",
+            enterTransition = {
+                slideIntoContainer(
+                    towards = Start,
+                    animationSpec = tween(300)
+                )
+            },
+            exitTransition = {
+                slideOutOfContainer(
+                    towards = End,
+                    animationSpec = tween(300)
+                )
+            }
+        ) {
+            SearchScreen(
+                onClose = { navController.popBackStack() }
             )
         }
 
