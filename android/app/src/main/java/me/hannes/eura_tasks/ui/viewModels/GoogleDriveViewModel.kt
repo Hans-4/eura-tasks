@@ -14,9 +14,13 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import me.hannes.eura_tasks.db.lists.DeletedUserListEntity
 import me.hannes.eura_tasks.db.lists.ListDbDao
@@ -51,10 +55,19 @@ data class DeletedListSyncModel(
     val deletionDate: Instant
 )
 
+data class ListConflict(
+    val localList: UserListEntity,
+    val remoteList: UserListEntity,
+    val onResolved: (UserListEntity) -> Unit
+)
+
 class GoogleDriveViewModel(
     private val taskDao: TaskDbDao,
     private val listDao: ListDbDao,
 ) : ViewModel() {
+
+    private val _listConflict = MutableStateFlow<ListConflict?>(null)
+    val listConflict: StateFlow<ListConflict?> = _listConflict.asStateFlow()
     private var driveService: Drive? = null
 
     private val gson = GsonBuilder()
@@ -421,32 +434,64 @@ class GoogleDriveViewModel(
                             val cloudDeletedListUuids = cloudDeletedLists.map { it.deletedUuid }.toSet()
                             val allDeletedListUuids = localDeletedListUuids + cloudDeletedListUuids
 
-                            val localActiveListUuids =
-                                listDao.getAllLists().first().map { it.uuid }.toSet()
+                            val localActiveLists = listDao.getAllLists().first()
+                            val localActiveListUuids = localActiveLists.map { it.uuid }.toSet()
 
                             val cleanActiveLists = cloudActiveLists.filter { list ->
                                 list.uuid !in allDeletedListUuids
                             }
 
-                            cleanActiveLists.forEach { list ->
-                                if (list.uuid !in localActiveListUuids) {
-                                    listDbViewModel.insertList(
-                                        name = list.name,
-                                        color = list.colorString,
-                                        type = list.type,
-                                        uuid = list.uuid
-                                    )
-                                    Log.d("eura-tasks", "Downloaded new cloud list: ${list.name}")
+                            var needsReupload = false
+
+                            for (cloudList in cleanActiveLists) {
+                                if (cloudList.uuid !in localActiveListUuids) {
+                                    val conflict = localActiveLists.find { it.name == cloudList.name }
+                                    if (conflict != null) {
+                                        val deferred = CompletableDeferred<UserListEntity>()
+                                        _listConflict.value = ListConflict(
+                                            localList = conflict,
+                                            remoteList = cloudList,
+                                            onResolved = { resolved ->
+                                                _listConflict.value = null
+                                                deferred.complete(resolved)
+                                            }
+                                        )
+                                        val winner = deferred.await()
+                                        if (winner === cloudList) {
+                                            listDao.upsertList(conflict.copy(
+                                                uuid = cloudList.uuid,
+                                                colorString = cloudList.colorString,
+                                                type = cloudList.type
+                                            ))
+                                            Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.name}")
+                                            needsReupload = true
+                                        } else {
+                                            Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.name}")
+                                        }
+                                    } else {
+                                        listDbViewModel.insertList(
+                                            name = cloudList.name,
+                                            color = cloudList.colorString,
+                                            type = cloudList.type,
+                                            uuid = cloudList.uuid
+                                        )
+                                        Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.name}")
+                                    }
                                 }
                             }
 
-                            if (cleanActiveLists.size < cloudActiveLists.size) {
-                                Log.d("eura-tasks", "Detected zombie lists on cloud. Re-uploading cleaned lists.json to Drive.")
+                            if (cleanActiveLists.size < cloudActiveLists.size || needsReupload) {
+                                if (needsReupload) {
+                                    Log.d("eura-tasks", "Conflicts resolved. Re-uploading lists.json to Drive.")
+                                } else {
+                                    Log.d("eura-tasks", "Detected zombie lists on cloud. Re-uploading cleaned lists.json to Drive.")
+                                }
 
                                 val listFolderId = getOrCreateSubFolderId("lists", getOrCreateMainFolderId())
                                 if (listFolderId != null) {
                                     try {
-                                        val syncLists = cleanActiveLists.map { entity ->
+                                        val finalLocalLists = listDao.getAllLists().first()
+                                        val syncLists = finalLocalLists.map { entity ->
                                             ListSyncModel(
                                                 uuid = entity.uuid,
                                                 title = entity.name,

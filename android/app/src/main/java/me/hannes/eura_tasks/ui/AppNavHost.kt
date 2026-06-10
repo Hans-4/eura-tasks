@@ -8,6 +8,8 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -21,6 +23,7 @@ import me.hannes.eura_tasks.ui.screens.SettingsScreen
 import me.hannes.eura_tasks.ui.screens.TaskDetailsScreen
 import me.hannes.eura_tasks.ui.screens.TaskScreen
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.settingsChildrenScreens.LinkGoogleAccountScreen
+import me.hannes.eura_tasks.ui.screens.sychronice.ListConflictWarningDialog
 import me.hannes.eura_tasks.ui.viewModels.TaskDbViewModel
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
@@ -41,6 +44,18 @@ fun AppNavHost(
     val navController = rememberNavController()
 
     val context = LocalContext.current
+
+    val listConflict by googleDriveViewModel.listConflict.collectAsState()
+
+    listConflict?.let { conflict ->
+        ListConflictWarningDialog(
+            localList = conflict.localList,
+            remoteList = conflict.remoteList,
+            onResolve = { resolved ->
+                conflict.onResolved(resolved)
+            }
+        )
+    }
 
     NavHost(
         navController = navController,

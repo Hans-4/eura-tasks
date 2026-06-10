@@ -83,7 +83,6 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SystemTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ListWithSimilarNameWarningDialog
-import me.hannes.eura_tasks.ui.screens.sychronice.ListConflictWarningDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -451,10 +450,5 @@ fun HomeScreen(
             )
         }
 
-        if (uiState.isListConflictWarningAlertOpen) {
-            ListConflictWarningDialog(
-                onClose = { onUiEvent(UiEvent.CloseConfirmDeletionDialog) }
-            )
-        }
     }
 }

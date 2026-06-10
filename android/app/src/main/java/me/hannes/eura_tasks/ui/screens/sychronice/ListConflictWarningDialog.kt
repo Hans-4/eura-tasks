@@ -1,6 +1,5 @@
 package me.hannes.eura_tasks.ui.screens.sychronice
 
-import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -35,48 +34,31 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
+import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.ui.Converter
 
-data class TestItems(
-    val name: String,
-    val type: String,
-    val color: String,
-    val selected: Boolean
-)
 @Composable
 fun ListConflictWarningDialog(
-    onClose: () -> Unit
+    localList: UserListEntity,
+    remoteList: UserListEntity,
+    onResolve: (UserListEntity) -> Unit
 ) {
-    val items = listOf(
-        TestItems(
-            name = "1",
-            type = "TRAVEL",
-            color = "BLUE",
-            selected = true
-        ),
-        TestItems(
-            name = "1",
-            type = "REMINDERS",
-            color = "GREEN",
-            selected = false
-        )
-    )
-
+    val items = listOf(localList, remoteList)
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     AlertDialog(
-        onDismissRequest = { onClose() },
+        onDismissRequest = { /* Prevent dismissal without choice? Or choose local by default? */ },
         confirmButton = {
-            TextButton(onClick = { onClose() }) {
+            TextButton(onClick = { onResolve(items[selectedIndex]) }) {
                 Text(stringResource(R.string.confirm))
             }
         },
-        title = { Text("There is a conflict") },
+        title = { Text("List Conflict Detected") },
         text = {
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text("You got a list which you already have locally but with a different color or type. Which one do you want to use?")
+                Text("A list with the name \"${localList.name}\" already exists locally but has different settings. Which one do you want to keep? Your tasks in the list will not be affected.")
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
                 Card(
                     border = BorderStroke(
@@ -86,13 +68,12 @@ fun ListConflictWarningDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column {
-                        val listSize = items.size
                         items.forEachIndexed { index, item ->
-                            Log.d("Type", "Type string is ${item.type}")
+                            val isLocal = index == 0
                             val icon = Converter.typeIconConverter(item.type)
                             val color = Converter.colorStringConverter(
                                 systemThemeIndex = 0,
-                                colorString = item.color
+                                colorString = item.colorString
                             )
 
                             Button(
@@ -127,14 +108,24 @@ fun ListConflictWarningDialog(
                                                 .size(24.dp)
                                         )
                                     }
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Text(item.name)
+                                    Spacer(modifier = Modifier.width(12.dp))
+                                    Column {
+                                        Text(
+                                            text = if (isLocal) "Local Version" else "Cloud Version",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                        Text(
+                                            text = "${item.type} (${item.colorString})",
+                                            style = MaterialTheme.typography.bodyMedium
+                                        )
+                                    }
                                 }
                             }
 
-                            if (index != listSize - 1) {
+                            if (index == 0) {
                                 HorizontalDivider(
-                                    thickness = 2.dp,
+                                    thickness = 1.dp,
                                     color = MaterialTheme.colorScheme.outlineVariant
                                 )
                             }
