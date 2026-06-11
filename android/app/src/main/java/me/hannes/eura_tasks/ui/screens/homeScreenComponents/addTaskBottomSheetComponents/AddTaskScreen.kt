@@ -34,9 +34,9 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.SYSTEM_LISTS
 import me.hannes.eura_tasks.ui.UiEvent
@@ -46,7 +46,7 @@ import me.hannes.eura_tasks.ui.UiState
 fun AddTaskScreen(
     onDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    dbState: DbState,
+    taskDbState: TaskDbState,
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,
@@ -62,16 +62,16 @@ fun AddTaskScreen(
     Log.d("Check", "First Entry:  ${firstUserTaskList}")
     val systemThemeIndex = if (darkTheme) 1 else 0
 
-    val pageList = taskLists.find { it.name == dbState.taskParentList.ifBlank { firstUserTaskList } }
+    val pageList = taskLists.find { it.name == taskDbState.taskParentList.ifBlank { firstUserTaskList } }
 
-    val listTitle = Converter.pageNameConverter(pageName = dbState.taskParentList.ifBlank { firstUserTaskList })
+    val listTitle = Converter.pageNameConverter(pageName = taskDbState.taskParentList.ifBlank { firstUserTaskList })
 
     val pageColor = Converter.colorStringConverter(
         systemThemeIndex = systemThemeIndex,
         colorString = pageList?.colorString
     )
 
-    val isFavorite = dbState.todoIsFavorite
+    val isFavorite = taskDbState.todoIsFavorite
     val isLockedAsFavorite = currentTab == "SYSTEM_FAVORITES"
 
     LaunchedEffect(currentTab) {
@@ -106,7 +106,7 @@ fun AddTaskScreen(
         }
 
         val parentList = when {
-            currentTab in SYSTEM_LISTS -> dbState.taskParentList.ifBlank { firstUserTaskList }
+            currentTab in SYSTEM_LISTS -> taskDbState.taskParentList.ifBlank { firstUserTaskList }
             else -> currentTab
         }
 
@@ -114,7 +114,7 @@ fun AddTaskScreen(
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
-            value = dbState.todoTitle,
+            value = taskDbState.todoTitle,
             onValueChange = {
                 onDbEvent(TaskDbEvent.SetTodoTitle(it))
             },
@@ -133,7 +133,7 @@ fun AddTaskScreen(
         ) {
             TextField(
                 modifier = Modifier.fillMaxWidth(),
-                value = dbState.todoDescription,
+                value = taskDbState.todoDescription,
                 onValueChange = {
                     onDbEvent(TaskDbEvent.SetTodoDescription(it))
                 },

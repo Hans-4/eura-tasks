@@ -33,6 +33,4 @@ interface ListDbDao {
     suspend fun listExists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_user_lists WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
-    @Query("SELECT * FROM user_lists WHERE LOWER(name) LIKE LOWER('%' || :query || '%')")
-    suspend fun searchForLists(query: String): List<UserListEntity>
 }

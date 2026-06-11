@@ -12,4 +12,5 @@ sealed interface TaskDbEvent {
     data class SortTodos(val sortType: SortType): TaskDbEvent
     data class SelectTaskList(val listType: String): TaskDbEvent
     data class DeleteTodoById(val id: Int): TaskDbEvent
+    data class SetSearchQuery(val query: String): TaskDbEvent
 }

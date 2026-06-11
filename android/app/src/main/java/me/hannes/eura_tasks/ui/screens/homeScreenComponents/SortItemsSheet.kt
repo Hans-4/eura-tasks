@@ -21,9 +21,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.tasks.SortType
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.UiEvent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +31,7 @@ import me.hannes.eura_tasks.ui.UiEvent
 fun SortItemsSheet(
     onUiEvent: (UiEvent) -> Unit,
     onDbEvent: (TaskDbEvent) -> Unit,
-    dbState: DbState
+    taskDbState: TaskDbState
 ) {
     ModalBottomSheet(
         modifier = Modifier.fillMaxWidth(),
@@ -55,7 +55,7 @@ fun SortItemsSheet(
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         val iconSize = 20.dp
-                        if (dbState.sortType == sortType) {
+                        if (taskDbState.sortType == sortType) {
                             Icon(
                                 imageVector = Icons.Rounded.Check,
                                 contentDescription = null,

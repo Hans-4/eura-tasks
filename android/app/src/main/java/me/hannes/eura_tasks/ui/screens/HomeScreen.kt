@@ -68,10 +68,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.hannes.eura_tasks.R
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.systemTaskList
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -86,7 +87,8 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addNewTaskListCompon
 @Composable
 fun HomeScreen(
     onUiEvent: (UiEvent) -> Unit,
-    dbState: DbState,
+    taskDbState: TaskDbState,
+    listDbState: ListDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
     onTask: (String) -> Unit,
@@ -95,7 +97,7 @@ fun HomeScreen(
     uiState: UiState,
     darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
-    val taskLists = dbState.userLists
+    val taskLists = listDbState.userLists
 
     val systemThemeIndex = if (darkTheme) 1 else 0
 
@@ -290,12 +292,12 @@ fun HomeScreen(
 
                                 val (completedTaskCount, totalTaskCount) = when (item.name) {
                                     "SYSTEM_ALL" -> Pair(
-                                        dbState.tasks.filter { it.isCompleted }.size,
-                                        dbState.tasks.size
+                                        taskDbState.tasks.filter { it.isCompleted }.size,
+                                        taskDbState.tasks.size
                                     )
                                     "SYSTEM_FAVORITES" -> Pair(
-                                        dbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
-                                        dbState.tasks.filter { it.isFavorite }.size
+                                        taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
+                                        taskDbState.tasks.filter { it.isFavorite }.size
                                     )
                                     else -> Pair(0, 0)
                                 }
@@ -354,7 +356,7 @@ fun HomeScreen(
                                     colorString = item.colorString
                                 )
                                 val itemName = Converter.pageNameConverter(item.name)
-                                val taskListCount = dbState.tasks.filter { it.taskList == item.name }.size
+                                val taskListCount = taskDbState.tasks.filter { it.taskList == item.name }.size
 
                                 UserTaskLists(
                                     index = index,
@@ -404,7 +406,7 @@ fun HomeScreen(
             AddNewTaskListDialog(
                 onUiEvent = onUiEvent,
                 onListDbEvent = onListDbEvent,
-                dbState = dbState,
+                listDbState = listDbState,
                 onClick = {}
             )
         }
@@ -414,7 +416,7 @@ fun HomeScreen(
                 AddTaskBottomSheet(
                     onDbEvent = onTaskDbEvent,
                     onUiEvent = onUiEvent,
-                    dbState = dbState,
+                    taskDbState = taskDbState,
                     uiState = uiState,
                     currentTab = "HOME_SCREEN",
                     firstUserTaskList = taskLists.first().name,

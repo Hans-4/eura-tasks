@@ -10,11 +10,11 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.cleanUpOldLists
 import me.hannes.eura_tasks.db.lists.DeletedUserListEntity
 import me.hannes.eura_tasks.db.lists.ListDbDao
 import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.UserListEntity
 import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.ui.UiEvent
@@ -26,12 +26,12 @@ class ListDbViewModel(
     private val listDao: ListDbDao,
     private val taskDao: TaskDbDao
 ): ViewModel() {
-    private val _state = MutableStateFlow(DbState())
+    private val _state = MutableStateFlow(ListDbState())
     val state = combine(_state, listDao.getAllLists()) { state, userLists ->
         state.copy(
             userLists = userLists
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DbState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ListDbState())
 
     fun onEvent(event: ListDbEvent, onUiEvent: (UiEvent) -> Unit) {
         when(event) {

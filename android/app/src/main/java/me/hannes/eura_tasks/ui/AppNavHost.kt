@@ -14,9 +14,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.lists.ListDbEvent
+import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.screens.HomeScreen
 import me.hannes.eura_tasks.ui.screens.SearchScreen
 import me.hannes.eura_tasks.ui.screens.SettingsScreen
@@ -31,7 +32,8 @@ import me.hannes.eura_tasks.ui.viewModels.ListDbViewModel
 
 @Composable
 fun AppNavHost(
-    dbState: DbState,
+    taskDbState: TaskDbState,
+    listDbState: ListDbState,
     uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
@@ -76,7 +78,8 @@ fun AppNavHost(
             }
         ) {
             HomeScreen(
-                dbState = dbState,
+                taskDbState = taskDbState,
+                listDbState = listDbState,
                 uiState = uiState,
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,
@@ -105,7 +108,7 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                dbState = dbState,
+                listDbState = listDbState,
                 listDbViewModel = listDbViewModel,
                 taskDbViewModel = taskDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
@@ -128,7 +131,12 @@ fun AppNavHost(
             }
         ) {
             SearchScreen(
-                onClose = { navController.popBackStack() }
+                onClose = { navController.popBackStack() },
+                taskDbState = taskDbState,
+                onTaskDbEvent = onTaskDbEvent,
+                onTaskDetails = { taskId ->
+                    navController.navigate("taskDetails/$taskId")
+                }
             )
         }
 
@@ -173,7 +181,8 @@ fun AppNavHost(
             val listName = backStackEntry.arguments?.getString("listName").toString()
             TaskScreen(
                 pageName = listName,
-                dbState = dbState,
+                taskDbState = taskDbState,
+                listDbState = listDbState,
                 uiState = uiState,
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,

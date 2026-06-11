@@ -10,13 +10,13 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import me.hannes.eura_tasks.db.DbState
 import me.hannes.eura_tasks.db.tasks.SortType
 import me.hannes.eura_tasks.db.tasks.TaskDbDao
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.DeletedTasksEntity
 import me.hannes.eura_tasks.db.tasks.TaskEntity
 import me.hannes.eura_tasks.db.cleanUpOldTasks
+import me.hannes.eura_tasks.db.tasks.TaskDbState
 import me.hannes.eura_tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -38,13 +38,13 @@ class TaskDbViewModel(
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
 
     private val _uiState = MutableStateFlow(UiState())
-    private val _state = MutableStateFlow(DbState())
+    private val _state = MutableStateFlow(TaskDbState())
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
             sortType = sortType
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), DbState())
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskDbState())
 
     fun onEvent(event: TaskDbEvent) {
         when(event) {
@@ -171,6 +171,22 @@ class TaskDbViewModel(
                     it.copy(
                         taskParentList = event.parentList
                     )
+                }
+            }
+
+            is TaskDbEvent.SetSearchQuery -> {
+                _state.update {
+                    it.copy(
+                        searchQuery = event.query
+                    )
+                }
+                viewModelScope.launch {
+                    val results = dao.searchForTasks(event.query)
+                    _state.update {
+                        it.copy(
+                            searchResults = results
+                        )
+                    }
                 }
             }
         }
