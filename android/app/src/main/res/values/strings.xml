@@ -23,4 +23,7 @@
     <string name="you_cant_delete_default_lists">You can\'t delete default lists</string>
     <string name="delete_list">Delete list</string>
     <string name="there_is_no_user_list_please_add_one_first">There is no user list. Please add one first.</string>
+    <string name="ok">OK</string>
+    <string name="delete">Delete</string>
+    <string name="confirm">Confirm</string>
 </resources>
