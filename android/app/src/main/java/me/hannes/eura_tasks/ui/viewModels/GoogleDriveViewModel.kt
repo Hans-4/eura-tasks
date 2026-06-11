@@ -85,6 +85,9 @@ class GoogleDriveViewModel(
         })
         .create()
 
+    private val _isDriveServiceReady = MutableStateFlow(false)
+    val isDriveServiceReady: StateFlow<Boolean> = _isDriveServiceReady.asStateFlow()
+
     fun initDriveService(context: Context, account: GoogleSignInAccount) {
         val credential = GoogleAccountCredential.usingOAuth2(
             context, Collections.singleton(DriveScopes.DRIVE_FILE)
@@ -95,6 +98,8 @@ class GoogleDriveViewModel(
             GsonFactory(),
             credential
         ).setApplicationName("eura-tasks").build()
+
+        _isDriveServiceReady.value = true
 
         Log.d("eura-tasks", "Drive Service Ready for: ${account.email}")
     }
