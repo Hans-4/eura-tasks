@@ -28,4 +28,6 @@
     <string name="confirm">Confirm</string>
     <string name="add_description">Add description</string>
     <string name="search_here">Search here</string>
+    <string name="search">Search</string>
+    <string name="open">Open</string>
 </resources>
