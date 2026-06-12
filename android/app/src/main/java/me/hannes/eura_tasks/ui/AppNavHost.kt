@@ -202,13 +202,16 @@ fun AppNavHost(
             }
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
-            TaskDetailsScreen(
-                taskId = taskId,
-                onDbEvent = onTaskDbEvent,
-                onClose = { navController.popBackStack() },
-                uiState = uiState,
-                onUiEvent = onUiEvent
-            )
+            val task = taskDbState.tasks.find { it.id == taskId }
+            if (task != null) {
+                TaskDetailsScreen(
+                    task = task,
+                    onTaskDbEvent = onTaskDbEvent,
+                    onClose = { navController.popBackStack() },
+                    uiState = uiState,
+                    onUiEvent = onUiEvent
+                )
+            }
         }
     }
 }

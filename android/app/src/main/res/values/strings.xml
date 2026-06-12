@@ -26,4 +26,6 @@
     <string name="ok">OK</string>
     <string name="delete">Delete</string>
     <string name="confirm">Confirm</string>
+    <string name="add_description">Add description</string>
+    <string name="search_here">Search here</string>
 </resources>

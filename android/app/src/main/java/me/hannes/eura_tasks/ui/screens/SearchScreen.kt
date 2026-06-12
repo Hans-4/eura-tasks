@@ -43,9 +43,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
 
@@ -142,13 +144,11 @@ fun SearchScreen(
                                         modifier = Modifier.fillMaxWidth(),
                                         contentAlignment = Alignment.CenterStart,
                                     ) {
-                                        if (textValue.isEmpty()) {
-                                            Text(
-                                                text = "Search here...",
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                                                fontSize = 16.sp,
-                                            )
-                                        }
+                                        Text(
+                                            text = if (textValue.isEmpty()) "${stringResource(R.string.search_here)}..." else "",
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                                            fontSize = 16.sp,
+                                        )
                                         innerTextField()
                                     }
                                 },
@@ -203,13 +203,11 @@ fun SearchScreen(
                         )
                         Column(modifier = Modifier.weight(1f)) {
                             Text(text = task.title, fontSize = 18.sp)
-                            if (task.description.isNotBlank()) {
-                                Text(
-                                    text = task.description,
-                                    fontSize = 14.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                            Text(
+                                text = task.taskList,
+                                fontSize = 14.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                         IconButton(
                             onClick = {
