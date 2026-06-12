@@ -25,10 +25,10 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x android/gradlew
 
-    - name: Build with Gradle
+    - name: Build APK (Without Daemon)
       working-directory: android
-      run: ./gradlew build
+      run: ./gradlew assembleDebug --no-daemon
       
     - name: Run unit tests
       working-directory: android
-      run: ./gradlew testDebugUnitTest
+      run: ./gradlew testDebugUnitTest --no-daemon
