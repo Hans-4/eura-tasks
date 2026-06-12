@@ -57,7 +57,7 @@ fun SearchScreen(
     onClose: () -> Unit,
     taskDbState: TaskDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
-    onTaskDetails: (Int) -> Unit
+    onTaskDetails: (Int, String) -> Unit
 ) {
     var textValue by remember { mutableStateOf(taskDbState.searchQuery) }
 
@@ -182,7 +182,7 @@ fun SearchScreen(
         ) {
             items(filteredTasks, key = { it.id }) { task ->
                 Button(
-                    onClick = { onTaskDetails(task.id) },
+                    onClick = { onTaskDetails(task.id, "search") },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant

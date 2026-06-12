@@ -54,11 +54,13 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
+    parentScreen: String,
     task: TaskEntity,
     onClose: () -> Unit,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    uiState: UiState
+    uiState: UiState,
+    onTaskList: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -75,7 +77,7 @@ fun TaskDetailsScreen(
                 },
                 title = {
                     Text(
-                        text = stringResource(R.string.search)
+                        text = if (parentScreen == "search") stringResource(R.string.search) else parentScreen
                     )
                 },
             )
@@ -98,7 +100,7 @@ fun TaskDetailsScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     Button(
-                        onClick = { TODO() },
+                        onClick = { onTaskList(task.taskList) },
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
                             contentColor = MaterialTheme.colorScheme.onSurface

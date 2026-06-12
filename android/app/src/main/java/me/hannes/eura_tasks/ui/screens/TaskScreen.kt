@@ -80,7 +80,7 @@ fun TaskScreen(
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
     onNavigateToHome: () -> Unit,
-    onTaskDetails: (Int) -> Unit,
+    onTaskDetails: (Int, String) -> Unit,
     uiState: UiState,
     taskDbState: TaskDbState,
     listDbState: ListDbState,
@@ -295,7 +295,7 @@ fun TaskScreen(
 
                             tasksToShow.filter { !it.isCompleted }.forEach { task ->
                                 Button(
-                                    onClick = { onTaskDetails(task.id) },
+                                    onClick = { onTaskDetails(task.id, pageTitle) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -380,7 +380,7 @@ fun TaskScreen(
 
                             tasksToShow.filter { it.isCompleted }.forEach { task ->
                                 Button(
-                                    onClick = { onTaskDetails(task.id) },
+                                    onClick = { onTaskDetails(task.id, pageTitle) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant

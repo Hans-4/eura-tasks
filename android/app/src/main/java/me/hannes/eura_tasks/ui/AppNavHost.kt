@@ -1,7 +1,10 @@
 package me.hannes.eura_tasks.ui
 
+import androidx.compose.animation.AnimatedContentTransitionScope
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.End
 import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Start
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -11,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -62,19 +66,47 @@ fun AppNavHost(
         navController = navController,
         startDestination = "home",
     ) {
+        val defaultEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+            slideIntoContainer(
+                towards = Start,
+                animationSpec = tween(300)
+            )
+        }
+
+        val defaultExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+            slideOutOfContainer(
+                towards = Start,
+                animationSpec = tween(300)
+            )
+        }
+
+        val defaultPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
+            slideIntoContainer(
+                towards = End,
+                animationSpec = tween(300)
+            )
+        }
+
+        val defaultPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
+            slideOutOfContainer(
+                towards = End,
+                animationSpec = tween(300)
+            )
+        }
+
         composable(
             route = "home",
             enterTransition = {
-                slideIntoContainer(
-                    towards = End,
-                    animationSpec = tween(300)
-                )
+                defaultEnterTransition()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards = Start,
-                    animationSpec = tween(300)
-                )
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
             }
         ) {
             HomeScreen(
@@ -84,7 +116,7 @@ fun AppNavHost(
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
-                onTask = { listName -> navController.navigate("taskLists/$listName")},
+                onTaskList = { listName -> navController.navigate("taskLists/$listName")},
                 onSettings = { navController.navigate("settings")},
                 onSearch = { navController.navigate("search") }
             )
@@ -93,16 +125,16 @@ fun AppNavHost(
         composable(
             route = "settings",
             enterTransition = {
-                slideIntoContainer(
-                    towards = Start,
-                    animationSpec = tween(300)
-                )
+                defaultEnterTransition()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards = End,
-                    animationSpec = tween(300)
-                )
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
             }
         ) {
             SettingsScreen(
@@ -118,24 +150,24 @@ fun AppNavHost(
         composable(
             route = "search",
             enterTransition = {
-                slideIntoContainer(
-                    towards = Start,
-                    animationSpec = tween(300)
-                )
+                defaultEnterTransition()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards = End,
-                    animationSpec = tween(300)
-                )
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
             }
         ) {
             SearchScreen(
                 onClose = { navController.popBackStack() },
                 taskDbState = taskDbState,
                 onTaskDbEvent = onTaskDbEvent,
-                onTaskDetails = { taskId ->
-                    navController.navigate("taskDetails/$taskId")
+                onTaskDetails = { taskId, parentScreen ->
+                    navController.navigate("taskDetails/$taskId/$parentScreen")
                 }
             )
         }
@@ -143,16 +175,16 @@ fun AppNavHost(
         composable(
             route = "linkGoogleAccount",
             enterTransition = {
-                slideIntoContainer(
-                    towards = Start,
-                    animationSpec = tween(300)
-                )
+                defaultEnterTransition()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards = End,
-                    animationSpec = tween(300)
-                )
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
             }
         ) {
             LinkGoogleAccountScreen(
@@ -166,16 +198,16 @@ fun AppNavHost(
         composable(
             route = "taskLists/{listName}",
             enterTransition = {
-                slideIntoContainer(
-                    towards = Start,
-                    animationSpec = tween(300)
-                )
+                defaultEnterTransition()
             },
             exitTransition = {
-                slideOutOfContainer(
-                    towards = End,
-                    animationSpec = tween(300)
-                )
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
             }
         ) { backStackEntry ->
             val listName = backStackEntry.arguments?.getString("listName").toString()
@@ -188,28 +220,37 @@ fun AppNavHost(
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
                 onNavigateToHome = {navController.popBackStack()},
-                onTaskDetails = { taskId -> navController.navigate("taskDetails/$taskId") },
+                onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
             )
         }
 
         composable(
-            route = "taskDetails/{taskId}",
+            route = "taskDetails/{taskId}/{parentScreen}",
             enterTransition = {
-                slideInVertically(initialOffsetY = { it }) + fadeIn()
+                defaultEnterTransition()
+            },
+            exitTransition = {
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
             },
             popExitTransition = {
-                slideOutVertically(targetOffsetY = { it }) + fadeOut()
+                defaultPopExitTransition()
             }
         ) { backStackEntry ->
             val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
             val task = taskDbState.tasks.find { it.id == taskId }
+            val parentScreen = backStackEntry.arguments?.getString("parentScreen").toString()
             if (task != null) {
                 TaskDetailsScreen(
                     task = task,
                     onTaskDbEvent = onTaskDbEvent,
                     onClose = { navController.popBackStack() },
                     uiState = uiState,
-                    onUiEvent = onUiEvent
+                    onUiEvent = onUiEvent,
+                    onTaskList = { listName -> navController.navigate("taskLists/$listName") },
+                    parentScreen = parentScreen
                 )
             }
         }
