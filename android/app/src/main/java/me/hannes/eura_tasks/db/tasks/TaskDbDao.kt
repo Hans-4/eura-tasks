@@ -41,4 +41,8 @@ interface TaskDbDao {
     suspend fun deleteTasksByListName(listName: String)
     @Query("SELECT * FROM tasks WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTasks(query: String): List<TaskEntity>
+    @Query("UPDATE tasks SET title = :newTitle WHERE id = :id")
+    suspend fun updateTaskTitle(id: Int, newTitle: String)
+    @Query("UPDATE tasks SET description = :newDescription WHERE id = :id")
+    suspend fun updateTaskDescription(id: Int, newDescription: String)
 }

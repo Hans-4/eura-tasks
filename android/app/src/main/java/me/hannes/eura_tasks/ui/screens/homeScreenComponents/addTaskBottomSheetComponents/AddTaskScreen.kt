@@ -76,7 +76,7 @@ fun AddTaskScreen(
 
     LaunchedEffect(currentTab) {
         if (isLockedAsFavorite) {
-            onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, todo = null))
+            onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, task = null))
         }
     }
 
@@ -163,7 +163,7 @@ fun AddTaskScreen(
 
             IconButton(
                 onClick = {
-                    onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, todo = null))
+                    onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, task = null))
                 },
                 enabled = !isLockedAsFavorite
             ) {

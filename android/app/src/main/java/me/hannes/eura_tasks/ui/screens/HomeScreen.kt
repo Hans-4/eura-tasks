@@ -91,7 +91,7 @@ fun HomeScreen(
     listDbState: ListDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
-    onTask: (String) -> Unit,
+    onTaskList: (String) -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
     uiState: UiState,
@@ -317,7 +317,7 @@ fun HomeScreen(
                                         title = title,
                                         progress = progress,
                                         color = color,
-                                        onTask = { onTask(item.name)}
+                                        onTask = { onTaskList(item.name)}
                                     )
                                 }
                             }
@@ -364,7 +364,7 @@ fun HomeScreen(
                                     icon = icon,
                                     count = taskListCount,
                                     color = colorItem,
-                                    onClick = { onTask(item.name) }
+                                    onClick = { onTaskList(item.name) }
                                 )
                             }
                         }

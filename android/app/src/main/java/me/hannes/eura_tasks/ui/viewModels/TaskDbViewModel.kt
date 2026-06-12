@@ -93,9 +93,9 @@ class TaskDbViewModel(
                 }
             }
             is TaskDbEvent.SetIsCompleted -> {
-                if (event.todo != null) {
+                if (event.task != null) {
                     viewModelScope.launch {
-                        dao.upsertTask(event.todo.copy(isCompleted = event.isCompleted))
+                        dao.upsertTask(event.task.copy(isCompleted = event.isCompleted))
                     }
                 } else {
                     _state.update {
@@ -120,9 +120,9 @@ class TaskDbViewModel(
                 }
             }
             is TaskDbEvent.SetTodoIsFavorite -> {
-                if (event.todo != null) {
+                if (event.task != null) {
                     viewModelScope.launch {
-                        dao.upsertTask(event.todo.copy(isFavorite = event.isFavorite))
+                        dao.upsertTask(event.task.copy(isFavorite = event.isFavorite))
                     }
                 } else {
                     _state.update {
@@ -187,6 +187,18 @@ class TaskDbViewModel(
                             searchResults = results
                         )
                     }
+                }
+            }
+
+            is TaskDbEvent.UpdateTaskTitleById -> {
+                viewModelScope.launch {
+                    dao.updateTaskTitle(event.id, event.newTitle)
+                }
+            }
+
+            is TaskDbEvent.UpdateDescriptionById -> {
+                viewModelScope.launch {
+                    dao.updateTaskDescription(event.id, event.newDescription)
                 }
             }
         }
