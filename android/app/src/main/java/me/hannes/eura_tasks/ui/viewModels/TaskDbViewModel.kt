@@ -67,7 +67,8 @@ class TaskDbViewModel(
                     isCompleted = false,
                     dueDateTime = null,
                     taskList = parentList,
-                    creationTime = currentDateTime
+                    creationTime = currentDateTime,
+                    tags = emptyList()
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)
@@ -85,10 +86,10 @@ class TaskDbViewModel(
                 }
             }
 
-            is TaskDbEvent.SetDate -> {
+            is TaskDbEvent.SetDueDateTime -> {
                 _state.update {
                     it.copy(
-                        todoDate = event.date
+                        dueDateTime = event.date
                     )
                 }
             }
@@ -103,13 +104,6 @@ class TaskDbViewModel(
                             todoIsCompleted = event.isCompleted
                         )
                     }
-                }
-            }
-            is TaskDbEvent.SetTime -> {
-                _state.update {
-                    it.copy(
-                        todoTime = event.time
-                    )
                 }
             }
             is TaskDbEvent.SetTodoDescription -> {

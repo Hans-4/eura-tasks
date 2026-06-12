@@ -40,7 +40,8 @@ data class TaskSyncModel(
     val isCompleted: Boolean,
     val taskList: String,
     val dueDateTime: LocalDateTime?,
-    val creationTime: Instant
+    val creationTime: Instant,
+    val tags: List<String>
 )
 
 data class ListSyncModel(
@@ -68,7 +69,6 @@ class GoogleDriveViewModel(
 
     private val _listConflict = MutableStateFlow<ListConflict?>(null)
     val listConflict: StateFlow<ListConflict?> = _listConflict.asStateFlow()
-    private var driveService: Drive? = null
 
     private val gson = GsonBuilder()
         .registerTypeAdapter(Instant::class.java, com.google.gson.JsonSerializer<Instant> { src, _, _ ->
@@ -85,6 +85,8 @@ class GoogleDriveViewModel(
         })
         .create()
 
+    private var driveService: Drive? = null
+
     private val _isDriveServiceReady = MutableStateFlow(false)
     val isDriveServiceReady: StateFlow<Boolean> = _isDriveServiceReady.asStateFlow()
 
@@ -100,8 +102,14 @@ class GoogleDriveViewModel(
         ).setApplicationName("eura-tasks").build()
 
         _isDriveServiceReady.value = true
-
         Log.d("eura-tasks", "Drive Service Ready for: ${account.email}")
+    }
+
+    // Call this when the user logs out
+    fun clearDriveService() {
+        driveService = null
+        _isDriveServiceReady.value = false
+        Log.d("eura-tasks", "Drive Service cleared and torn down.")
     }
 
     fun checkExistingLogin(context: Context) {
@@ -361,7 +369,8 @@ class GoogleDriveViewModel(
                             isCompleted = syncModel.isCompleted,
                             dueDateTime = syncModel.dueDateTime,
                             creationTime = syncModel.creationTime,
-                            taskList = syncModel.taskList
+                            taskList = syncModel.taskList,
+                            tags = syncModel.tags
                         )
                     )
                 } catch (e: Exception) {
@@ -542,7 +551,8 @@ class GoogleDriveViewModel(
                                         isCompleted = entity.isCompleted,
                                         dueDateTime = entity.dueDateTime,
                                         creationTime = entity.creationTime,
-                                        taskList = entity.taskList
+                                        taskList = entity.taskList,
+                                        tags = entity.tags
                                     )
                                     val jsonContent = gson.toJson(syncModel)
                                     val contentStream =

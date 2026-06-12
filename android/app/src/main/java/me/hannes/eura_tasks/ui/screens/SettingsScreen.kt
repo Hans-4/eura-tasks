@@ -1,6 +1,7 @@
 package me.hannes.eura_tasks.ui.screens
 
 import android.util.Log
+import me.hannes.eura_tasks.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -28,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.hannes.eura_tasks.db.lists.ListDbState
@@ -57,7 +59,9 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = {},
+                title = {
+                    Text(text = stringResource(R.string.settings))
+                },
                 navigationIcon = {
                     IconButton(
                         onClick = { onClose() }
@@ -78,10 +82,9 @@ fun SettingsScreen(
             item {
                 Button(
                     onClick = { onLinkGoogleAccount() },
-                    enabled = !isDriveReady,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Add Google cloud sync")
+                    Text("Manage Google cloud sync")
                 }
             }
 
