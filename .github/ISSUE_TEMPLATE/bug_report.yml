@@ -7,7 +7,7 @@ body:
     attributes:
       label: "App version"
       placeholder: "v1.2"
-      description: Please specify the version in which the bug occurred. Dont know how to find the version? See [How to Find Your App Version](https://github.com/Hans-4/eura-tasks/blob/readme/how_to_find.md#how-to-find-your-app-version).
+      description: Please specify the version in which the bug occurred. Dont know how to find the version? See [How to Find Your App Version](https://github.com/Hans-4/eura-tasks/blob/main/readme/how_to_find.md#how-to-find-your-app-version).
     validations:
       required: true
 
