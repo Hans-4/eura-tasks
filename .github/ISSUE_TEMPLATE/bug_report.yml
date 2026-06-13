@@ -1,0 +1,12 @@
+name: Bug Report
+description: File a bug report
+labels: ['bug']
+body:
+  - type: input
+    id: version
+    attributes:
+      label: "App version"
+      placeholder: "v1.2"
+      description: Please specify the version in which the bug occurred. Dont know how to find the version? Go to -> 
+    validations:
+      required: true
