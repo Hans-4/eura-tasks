@@ -1,6 +1,7 @@
 package me.hannes.eura_tasks.ui.screens.homeScreenComponents.settingsChildrenScreens
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -13,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -76,6 +76,11 @@ fun LinkGoogleAccountScreen(
         }
     }
 
+    BackHandler(
+        enabled = true,
+        onBack = { onClose() }
+    )
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -114,8 +119,8 @@ fun LinkGoogleAccountScreen(
                     onClick = {
                         googleSignInClient.signOut().addOnCompleteListener { task ->
                             if (task.isSuccessful) {
-                                signedInAccount = null // Update local state to switch buttons
-                                onSignOut() // Clear data out of GoogleDriveViewModel
+                                signedInAccount = null
+                                onSignOut()
                             } else {
                                 Log.e("EuraToDo", "Sign out failed.")
                             }

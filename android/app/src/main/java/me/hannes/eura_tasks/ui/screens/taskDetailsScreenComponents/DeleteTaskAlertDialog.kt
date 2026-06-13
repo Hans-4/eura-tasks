@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens.taskDetailsScreenComponents
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -10,6 +11,11 @@ fun DeleteTaskAlertDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    BackHandler(
+        enabled = true,
+        onBack = { onDismiss() }
+    )
+
     AlertDialog(
         title = {
             Text("Do you really wanna delete this Task?")

@@ -1,6 +1,7 @@
 package me.hannes.eura_tasks.ui.screens
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import me.hannes.eura_tasks.R
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -55,6 +56,12 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         googleDriveViewModel.checkExistingLogin(context)
     }
+
+    BackHandler(
+        enabled = true,
+        onBack = { onClose() }
+    )
+
 
     Scaffold(
         topBar = {

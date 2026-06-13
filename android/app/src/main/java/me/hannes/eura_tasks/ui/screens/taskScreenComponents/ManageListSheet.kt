@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens.taskScreenComponents
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -27,6 +28,11 @@ fun ManageListSheet(
     onDismiss: () -> Unit
 ) {
     val isSystemList = pageName in SYSTEM_LISTS
+
+    BackHandler(
+        enabled = true,
+        onBack = { onDismiss() }
+    )
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },

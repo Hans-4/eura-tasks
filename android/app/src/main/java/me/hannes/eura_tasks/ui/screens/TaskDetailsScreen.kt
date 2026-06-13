@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens
 
+import androidx.activity.compose.BackHandler
 import me.hannes.eura_tasks.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,7 +24,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -63,6 +63,12 @@ fun TaskDetailsScreen(
     onTaskList: (String) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
+
+    BackHandler(
+        enabled = true,
+        onBack = { onClose() }
+    )
+
 
     Scaffold(
         topBar = {
