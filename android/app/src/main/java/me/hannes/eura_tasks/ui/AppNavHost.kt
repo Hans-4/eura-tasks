@@ -191,6 +191,9 @@ fun AppNavHost(
                 onClose = { navController.popBackStack() },
                 onSuccess = { account ->
                     googleDriveViewModel.initDriveService(context, account)
+                },
+                onSignOut = {
+                    googleDriveViewModel.clearDriveService()
                 }
             )
         }

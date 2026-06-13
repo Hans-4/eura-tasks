@@ -16,6 +16,7 @@ data class TaskEntity(
     val taskList: String,
     val creationTime: Instant,
     val uuid: String = UUID.randomUUID().toString(),
+    val tags: List<String>,
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
 )

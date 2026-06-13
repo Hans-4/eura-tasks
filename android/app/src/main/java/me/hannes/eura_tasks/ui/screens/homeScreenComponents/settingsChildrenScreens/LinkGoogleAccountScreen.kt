@@ -5,38 +5,51 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.unit.dp
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
-import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinkGoogleAccountScreen(
     onSuccess: (GoogleSignInAccount) -> Unit,
+    onSignOut: () -> Unit,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
+
+    // Keep track of whether the user is currently signed in
+    var signedInAccount by remember {
+        mutableStateOf(GoogleSignIn.getLastSignedInAccount(context))
+    }
 
     // 1. Configure Sign-In
     val gso = remember {
@@ -55,6 +68,7 @@ fun LinkGoogleAccountScreen(
         try {
             val account = task.getResult(ApiException::class.java)
             if (account != null) {
+                signedInAccount = account // Update local UI state
                 onSuccess(account) // Pass the account to your Drive logic
             }
         } catch (e: ApiException) {
@@ -64,15 +78,13 @@ fun LinkGoogleAccountScreen(
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar(
-                title = {},
+            TopAppBar(
+                title = { Text("Google Account") },
                 navigationIcon = {
-                    IconButton(
-                        onClick = { onClose() }
-                    ) {
+                    IconButton(onClick = { onClose() }) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = null
+                            contentDescription = "Back"
                         )
                     }
                 }
@@ -80,7 +92,6 @@ fun LinkGoogleAccountScreen(
         }
     ) { innerPadding ->
 
-        // 3. The UI (The Button)
         Column(
             modifier = Modifier
                 .padding(innerPadding)
@@ -88,8 +99,36 @@ fun LinkGoogleAccountScreen(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Button(onClick = { launcher.launch(googleSignInClient.signInIntent) }) {
-                Text("Mit Google anmelden")
+            if (signedInAccount != null) {
+                // User is Signed In -> Show Account Info & Log Out Button
+                Text(
+                    text = "Linked as: ${signedInAccount?.email}",
+                    style = MaterialTheme.typography.bodyLarge
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    onClick = {
+                        googleSignInClient.signOut().addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                signedInAccount = null // Update local state to switch buttons
+                                onSignOut() // Clear data out of GoogleDriveViewModel
+                            } else {
+                                Log.e("EuraToDo", "Sign out failed.")
+                            }
+                        }
+                    }
+                ) {
+                    Text("Disconnect Account")
+                }
+            } else {
+                // User is Not Signed In -> Show Sign In Button
+                Button(onClick = { launcher.launch(googleSignInClient.signInIntent) }) {
+                    Text("Sign in with Google")
+                }
             }
         }
     }
