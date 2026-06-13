@@ -10,3 +10,15 @@ body:
       description: Please specify the version in which the bug occurred. Dont know how to find the version? Go to -> 
     validations:
       required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots and videos
+      description: If possible, please include screenshots or videos
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output if applicable
+      description: Please copy and paste any relevant log output in this field.
