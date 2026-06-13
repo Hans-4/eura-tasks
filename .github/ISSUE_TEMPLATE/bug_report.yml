@@ -16,12 +16,16 @@ body:
     attributes:
       label: Current behaviour
       description: What did Eura Tasks do? Please do not paste screenshots or videos into the field. Instead, upload them to the designated field.
+    validations:
+      required: true
       
   - type: textarea
     id: expected
     attributes:
       label: Expected behaviour
       description: What did you expect Eura Tasks to do?
+    validations:
+      required: true
 
   - type: textarea
     id: screenshots
