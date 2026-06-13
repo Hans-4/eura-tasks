@@ -7,7 +7,7 @@ body:
     attributes:
       label: "App version"
       placeholder: "v1.2"
-      description: Please specify the version in which the bug occurred. Dont know how to find the version? See [How to Find your App version](./readme/how_to_find.md#how-to-find-your-app-version).
+      description: Please specify the version in which the bug occurred. Dont know how to find the version? See [How to Find Your App Version](./readme/how_to_find.md#how-to-find-your-app-version).
     validations:
       required: true
 
