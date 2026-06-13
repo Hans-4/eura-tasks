@@ -1,5 +1,6 @@
 package me.hannes.eura_tasks.ui.screens.sychronice
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -45,6 +46,11 @@ fun ListConflictWarningDialog(
 ) {
     val items = listOf(localList, remoteList)
     var selectedIndex by remember { mutableIntStateOf(0) }
+
+    BackHandler(
+        enabled = false,
+        onBack = {}
+    )
 
     AlertDialog(
         onDismissRequest = { /* Prevent dismissal without choice? Or choose local by default? */ },

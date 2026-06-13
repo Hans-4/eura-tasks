@@ -6,10 +6,6 @@ import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -222,7 +218,7 @@ fun AppNavHost(
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
-                onNavigateToHome = {navController.popBackStack()},
+                onClose = {navController.popBackStack()},
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
             )
         }

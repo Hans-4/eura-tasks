@@ -1,6 +1,7 @@
 package me.hannes.eura_tasks.ui.screens
 
 import android.util.Log
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -63,7 +64,6 @@ import me.hannes.eura_tasks.db.lists.ListDbState
 import me.hannes.eura_tasks.db.lists.systemTaskList
 import me.hannes.eura_tasks.db.tasks.TaskDbEvent
 import me.hannes.eura_tasks.db.tasks.TaskDbState
-import me.hannes.eura_tasks.db.tasks.TaskEntity
 import me.hannes.eura_tasks.ui.Converter
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
@@ -79,7 +79,7 @@ fun TaskScreen(
     onUiEvent: (UiEvent) -> Unit,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
-    onNavigateToHome: () -> Unit,
+    onClose: () -> Unit,
     onTaskDetails: (Int, String) -> Unit,
     uiState: UiState,
     taskDbState: TaskDbState,
@@ -127,6 +127,11 @@ fun TaskScreen(
         }
     }
 
+    BackHandler(
+        enabled = true,
+        onBack = { onClose() }
+    )
+
     Scaffold(
         topBar = {
             Column{
@@ -142,7 +147,7 @@ fun TaskScreen(
                     },
                     navigationIcon = {
                         IconButton(
-                            onClick = { onNavigateToHome() },
+                            onClick = { onClose() },
                             shape = RoundedCornerShape(32.dp),
                         ) {
                             Icon(
@@ -474,7 +479,7 @@ fun TaskScreen(
                             onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)
                             onUiEvent(UiEvent.CloseManageListSheet)
                             delay(300)
-                            onNavigateToHome()
+                            onClose()
                         }
                     }
                 },
