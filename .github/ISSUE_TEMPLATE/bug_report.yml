@@ -11,6 +11,18 @@ body:
     validations:
       required: true
 
+  - type: dropdown
+    id: component
+    attributes:
+      label: What component is this issue related to?
+      options:
+        - Other
+        - UI/UX
+        - Cloud sync
+        - Local database
+    validations:
+      required: true
+
   - type: textarea
     id: current
     attributes:
