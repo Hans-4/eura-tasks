@@ -78,10 +78,6 @@ class GoogleDriveViewModel(
     private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
     val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
 
-    fun resetSyncStatus() {
-        _syncUiState.value = SyncUiState.Idle
-    }
-
     private val _listConflict = MutableStateFlow<ListConflict?>(null)
     val listConflict: StateFlow<ListConflict?> = _listConflict.asStateFlow()
 
@@ -104,6 +100,11 @@ class GoogleDriveViewModel(
 
     private val _isDriveServiceReady = MutableStateFlow(false)
     val isDriveServiceReady: StateFlow<Boolean> = _isDriveServiceReady.asStateFlow()
+
+    fun resetSyncStatus() {
+        _syncUiState.value = SyncUiState.Idle
+        _syncMessage.value = "Ready to synchronize."
+    }
 
     fun initDriveService(context: Context, account: GoogleSignInAccount) {
         val credential = GoogleAccountCredential.usingOAuth2(

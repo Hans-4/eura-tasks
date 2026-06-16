@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -36,6 +37,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
+import me.hannes.eura_tasks.ui.SYNC_INTERVAL_OPTIONS
 import me.hannes.eura_tasks.ui.UiEvent
 import me.hannes.eura_tasks.ui.UiState
 import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
@@ -82,6 +84,9 @@ fun LinkGoogleAccountScreen(
         }
     }
 
+    var isManageIntervalsDialogOpen by remember { mutableStateOf(false) }
+    var selectedInterval by remember { mutableIntStateOf(0) }
+
     BackHandler(
         enabled = true,
         onBack = { onClose() }
@@ -117,6 +122,14 @@ fun LinkGoogleAccountScreen(
                     style = MaterialTheme.typography.bodyLarge
                 )
                 Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { isManageIntervalsDialogOpen = true }
+                ) {
+                    Text(
+                        text = "synchronisation intervals: ${SYNC_INTERVAL_OPTIONS[selectedInterval]}"
+                    )
+                }
 
                 Button(
                     colors = ButtonDefaults.buttonColors(
@@ -157,6 +170,15 @@ fun LinkGoogleAccountScreen(
                 onUiEvent(UiEvent.CloseDeleteAllCloudDataWarningDialog)
                 googleDriveViewModel.deleteAllData()
             }
+        )
+    }
+
+    if (isManageIntervalsDialogOpen) {
+        ManageSyncIntervalsDialog(
+            onConfirm = { selectedIndex ->
+                isManageIntervalsDialogOpen = false
+                selectedInterval = selectedIndex
+            },
         )
     }
 }
