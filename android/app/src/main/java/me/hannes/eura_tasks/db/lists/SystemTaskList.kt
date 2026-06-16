@@ -28,13 +28,13 @@ val systemTaskList = listOf(
         colorString = "YELLOW"
     ),
     SystemListItem(
-        name = "SYSTEM_ASSIGNED_TO_ME",
-        type = "ASSIGNED_TO_ME",
+        name = "SYSTEM_IMPORTANT",
+        type = "IMPORTANT",
         colorString = "GREEN"
     ),
     SystemListItem(
-        name = "SYSTEM_GROCERIES",
-        type = "GROCERIES",
+        name = "SYSTEM_SHOPPING",
+        type = "SHOPPING",
         colorString = "BLUE"
     ),
 )

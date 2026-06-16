@@ -12,7 +12,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material.icons.rounded.Event
-import androidx.compose.material.icons.rounded.PersonAdd
+import androidx.compose.material.icons.rounded.PriorityHigh
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Today
@@ -39,8 +39,8 @@ class Converter() {
                  "SYSTEM_SCHEDULE" -> "Schedule"
                  "SYSTEM_ALL" -> stringResource(R.string.all)
                  "SYSTEM_FAVORITES" -> stringResource(R.string.favorites)
-                 "SYSTEM_ASSIGNED_TO_ME" -> "Assigned to me"
-                 "SYSTEM_GROCERIES" -> "Groceries"
+                 "SYSTEM_IMPORTANT" -> stringResource(R.string.important)
+                 "SYSTEM_SHOPPING" -> stringResource(R.string.shopping)
                  "MY_TASKS" -> stringResource(R.string.my_tasks)
                  else -> pageName
             }
@@ -53,8 +53,8 @@ class Converter() {
                 "SCHEDULE" -> Icons.Rounded.Event
                 "ALL" -> Icons.AutoMirrored.Rounded.List
                 "FAVORITES" -> Icons.Rounded.Star
-                "ASSIGNED_TO_ME" -> Icons.Rounded.PersonAdd
-                "GROCERIES" -> Icons.Rounded.ShoppingCart
+                "IMPORTANT" -> Icons.Rounded.PriorityHigh
+                "SHOPPING" -> Icons.Rounded.ShoppingCart
                 else -> Icons.Outlined.BugReport
             }
         }
