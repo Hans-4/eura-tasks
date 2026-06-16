@@ -175,6 +175,20 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+            UiEvent.CloseDeleteAllCloudDataWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllCloudDataWarningDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenDeleteAllCloudDataWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllCloudDataWarningDialogOpen = true
+                    )
+                }
+            }
         }
     }
 }

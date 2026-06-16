@@ -136,7 +136,6 @@ fun AppNavHost(
             SettingsScreen(
                 onClose = { navController.popBackStack() },
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
-                listDbState = listDbState,
                 listDbViewModel = listDbViewModel,
                 taskDbViewModel = taskDbViewModel,
                 googleDriveViewModel = googleDriveViewModel
@@ -184,13 +183,16 @@ fun AppNavHost(
             }
         ) {
             LinkGoogleAccountScreen(
+                googleDriveViewModel = googleDriveViewModel,
                 onClose = { navController.popBackStack() },
                 onSuccess = { account ->
                     googleDriveViewModel.initDriveService(context, account)
                 },
                 onSignOut = {
                     googleDriveViewModel.clearDriveService()
-                }
+                },
+                onUiEvent = onUiEvent,
+                uiState = uiState
             )
         }
 

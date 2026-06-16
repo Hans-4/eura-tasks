@@ -11,5 +11,6 @@ data class UiState(
     val isManageListSheetOpen: Boolean = false,
     val isListWithSimilarNameWarningDialogOpen: Boolean = false,
     val isDeleteAllTasksWarningDialogOpen: Boolean = false,
-    val isListConflictWarningAlertOpen: Boolean = false
+    val isListConflictWarningAlertOpen: Boolean = false,
+    val isDeleteAllCloudDataWarningDialogOpen: Boolean = false,
 )

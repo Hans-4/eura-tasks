@@ -62,10 +62,25 @@ data class ListConflict(
     val onResolved: (UserListEntity) -> Unit
 )
 
+sealed interface SyncUiState {
+    object Idle : SyncUiState
+    object Loading : SyncUiState
+    data class Success(val message: String) : SyncUiState
+    data class Error(val errorMessage: String) : SyncUiState
+}
+
 class GoogleDriveViewModel(
     private val taskDao: TaskDbDao,
     private val listDao: ListDbDao,
 ) : ViewModel() {
+    private val _syncMessage = MutableStateFlow("Ready to synchronize.")
+    val syncMessage: StateFlow<String> = _syncMessage.asStateFlow()
+    private val _syncUiState = MutableStateFlow<SyncUiState>(SyncUiState.Idle)
+    val syncUiState: StateFlow<SyncUiState> = _syncUiState.asStateFlow()
+
+    fun resetSyncStatus() {
+        _syncUiState.value = SyncUiState.Idle
+    }
 
     private val _listConflict = MutableStateFlow<ListConflict?>(null)
     val listConflict: StateFlow<ListConflict?> = _listConflict.asStateFlow()
@@ -137,6 +152,36 @@ class GoogleDriveViewModel(
         } catch (e: Exception) {
             Log.e("eura-tasks", "Main folder creation failed: ${e.message}")
             null
+        }
+    }
+
+    fun deleteAllData(onResult: (Boolean) -> Unit = {}) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val service = driveService
+            if (service == null) {
+                Log.e("eura-tasks", "Drive Service not initialized")
+                withContext(Dispatchers.Main) { onResult(false) }
+                return@launch
+            }
+
+            try {
+                val folderId = getOrCreateMainFolderId() ?: run {
+                    withContext(Dispatchers.Main) { onResult(false) }
+                    return@launch
+                }
+
+                val trashedMetadata = com.google.api.services.drive.model.File().apply {
+                    trashed = true
+                }
+
+                service.files().update(folderId, trashedMetadata).execute()
+
+                withContext(Dispatchers.Main) { onResult(true) }
+
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Error deleting the main folder: ${e.message}")
+                withContext(Dispatchers.Main) { onResult(false) }
+            }
         }
     }
 
@@ -227,6 +272,8 @@ class GoogleDriveViewModel(
                 if (existingFile != null) {
                     driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
                     Log.d("eura-tasks", "Updated $fileName on cloud storage.")
+                    _syncMessage.value = "Updated $fileName on cloud storage."
+
                 } else {
                     val metadata = com.google.api.services.drive.model.File().apply {
                         name = fileName
@@ -390,7 +437,6 @@ class GoogleDriveViewModel(
                 withContext(Dispatchers.Main) { onResult(false) }
                 return@launch
             }
-
             try {
                 val folderId = getOrCreateSubFolderId(
                     folderName = "tasks",
@@ -414,6 +460,7 @@ class GoogleDriveViewModel(
                     }
                     driveService?.files()?.update(existingFile.id, trashedMetadata)?.execute()
                     Log.d("eura-tasks", "Moved to trash: $fileName")
+                    _syncMessage.value = "Moved to trash: $fileName"
                     withContext(Dispatchers.Main) { onResult(true) }
                 } else {
                     Log.w("eura-tasks", "Delete failed: File $fileName not found on Drive.")
@@ -436,8 +483,10 @@ class GoogleDriveViewModel(
                 Log.e("eura-tasks", "Cannot sync: Drive Service not initialized")
                 return@launch
             }
-
+            _syncUiState.value = SyncUiState.Loading
             Log.d("eura-tasks", "--- STARTING FULL SYNC ---")
+            _syncMessage.value = "Starting sync..."
+
 
             syncDeletedUserLists { cloudDeletedLists ->
                 syncUserLists { cloudActiveLists ->
@@ -478,9 +527,11 @@ class GoogleDriveViewModel(
                                                 type = cloudList.type
                                             ))
                                             Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.name}")
+                                            _syncMessage.value = "Conflict resolved: Kept cloud list ${cloudList.name}"
                                             needsReupload = true
                                         } else {
                                             Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.name}")
+                                            _syncMessage.value = "Conflict resolved: Kept local list ${conflict.name}"
                                         }
                                     } else {
                                         listDbViewModel.insertList(
@@ -490,6 +541,7 @@ class GoogleDriveViewModel(
                                             uuid = cloudList.uuid
                                         )
                                         Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.name}")
+                                        _syncMessage.value = "Downloaded new cloud list: ${cloudList.name}"
                                     }
                                 }
                             }
@@ -497,8 +549,11 @@ class GoogleDriveViewModel(
                             if (cleanActiveLists.size < cloudActiveLists.size || needsReupload) {
                                 if (needsReupload) {
                                     Log.d("eura-tasks", "Conflicts resolved. Re-uploading lists.json to Drive.")
+                                    _syncMessage.value = "Conflicts resolved. Re-uploading lists.json to Drive."
+
                                 } else {
                                     Log.d("eura-tasks", "Detected zombie lists on cloud. Re-uploading cleaned lists.json to Drive.")
+                                    _syncMessage.value = "Detected zombie lists on cloud. Re-uploading cleaned lists.json to Drive."
                                 }
 
                                 val listFolderId = getOrCreateSubFolderId("lists", getOrCreateMainFolderId())
@@ -528,11 +583,14 @@ class GoogleDriveViewModel(
                                         }
                                     } catch (e: Exception) {
                                         Log.e("eura-tasks", "Failed to fix lists.json on cloud: ${e.message}")
+                                        _syncUiState.value = SyncUiState.Error("Failed to fix lists.json on cloud: ${e.message}")
                                     }
                                 }
                             }
 
                             Log.d("eura-tasks", "Lists reconciled, saved locally, and updated on cloud.")
+                            _syncUiState.value = SyncUiState.Success("Lists reconciled, saved locally, and updated on cloud.")
+
 
                             val taskFolderId = getOrCreateSubFolderId(
                                 folderName = "tasks",
@@ -575,6 +633,7 @@ class GoogleDriveViewModel(
                                     }
                                 } catch (e: Exception) {
                                     Log.e("eura-tasks", "Upload failed for task ${entity.uuid}: ${e.message}")
+                                    _syncUiState.value = SyncUiState.Error("Upload failed for task ${entity.uuid}: ${e.message}")
                                 }
                             }
 
@@ -600,11 +659,14 @@ class GoogleDriveViewModel(
                                 if (task.uuid in allDeletedTaskUuids) {
                                     deleteTaskFile(task.uuid)
                                     Log.d("eura-tasks", "Cloud task file ${task.uuid} matched a tombstone. Purging from Drive.")
+                                    _syncMessage.value = "Cloud task file ${task.uuid} matched a tombstone. Purging from Drive."
+
                                 } else if (task.uuid !in localActiveTaskUuids) {
 
                                     // CHECK: Does the target list exist locally?
                                     if (task.taskList !in localActiveListNames) {
                                         Log.w("eura-tasks", "List '${task.taskList}' missing for downloaded task. Auto-creating list.")
+                                        _syncUiState.value = SyncUiState.Success("List '${task.taskList}' missing for downloaded task. Auto-creating list.")
 
                                         // Synchronously insert the missing list into Room first
                                         listDbViewModel.insertListSynchronously(
@@ -618,12 +680,15 @@ class GoogleDriveViewModel(
 
                                     taskDbViewModel.insertTask(task)
                                     Log.d("eura-tasks", "Downloaded new cloud task: ${task.title}")
+                                    _syncMessage.value = "Downloaded new cloud task: ${task.title}"
+
                                 }
                             }
 
                             Log.d("eura-tasks", "--- FULL SYNC COMPLETE ---")
 
                             withContext(Dispatchers.Main) {
+                                _syncUiState.value = SyncUiState.Success("Sync completed successfully")
                                 onComplete()
                             }
                         }

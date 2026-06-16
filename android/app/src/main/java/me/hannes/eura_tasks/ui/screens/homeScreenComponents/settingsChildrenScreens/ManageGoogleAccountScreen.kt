@@ -36,10 +36,16 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
+import me.hannes.eura_tasks.ui.UiEvent
+import me.hannes.eura_tasks.ui.UiState
+import me.hannes.eura_tasks.ui.viewModels.GoogleDriveViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LinkGoogleAccountScreen(
+    googleDriveViewModel: GoogleDriveViewModel,
+    onUiEvent: (UiEvent) -> Unit,
+    uiState: UiState,
     onSuccess: (GoogleSignInAccount) -> Unit,
     onSignOut: () -> Unit,
     onClose: () -> Unit
@@ -129,12 +135,28 @@ fun LinkGoogleAccountScreen(
                 ) {
                     Text("Disconnect Account")
                 }
+
+                Button(
+                    onClick = { onUiEvent(UiEvent.OpenDeleteAllCloudDataWarningDialog) }
+                ) {
+                    Text("Delete all cloud data")
+                }
+
             } else {
-                // User is Not Signed In -> Show Sign In Button
                 Button(onClick = { launcher.launch(googleSignInClient.signInIntent) }) {
                     Text("Sign in with Google")
                 }
             }
         }
+    }
+
+    if (uiState.isDeleteAllCloudDataWarningDialogOpen) {
+        DeleteAllCloudDataWarningDialog(
+            onClose = { onUiEvent(UiEvent.CloseDeleteAllCloudDataWarningDialog) },
+            onConfirm = {
+                onUiEvent(UiEvent.CloseDeleteAllCloudDataWarningDialog)
+                googleDriveViewModel.deleteAllData()
+            }
+        )
     }
 }

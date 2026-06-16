@@ -1,6 +1,5 @@
 package me.hannes.eura_tasks.ui.screens.homeScreenComponents.addTaskBottomSheetComponents
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -59,7 +58,6 @@ fun AddTaskScreen(
         focusRequester.requestFocus()
     }
 
-    Log.d("Check", "First Entry:  ${firstUserTaskList}")
     val systemThemeIndex = if (darkTheme) 1 else 0
 
     val pageList = taskLists.find { it.name == taskDbState.taskParentList.ifBlank { firstUserTaskList } }
