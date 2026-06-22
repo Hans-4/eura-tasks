@@ -29,6 +29,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -62,6 +64,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +77,7 @@ import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
@@ -87,6 +91,8 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SystemTaskLists
+import me.hannes.eura_tasks.ui.screens.homeScreenComponents.TagListColumnItem
+import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserListColumnItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ListWithSimilarNameWarningDialog
 
@@ -128,6 +134,9 @@ fun HomeScreen(
 
     val tabItems = listOf("My Lists", "Tags")
     var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    val pagerState = rememberPagerState(pageCount = { tabItems.size })
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(uiState.isAddingTask && noUserList) {
         if (uiState.isAddingTask && taskLists.isEmpty()) {
@@ -335,67 +344,38 @@ fun HomeScreen(
                 }
             }
 
-            stickyHeader{
+            //TODO: Change to stickyHeader
+            item{
                 SecondaryTabRow(
-                    selectedTabIndex = selectedTabIndex,
+                    selectedTabIndex = pagerState.currentPage,
                 ) {
-                    tabItems.forEachIndexed { index, item ->
+                    tabItems.forEachIndexed { index, title ->
                         Tab(
-                            selected = index == 0,
-                            onClick = { selectedTabIndex = index },
-                            text = { Text(item) }
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                                      },
+                            text = { Text(title) }
                         )
                     }
                 }
             }
 
             item {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(R.string.my_lists),
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    if (!noUserList) {
-                        Card(
-                            shape = MaterialTheme.shapes.large,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            taskLists.forEachIndexed { index, item ->
-                                val icon = Converter.typeIconConverter(typeString = item.type)
-                                val colorItem = Converter.colorStringConverter(
-                                    systemThemeIndex = systemThemeIndex,
-                                    colorString = item.colorString
-                                )
-                                val itemName = Converter.pageNameConverter(item.name)
-                                val taskListCount = taskDbState.tasks.filter { it.taskList == item.name }.size
-
-                                UserTaskLists(
-                                    index = index,
-                                    title = itemName,
-                                    icon = icon,
-                                    count = taskListCount,
-                                    color = colorItem,
-                                    onClick = { onTaskList(item.name) }
-                                )
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "No Lists",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .padding(top = 104.dp)
-                                .fillMaxWidth()
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) { page ->
+                    when (page) {
+                        0 -> UserListColumnItem(
+                            noUserList = noUserList,
+                            taskLists = taskLists,
+                            systemThemeIndex = systemThemeIndex,
+                            taskDbState = taskDbState,
+                            onTaskList = onTaskList
                         )
+                        1 -> TagListColumnItem()
                     }
                 }
             }
