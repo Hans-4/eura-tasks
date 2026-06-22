@@ -13,4 +13,5 @@ data class UiState(
     val isDeleteAllTasksWarningDialogOpen: Boolean = false,
     val isListConflictWarningAlertOpen: Boolean = false,
     val isDeleteAllCloudDataWarningDialogOpen: Boolean = false,
+    val isAddTagsDialogOpen: Boolean = false,
 )

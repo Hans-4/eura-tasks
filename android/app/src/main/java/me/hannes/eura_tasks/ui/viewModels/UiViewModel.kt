@@ -133,6 +133,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseListWithSimilarNameWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -147,6 +148,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseDeleteAllTasksWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -161,6 +163,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseListConflictWarningAlertOpen -> {
                 _state.update {
                     it.copy(
@@ -175,6 +178,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseDeleteAllCloudDataWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -186,6 +190,21 @@ class UiViewModel: ViewModel() {
                 _state.update {
                     it.copy(
                         isDeleteAllCloudDataWarningDialogOpen = true
+                    )
+                }
+            }
+
+            UiEvent.CloseAddTagsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddTagsDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenAddTagsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddTagsDialogOpen = true
                     )
                 }
             }

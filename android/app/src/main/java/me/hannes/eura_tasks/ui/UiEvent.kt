@@ -25,4 +25,6 @@ sealed interface UiEvent {
     object CloseListConflictWarningAlertOpen: UiEvent
     object OpenDeleteAllCloudDataWarningDialog: UiEvent
     object CloseDeleteAllCloudDataWarningDialog: UiEvent
+    object OpenAddTagsDialog: UiEvent
+    object CloseAddTagsDialog: UiEvent
 }

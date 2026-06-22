@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
+import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -157,7 +158,20 @@ fun AddTaskScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+
+            IconButton(
+                onClick = {
+                    onUiEvent(UiEvent.OpenAddTagsDialog)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Tag,
+                    contentDescription = null,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(4.dp))
 
             IconButton(
                 onClick = {
@@ -185,5 +199,12 @@ fun AddTaskScreen(
                 )
             }
         }
+    }
+
+    if (uiState.isAddTagsDialogOpen) {
+        AddTagsDialog(
+            onDismiss = { onUiEvent(UiEvent.CloseAddTagsDialog) },
+            onConfirm = { TODO() }
+        )
     }
 }
