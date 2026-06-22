@@ -21,14 +21,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,7 +42,6 @@ import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -49,24 +50,34 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SecondaryTabRow
 import androidx.compose.material3.Snackbar
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
 import me.hannes.eura_tasks.R
 import me.hannes.eura_tasks.db.lists.ListDbEvent
 import me.hannes.eura_tasks.db.lists.ListDbState
@@ -80,6 +91,8 @@ import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddNewTaskListDialog
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.AddTaskBottomSheet
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.FabMenuItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.SystemTaskLists
+import me.hannes.eura_tasks.ui.screens.homeScreenComponents.TagListColumnItem
+import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserListColumnItem
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.UserTaskLists
 import me.hannes.eura_tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ListWithSimilarNameWarningDialog
 
@@ -114,6 +127,17 @@ fun HomeScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
 
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
+        state = rememberTopAppBarState(),
+        snapAnimationSpec = null //TODO
+    )
+
+    val tabItems = listOf("My Lists", "Tags")
+    var selectedTabIndex by remember { mutableIntStateOf(0) }
+
+    val pagerState = rememberPagerState(pageCount = { tabItems.size })
+    val coroutineScope = rememberCoroutineScope()
+
     LaunchedEffect(uiState.isAddingTask && noUserList) {
         if (uiState.isAddingTask && taskLists.isEmpty()) {
             snackbarHostState.showSnackbar(
@@ -126,51 +150,42 @@ fun HomeScreen(
 
 
     Scaffold(
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            Card(
-                colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            Surface(
+                color = MaterialTheme.colorScheme.surface,
             ) {
                 Column {
                     CenterAlignedTopAppBar(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(topBarHeight),
+                        modifier = Modifier.heightIn(max = topBarHeight),
                         title = {
-                            Box(
-                                modifier = Modifier.fillMaxHeight(),
-                                contentAlignment = Alignment.Center
+                            Text(
+                                "Tasks",
+                                fontWeight = Bold
+                            )
+                        },
+                        actions = {
+                            IconButton(
+                                modifier = Modifier.size(32.dp),
+                                onClick = { onSettings() },
+                                colors = IconButtonDefaults.iconButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                                )
                             ) {
-                                Text(
-                                    "Tasks",
-                                    fontWeight = Bold
+                                Icon(
+                                    modifier = Modifier.fillMaxSize(),
+                                    imageVector = Icons.Rounded.AccountCircle,
+                                    contentDescription = "Account"
                                 )
                             }
                         },
-                        actions = {
-                            Box(
-                                modifier = Modifier
-                                    .padding(end = 16.dp)
-                                    .fillMaxHeight(),
-                                contentAlignment = Alignment.Center,
-                            ) {
-                                IconButton(
-                                    modifier = Modifier.size(32.dp),
-                                    onClick = { onSettings() },
-                                    colors = IconButtonDefaults.iconButtonColors(
-                                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                                        contentColor = MaterialTheme.colorScheme.primaryContainer
-                                    )
-                                ) {
-                                    Icon(
-                                        modifier = Modifier.fillMaxSize(),
-                                        imageVector = Icons.Rounded.AccountCircle,
-                                        contentDescription = "Account"
-                                    )
-                                }
-                            }
-                        }
+                        scrollBehavior = scrollBehavior,
+                        colors = TopAppBarDefaults.topAppBarColors(
+                            scrolledContainerColor = MaterialTheme.colorScheme.background
+                        )
                     )
 
                     Spacer(modifier = Modifier.height(4.dp))
@@ -329,53 +344,38 @@ fun HomeScreen(
                 }
             }
 
-            item {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
+            //TODO: Change to stickyHeader
+            item{
+                SecondaryTabRow(
+                    selectedTabIndex = pagerState.currentPage,
                 ) {
-                    Text(
-                        text = stringResource(R.string.my_lists),
-                        fontSize = 18.sp,
-                        color = MaterialTheme.colorScheme.outline,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-
-                    if (!noUserList) {
-                        Card(
-                            shape = MaterialTheme.shapes.large,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
-                            ),
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            taskLists.forEachIndexed { index, item ->
-                                val icon = Converter.typeIconConverter(typeString = item.type)
-                                val colorItem = Converter.colorStringConverter(
-                                    systemThemeIndex = systemThemeIndex,
-                                    colorString = item.colorString
-                                )
-                                val itemName = Converter.pageNameConverter(item.name)
-                                val taskListCount = taskDbState.tasks.filter { it.taskList == item.name }.size
-
-                                UserTaskLists(
-                                    index = index,
-                                    title = itemName,
-                                    icon = icon,
-                                    count = taskListCount,
-                                    color = colorItem,
-                                    onClick = { onTaskList(item.name) }
-                                )
-                            }
-                        }
-                    } else {
-                        Text(
-                            text = "No Lists",
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier
-                                .padding(top = 104.dp)
-                                .fillMaxWidth()
+                    tabItems.forEachIndexed { index, title ->
+                        Tab(
+                            selected = pagerState.currentPage == index,
+                            onClick = {
+                                coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                                      },
+                            text = { Text(title) }
                         )
+                    }
+                }
+            }
+
+            item {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.Top
+                ) { page ->
+                    when (page) {
+                        0 -> UserListColumnItem(
+                            noUserList = noUserList,
+                            taskLists = taskLists,
+                            systemThemeIndex = systemThemeIndex,
+                            taskDbState = taskDbState,
+                            onTaskList = onTaskList
+                        )
+                        1 -> TagListColumnItem()
                     }
                 }
             }

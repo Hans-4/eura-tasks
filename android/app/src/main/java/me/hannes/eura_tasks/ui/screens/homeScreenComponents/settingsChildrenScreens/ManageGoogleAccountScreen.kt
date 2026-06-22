@@ -80,7 +80,7 @@ fun LinkGoogleAccountScreen(
                 onSuccess(account) // Pass the account to your Drive logic
             }
         } catch (e: ApiException) {
-            Log.e("EuraToDo", "Login Failed: ${e.statusCode}")
+            Log.e("EuraTasks", "Login Failed: ${e.statusCode}")
         }
     }
 
@@ -141,7 +141,7 @@ fun LinkGoogleAccountScreen(
                                 signedInAccount = null
                                 onSignOut()
                             } else {
-                                Log.e("EuraToDo", "Sign out failed.")
+                                Log.e("EuraTasks", "Sign out failed.")
                             }
                         }
                     }
