@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
-import com.eura.tasks.db.cleanUpOldLists
+import com.eura.tasks.db.cleanUpOldLogs
 import com.eura.tasks.db.lists.DeletedUserListEntity
 import com.eura.tasks.db.lists.ListDbDao
 import com.eura.tasks.db.lists.ListDbEvent
@@ -46,7 +46,8 @@ class ListDbViewModel(
 
                 viewModelScope.launch {
                     if (listDao.searchForExistingTitle(title)) {
-                        onUiEvent(UiEvent.OpenListWithSimilarNameWarningDialog)
+                        onUiEvent(UiEvent.SetReason(1))
+                        onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
                     } else {
                         val list = UserListEntity(
                             name = title,
@@ -61,7 +62,7 @@ class ListDbViewModel(
                                 listColor = "RED"
                             )
                         }
-                        cleanUpOldLists(listDao)
+                        cleanUpOldLogs { cutoff -> listDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(UiEvent.CloseAddTaskListDialog)
                     }
                 }

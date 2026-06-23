@@ -9,6 +9,8 @@ sealed interface TaskDbEvent {
     data class SetTodoIsFavorite(val isFavorite: Boolean, val task: TaskEntity? = null): TaskDbEvent
     data class SetIsCompleted(val isCompleted: Boolean, val task: TaskEntity? = null): TaskDbEvent
     data class SetDueDateTime(val date: LocalDateTime): TaskDbEvent
+    data class SetTaskTags(val tags: List<String>): TaskDbEvent
+
     data class SetParentList(val parentList: String): TaskDbEvent
     data class SortTodos(val sortType: SortType): TaskDbEvent
     data class SelectTaskList(val listType: String): TaskDbEvent

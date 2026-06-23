@@ -207,10 +207,10 @@ fun AddTaskScreen(
 
     if (uiState.isAddTagsDialogOpen) {
         AddTagsDialog(
-            onDismiss = { onUiEvent(UiEvent.CloseAddTagsDialog) },
-            onConfirm = { TODO() },
+            onClose = { onUiEvent(UiEvent.CloseAddTagsDialog) },
             onTagDbEvent = onTagDbEvent,
             tagDbState = tagDbState,
+            onTaskDbEvent = onDbEvent,
             onUiEvent = onUiEvent,
             uiState = uiState
         )

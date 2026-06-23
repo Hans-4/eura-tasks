@@ -98,7 +98,7 @@ class MainActivity : ComponentActivity() {
                     uiState = uiState,
                     onTaskDbEvent = taskDbViewModel::onEvent,
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
-                    onTagDbEvent = tagDbViewModel::onEvent,
+                    onTagDbEvent = { event -> tagDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onUiEvent = uiViewModel::onEvent,
                     taskDbViewModel = taskDbViewModel,
                     listDbViewModel = listDbViewModel,

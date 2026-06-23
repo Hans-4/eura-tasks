@@ -9,19 +9,26 @@ import com.eura.tasks.R
 import com.eura.tasks.ui.UiEvent
 
 @Composable
-fun ListWithSimilarNameWarningDialog(
-    onUiEvent: (UiEvent) -> Unit
+fun ItemWithSimilarNameWarningDialog(
+    onUiEvent: (UiEvent) -> Unit,
+    reason: Int
 ) {
+    val type = when (reason) {
+        1 -> stringResource(R.string.list)
+        2 -> stringResource(R.string.tag)
+        else -> ":("
+    }
+
     AlertDialog(
-        title =  {Text("List can not be created")},
+        title =  {Text("$type can not be created")},
         text = {
-            Text("There is already a list with a similar name. Chose a different name.")
+            Text("There is already a $type with a similar name. Chose a different name.")
         },
-        onDismissRequest = {onUiEvent(UiEvent.CloseListWithSimilarNameWarningDialog)},
+        onDismissRequest = {onUiEvent(UiEvent.CloseItemWithSimilarNameWarningDialog)},
         confirmButton = {
             TextButton(
                 onClick = {
-                    onUiEvent(UiEvent.CloseListWithSimilarNameWarningDialog)
+                    onUiEvent(UiEvent.CloseItemWithSimilarNameWarningDialog)
                 }
             ) {
                 Text(stringResource(R.string.ok))

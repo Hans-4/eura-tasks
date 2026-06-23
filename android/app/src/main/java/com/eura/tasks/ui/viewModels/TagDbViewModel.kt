@@ -2,10 +2,12 @@ package com.eura.tasks.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eura.tasks.db.cleanUpOldLogs
 import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tags.TagsEntity
+import com.eura.tasks.ui.UiEvent
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -25,7 +27,7 @@ class TagDbViewModel(
             state.copy(tags = tags)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TagDbState())
 
-    fun onEvent(event: TagDbEvent) {
+    fun onEvent(event: TagDbEvent, onUiEvent: (UiEvent) -> Unit) {
         when(event) {
             TagDbEvent.SaveTag -> {
                 val title = _state.value.tagTitle.trim()
@@ -34,15 +36,24 @@ class TagDbViewModel(
                     return
                 }
 
-                val tag = TagsEntity(
-                    name = title,
-                )
                 viewModelScope.launch {
-                    tagDao.upsertTag(tag)
-                    _state.update {
-                        it.copy(
-                            tagTitle = ""
+                    if (tagDao.searchForExistingTitle(title)) {
+                        onUiEvent(UiEvent.SetReason(2))
+                        onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
+                    } else {
+                        val tag = TagsEntity(
+                            name = title,
                         )
+
+                        tagDao.upsertTag(tag)
+                        _state.update {
+                            it.copy(
+                                tagTitle = ""
+                            )
+                        }
+
+                        cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
+                        onUiEvent(UiEvent.CloseAddTagTextField)
                     }
                 }
             }

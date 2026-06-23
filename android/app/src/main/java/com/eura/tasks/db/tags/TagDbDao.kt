@@ -18,4 +18,8 @@ interface TagDbDao {
     suspend fun deleteByTaskId(taskId: Int)
     @Query("DELETE FROM task_tags WHERE tagId = :tagId")
     suspend fun deleteByTagId(tagId: Int)
+    @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(name) = LOWER(:title))")
+    suspend fun searchForExistingTitle(title: String): Boolean
+    @Query("DELETE FROM deleted_tags WHERE deletionDate < :cutoffTimestamp")
+    suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 }

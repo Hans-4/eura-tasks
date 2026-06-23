@@ -134,17 +134,24 @@ class UiViewModel: ViewModel() {
                 }
             }
 
-            UiEvent.CloseListWithSimilarNameWarningDialog -> {
+            UiEvent.CloseItemWithSimilarNameWarningDialog -> {
                 _state.update {
                     it.copy(
-                        isListWithSimilarNameWarningDialogOpen = false
+                        isItemWithSimilarNameWarningDialogOpen = false
                     )
                 }
             }
-            UiEvent.OpenListWithSimilarNameWarningDialog -> {
+            UiEvent.OpenItemWithSimilarNameWarningDialog -> {
                 _state.update {
                     it.copy(
-                        isListWithSimilarNameWarningDialogOpen = true
+                        isItemWithSimilarNameWarningDialogOpen = true
+                    )
+                }
+            }
+            is UiEvent.SetReason -> {
+                _state.update {
+                    it.copy(
+                        similarNameWarningReason = event.reason
                     )
                 }
             }

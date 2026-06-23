@@ -90,7 +90,7 @@ import com.eura.tasks.ui.screens.homeScreenComponents.FabMenuItem
 import com.eura.tasks.ui.screens.homeScreenComponents.SystemTaskLists
 import com.eura.tasks.ui.screens.homeScreenComponents.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreenComponents.UserListColumnItem
-import com.eura.tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ListWithSimilarNameWarningDialog
+import com.eura.tasks.ui.screens.homeScreenComponents.addNewTaskListComponents.ItemWithSimilarNameWarningDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -425,9 +425,10 @@ fun HomeScreen(
             }
         }
 
-        if (uiState.isListWithSimilarNameWarningDialogOpen) {
-            ListWithSimilarNameWarningDialog(
-                onUiEvent = onUiEvent
+        if (uiState.isItemWithSimilarNameWarningDialogOpen) {
+            ItemWithSimilarNameWarningDialog(
+                onUiEvent = onUiEvent,
+                reason = uiState.similarNameWarningReason
             )
         }
 

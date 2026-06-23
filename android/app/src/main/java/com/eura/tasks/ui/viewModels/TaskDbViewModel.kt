@@ -1,7 +1,9 @@
 package com.eura.tasks.ui.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.eura.tasks.db.cleanUpOldLogs
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -15,7 +17,6 @@ import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
-import com.eura.tasks.db.cleanUpOldTasks
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.ui.UiState
 import kotlin.time.Clock
@@ -54,6 +55,8 @@ class TaskDbViewModel(
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
+                Log.d("Check", "Selected tags ${state.value.tags}")
+
                 val currentDateTime: Instant = Clock.System.now()
 
                 if (title.isBlank() || parentList.isBlank()) {
@@ -71,7 +74,7 @@ class TaskDbViewModel(
                 )
                 viewModelScope.launch {
                     dao.upsertTask(task)
-                    cleanUpOldTasks(dao)
+                    cleanUpOldLogs { cutoff -> dao.deleteLogsOlderThan(cutoff) }
                 }
                 _state.update { it.copy(
                     todoTitle = "",
@@ -192,6 +195,14 @@ class TaskDbViewModel(
             is TaskDbEvent.UpdateDescriptionById -> {
                 viewModelScope.launch {
                     dao.updateTaskDescription(event.id, event.newDescription)
+                }
+            }
+
+            is TaskDbEvent.SetTaskTags -> {
+                _state.update {
+                    it.copy(
+                        tags = event.tags
+                    )
                 }
             }
         }

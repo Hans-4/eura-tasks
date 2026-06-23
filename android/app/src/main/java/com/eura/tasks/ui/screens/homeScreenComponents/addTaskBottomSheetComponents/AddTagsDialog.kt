@@ -30,10 +30,8 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -45,22 +43,25 @@ import androidx.compose.ui.unit.dp
 import com.eura.tasks.R
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
+import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun AddTagsDialog(
-    onDismiss: () -> Unit,
-    onConfirm: () -> Unit,
+    onClose: () -> Unit,
     onTagDbEvent: (TagDbEvent) -> Unit,
     tagDbState: TagDbState,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState
 ) {
 
     val tagList = tagDbState.tags
     val isEmpty = tagList.isEmpty()
+
+    val selectedTagIds = remember { mutableStateListOf<Int>() }
 
     val focusRequester = remember { FocusRequester() }
 
@@ -71,10 +72,14 @@ fun AddTagsDialog(
     }
 
     AlertDialog(
-        onDismissRequest = { onDismiss() },
+        onDismissRequest = { onClose() },
         confirmButton = {
             TextButton(
-                onClick = { onConfirm() }
+                onClick = {
+                    onClose()
+                    val stringIdList = selectedTagIds.map { it.toString() }
+                    onTaskDbEvent(TaskDbEvent.SetTaskTags(stringIdList))
+                }
             ) {
                 Text(
                     text = stringResource(R.string.save)
@@ -83,7 +88,7 @@ fun AddTagsDialog(
         },
         dismissButton = {
             TextButton(
-                onClick = { onDismiss() }
+                onClick = { onClose() }
             ) {
                 Text(
                     text = stringResource(R.string.cancel)
@@ -118,9 +123,15 @@ fun AddTagsDialog(
                         item {
                             if (!isEmpty) {
                                 tagList.forEachIndexed { index, item ->
-                                    var checked by remember { mutableStateOf(false) }
+                                    val isChecked = selectedTagIds.contains(item.id)
                                     Button(
-                                        onClick = { checked = !checked },
+                                        onClick = {
+                                            if (isChecked) {
+                                                selectedTagIds.remove(item.id)
+                                            } else {
+                                                selectedTagIds.add(item.id)
+                                            }
+                                        },
                                         shape = RoundedCornerShape(0.dp),
                                         colors = ButtonDefaults.buttonColors(
                                             containerColor = MaterialTheme.colorScheme.surface,
@@ -133,8 +144,14 @@ fun AddTagsDialog(
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             Checkbox(
-                                                checked = checked,
-                                                onCheckedChange = { checked = it }
+                                                checked = isChecked,
+                                                onCheckedChange = { checked ->
+                                                    if (checked) {
+                                                        selectedTagIds.add(item.id)
+                                                    } else {
+                                                        selectedTagIds.remove(item.id)
+                                                    }
+                                                }
                                             )
 
                                             Text(text = item.name)
@@ -189,10 +206,15 @@ fun AddTagsDialog(
                                 ) {
                                     Text(text = "Cancel")
                                 }
-                                TextButton(onClick = {
-                                    onTagDbEvent(TagDbEvent.SaveTag)
-                                    onUiEvent(UiEvent.CloseAddTagTextField)
-                                }) { Text(text = stringResource(R.string.save)) }
+                                TextButton(
+                                    onClick = {
+                                        onTagDbEvent(TagDbEvent.SaveTag)
+                                }
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.save)
+                                    )
+                                }
                             }
                         }
                     } else {

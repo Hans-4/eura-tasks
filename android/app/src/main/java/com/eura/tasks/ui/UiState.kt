@@ -9,7 +9,10 @@ data class UiState(
     val isConfirmingDeletion: Boolean = false,
     val isHomeFABMenuExpanded: Boolean = false,
     val isManageListSheetOpen: Boolean = false,
-    val isListWithSimilarNameWarningDialogOpen: Boolean = false,
+
+    val isItemWithSimilarNameWarningDialogOpen: Boolean = false,
+    val similarNameWarningReason: Int = 0,
+
     val isDeleteAllTasksWarningDialogOpen: Boolean = false,
     val isListConflictWarningAlertOpen: Boolean = false,
     val isDeleteAllCloudDataWarningDialogOpen: Boolean = false,
