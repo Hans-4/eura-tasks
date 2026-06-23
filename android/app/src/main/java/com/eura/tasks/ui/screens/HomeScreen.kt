@@ -109,10 +109,13 @@ fun HomeScreen(
     darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
     val taskLists = listDbState.userLists
+    val noUserList = taskLists.isEmpty()
+
+    val tagList = tagDbState.tags
+    val noTags = tagList.isEmpty()
 
     val systemThemeIndex = if (darkTheme) 1 else 0
 
-    val noUserList = taskLists.isEmpty()
 
     val topBarHeight = 100.dp
 
@@ -373,7 +376,10 @@ fun HomeScreen(
                             taskDbState = taskDbState,
                             onTaskList = onTaskList
                         )
-                        1 -> TagListColumnItem()
+                        1 -> TagListColumnItem(
+                            noTags = noTags,
+                            tagList = tagList,
+                        )
                     }
                 }
             }
