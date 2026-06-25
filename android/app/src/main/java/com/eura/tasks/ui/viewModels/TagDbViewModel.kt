@@ -1,5 +1,6 @@
 package com.eura.tasks.ui.viewModels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
@@ -26,7 +27,11 @@ class TagDbViewModel(
     val state: StateFlow<TagDbState> = tagDao.getAllTags()
         .combine(_state) { tags, state ->
             state.copy(tags = tags)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TagDbState())
+        }.stateIn(
+            viewModelScope,
+            SharingStarted.WhileSubscribed(5000),
+            TagDbState()
+        )
 
     fun onEvent(event: TagDbEvent, onUiEvent: (UiEvent) -> Unit) {
         when(event) {
@@ -89,6 +94,20 @@ class TagDbViewModel(
                     it.copy(
                         selectedTagUuids = emptyList()
                     )
+                }
+            }
+
+            is TagDbEvent.GetAllTagsByUuid -> {
+                viewModelScope.launch {
+                    val taskTagsEntity = tagDao.getAllTagsFromTask(event.uuid)
+                    val tagsUuids = taskTagsEntity.map { it.tagUuid }
+                    val allTags = tagDao.getTagsByUuids(tagsUuids)
+
+                    _state.update {
+                        it.copy(
+                            tagsFromCurrentTask = allTags
+                        )
+                    }
                 }
             }
         }

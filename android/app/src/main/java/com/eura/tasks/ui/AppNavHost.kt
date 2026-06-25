@@ -259,7 +259,9 @@ fun AppNavHost(
                     uiState = uiState,
                     onUiEvent = onUiEvent,
                     onTaskList = { listName -> navController.navigate("taskLists/$listName") },
-                    parentScreen = parentScreen
+                    parentScreen = parentScreen,
+                    onTagDbEvent = onTagDbEvent,
+                    tagDbState = tagDbState
                 )
             }
         }
