@@ -60,10 +60,8 @@ import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -129,12 +127,10 @@ fun HomeScreen(
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(
-        state = rememberTopAppBarState(),
-        snapAnimationSpec = null //TODO
+        state = rememberTopAppBarState()
     )
 
-    val tabItems = listOf("My Lists", "Tags")
-    var selectedTabIndex by remember { mutableIntStateOf(0) }
+    val tabItems = listOf(stringResource(R.string.my_lists), stringResource(R.string.tags))
 
     val pagerState = rememberPagerState(pageCount = { tabItems.size })
     val coroutineScope = rememberCoroutineScope()
@@ -283,19 +279,21 @@ fun HomeScreen(
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 8.dp),
+                .fillMaxSize(),
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Column(modifier = Modifier.padding(vertical = 8.dp)) {
+                Column(modifier = Modifier
+                    .padding(vertical = 8.dp, horizontal = 8.dp)) {
                     systemTaskList
                         .take(6)
                         .chunked(2)
                         .forEach { list ->
                         Row(
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             for (item in list) {
@@ -349,6 +347,8 @@ fun HomeScreen(
             item{
                 SecondaryTabRow(
                     selectedTabIndex = pagerState.currentPage,
+                    modifier = Modifier
+                        .padding(horizontal = 8.dp)
                 ) {
                     tabItems.forEachIndexed { index, title ->
                         Tab(

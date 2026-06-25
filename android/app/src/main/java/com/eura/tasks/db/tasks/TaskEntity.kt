@@ -1,12 +1,16 @@
 package com.eura.tasks.db.tasks
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.time.Instant
 
-@Entity(tableName = "tasks")
+@Entity(
+    tableName = "tasks",
+    indices = [Index(value = ["uuid"], unique = true)]
+)
 data class TaskEntity(
     val title: String,
     val description: String,

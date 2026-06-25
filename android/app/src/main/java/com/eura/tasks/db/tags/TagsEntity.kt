@@ -1,10 +1,14 @@
 package com.eura.tasks.db.tags
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.util.UUID
 
-@Entity(tableName = "tags")
+@Entity(
+    tableName = "tags",
+    indices = [Index(value = ["uuid"], unique = true)]
+)
 data class TagsEntity(
     val name: String,
     val uuid: String = UUID.randomUUID().toString(),

@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TaskDbViewModel(db.taskDao) as T
+                    return TaskDbViewModel(db.taskDao, db.tagDao) as T
                 }
             }
         }

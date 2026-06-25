@@ -30,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,8 +60,6 @@ fun AddTagsDialog(
     val tagList = tagDbState.tags
     val isEmpty = tagList.isEmpty()
 
-    val selectedTagIds = remember { mutableStateListOf<Int>() }
-
     val focusRequester = remember { FocusRequester() }
 
     LaunchedEffect(uiState.isAddTagTextFieldOpen) {
@@ -77,8 +74,8 @@ fun AddTagsDialog(
             TextButton(
                 onClick = {
                     onClose()
-                    val stringIdList = selectedTagIds.map { it.toString() }
-                    onTaskDbEvent(TaskDbEvent.SetTaskTags(stringIdList))
+                    onTaskDbEvent(TaskDbEvent.SetTaskTags(tagDbState.selectedTagUuids))
+                    onTagDbEvent(TagDbEvent.UncheckAllTags)
                 }
             ) {
                 Text(
@@ -123,13 +120,13 @@ fun AddTagsDialog(
                         item {
                             if (!isEmpty) {
                                 tagList.forEachIndexed { index, item ->
-                                    val isChecked = selectedTagIds.contains(item.id)
+                                    val isChecked = tagDbState.selectedTagUuids.contains(item.uuid)
                                     Button(
                                         onClick = {
                                             if (isChecked) {
-                                                selectedTagIds.remove(item.id)
+                                                onTagDbEvent(TagDbEvent.UnselectTag(item.uuid))
                                             } else {
-                                                selectedTagIds.add(item.id)
+                                                onTagDbEvent(TagDbEvent.SelectTag(item.uuid))
                                             }
                                         },
                                         shape = RoundedCornerShape(0.dp),
@@ -145,11 +142,11 @@ fun AddTagsDialog(
                                         ) {
                                             Checkbox(
                                                 checked = isChecked,
-                                                onCheckedChange = { checked ->
-                                                    if (checked) {
-                                                        selectedTagIds.add(item.id)
+                                                onCheckedChange = {
+                                                    if (isChecked) {
+                                                        onTagDbEvent(TagDbEvent.UnselectTag(item.uuid))
                                                     } else {
-                                                        selectedTagIds.remove(item.id)
+                                                        onTagDbEvent(TagDbEvent.SelectTag(item.uuid))
                                                     }
                                                 }
                                             )

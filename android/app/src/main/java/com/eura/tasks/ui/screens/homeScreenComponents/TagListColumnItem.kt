@@ -23,7 +23,9 @@ fun TagListColumnItem(
     tagList: List<TagsEntity>,
 ) {
     Column(
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier
+            .padding(horizontal = 8.dp)
+            .fillMaxWidth()
     ) {
         Text(
             text = stringResource(R.string.tags),

@@ -14,9 +14,11 @@ interface TagDbDao {
 
     @Upsert
     suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
-    @Query("DELETE FROM task_tags WHERE taskId = :taskId")
+    @Query("INSERT INTO task_tags (taskUuid, tagUuid) VALUES (:taskUuid, :tagUuid)")
+    suspend fun insertTaskTags(taskUuid: String, tagUuid: String)
+    @Query("DELETE FROM task_tags WHERE taskUuid = :taskId")
     suspend fun deleteByTaskId(taskId: Int)
-    @Query("DELETE FROM task_tags WHERE tagId = :tagId")
+    @Query("DELETE FROM task_tags WHERE tagUuid = :tagId")
     suspend fun deleteByTagId(tagId: Int)
     @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(name) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean

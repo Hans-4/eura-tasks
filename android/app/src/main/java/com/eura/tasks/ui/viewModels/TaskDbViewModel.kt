@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
+import com.eura.tasks.db.tags.TagDbDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,16 +25,17 @@ import kotlin.time.Instant
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
-    private val dao: TaskDbDao
+    private val taskDao: TaskDbDao,
+    private val tagDao: TagDbDao
 ): ViewModel() {
 
     private val _sortType = MutableStateFlow(SortType.ID)
     private val _tasks = _sortType //TODO: Implement toggle to toggle Asc and Desc
         .flatMapLatest { sortType ->
             when(sortType) {
-                SortType.ID -> dao.getAllTasksByIdDesc()
-                SortType.TITLE -> dao.getAllTodosByTitleAsc()
-            SortType.DATE -> dao.getAllTasksByDateAsc()
+                SortType.ID -> taskDao.getAllTasksByIdDesc()
+                SortType.TITLE -> taskDao.getAllTodosByTitleAsc()
+            SortType.DATE -> taskDao.getAllTasksByDateAsc()
             }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(), emptyList())
@@ -72,9 +74,23 @@ class TaskDbViewModel(
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
-                viewModelScope.launch {
-                    dao.upsertTask(task)
-                    cleanUpOldLogs { cutoff -> dao.deleteLogsOlderThan(cutoff) }
+
+                if (_state.value.tags.isEmpty()) {
+                    viewModelScope.launch {
+                        taskDao.upsertTask(task)
+                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
+                    }
+                } else {
+                    viewModelScope.launch {
+                        taskDao.upsertTask(task)
+                        val entryUuid = task.uuid
+
+                        for (tag in _state.value.tags) {
+                            tagDao.insertTaskTags(entryUuid, tag)
+                        }
+
+                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
+                    }
                 }
                 _state.update { it.copy(
                     todoTitle = "",
@@ -98,7 +114,7 @@ class TaskDbViewModel(
             is TaskDbEvent.SetIsCompleted -> {
                 if (event.task != null) {
                     viewModelScope.launch {
-                        dao.upsertTask(event.task.copy(isCompleted = event.isCompleted))
+                        taskDao.upsertTask(event.task.copy(isCompleted = event.isCompleted))
                     }
                 } else {
                     _state.update {
@@ -118,7 +134,7 @@ class TaskDbViewModel(
             is TaskDbEvent.SetTodoIsFavorite -> {
                 if (event.task != null) {
                     viewModelScope.launch {
-                        dao.upsertTask(event.task.copy(isFavorite = event.isFavorite))
+                        taskDao.upsertTask(event.task.copy(isFavorite = event.isFavorite))
                     }
                 } else {
                     _state.update {
@@ -155,11 +171,11 @@ class TaskDbViewModel(
 
                 viewModelScope.launch {
                     val deletedTask = DeletedTasksEntity(
-                        deletedUuid = dao.getTaskUuid(event.id),
+                        deletedUuid = taskDao.getTaskUuid(event.id),
                         deletionDate = currentDateTime
                     )
-                    dao.upsertDeletedTask(deletedTask)
-                    dao.deleteTodoById(event.id)
+                    taskDao.upsertDeletedTask(deletedTask)
+                    taskDao.deleteTodoById(event.id)
                 }
             }
             is TaskDbEvent.SetParentList -> {
@@ -177,7 +193,7 @@ class TaskDbViewModel(
                     )
                 }
                 viewModelScope.launch {
-                    val results = dao.searchForTasks(event.query)
+                    val results = taskDao.searchForTasks(event.query)
                     _state.update {
                         it.copy(
                             searchResults = results
@@ -188,13 +204,13 @@ class TaskDbViewModel(
 
             is TaskDbEvent.UpdateTaskTitleById -> {
                 viewModelScope.launch {
-                    dao.updateTaskTitle(event.id, event.newTitle)
+                    taskDao.updateTaskTitle(event.id, event.newTitle)
                 }
             }
 
             is TaskDbEvent.UpdateDescriptionById -> {
                 viewModelScope.launch {
-                    dao.updateTaskDescription(event.id, event.newDescription)
+                    taskDao.updateTaskDescription(event.id, event.newDescription)
                 }
             }
 
@@ -213,7 +229,7 @@ class TaskDbViewModel(
      */
     fun insertTask(task: TaskEntity) {
         viewModelScope.launch {
-            dao.upsertTask(task)
+            taskDao.upsertTask(task)
         }
     }
 }

@@ -9,12 +9,12 @@ import com.eura.tasks.db.tasks.TaskEntity
 data class TaskWithTags(
     @Embedded val task: TaskEntity,
     @Relation(
-        parentColumn = "id",
-        entityColumn = "id",
+        parentColumn = "uuid",
+        entityColumn = "uuid",
         associateBy = Junction(
             value = TaskTagsEntity::class,
-            parentColumn = "taskId",
-            entityColumn = "tagId"
+            parentColumn = "taskUuid",
+            entityColumn = "tagUuid"
         )
     )
     val tags: List<TagsEntity>

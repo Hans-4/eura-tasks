@@ -8,6 +8,7 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.ui.UiEvent
+import com.eura.tasks.ui.UiEvent.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -38,22 +39,24 @@ class TagDbViewModel(
 
                 viewModelScope.launch {
                     if (tagDao.searchForExistingTitle(title)) {
-                        onUiEvent(UiEvent.SetReason(2))
-                        onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
+                        onUiEvent(SetReason(2))
+                        onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
                         val tag = TagsEntity(
                             name = title,
                         )
 
                         tagDao.upsertTag(tag)
+
                         _state.update {
                             it.copy(
-                                tagTitle = ""
+                                tagTitle = "",
+                                selectedTagUuids = it.selectedTagUuids + tag.uuid,
                             )
                         }
 
                         cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
-                        onUiEvent(UiEvent.CloseAddTagTextField)
+                        onUiEvent(CloseAddTagTextField)
                     }
                 }
             }
@@ -62,6 +65,29 @@ class TagDbViewModel(
                 _state.update {
                     it.copy(
                         tagTitle = event.title
+                    )
+                }
+            }
+
+            is TagDbEvent.SelectTag -> {
+                _state.update {
+                    it.copy(
+                        selectedTagUuids = it.selectedTagUuids + event.uuid
+                    )
+                }
+            }
+            is TagDbEvent.UnselectTag -> {
+                _state.update {
+                    it.copy(
+                        selectedTagUuids = it.selectedTagUuids - event.uuid
+                    )
+                }
+            }
+
+            TagDbEvent.UncheckAllTags -> {
+                _state.update {
+                    it.copy(
+                        selectedTagUuids = emptyList()
                     )
                 }
             }
