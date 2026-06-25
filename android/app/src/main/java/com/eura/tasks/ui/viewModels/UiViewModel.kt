@@ -230,6 +230,21 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseSetSearchFilterBottomSheet -> {
+                _state.update {
+                    it.copy(
+                        isSetSearchFilterBottomSheetOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenSetSearchFilterBottomSheet -> {
+                _state.update {
+                    it.copy(
+                        isSetSearchFilterBottomSheetOpen = true
+                    )
+                }
+            }
         }
     }
 }

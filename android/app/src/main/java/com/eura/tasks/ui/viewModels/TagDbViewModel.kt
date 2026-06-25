@@ -1,6 +1,5 @@
 package com.eura.tasks.ui.viewModels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
@@ -48,7 +47,7 @@ class TagDbViewModel(
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
                         val tag = TagsEntity(
-                            name = title,
+                            title = title,
                         )
 
                         tagDao.upsertTag(tag)

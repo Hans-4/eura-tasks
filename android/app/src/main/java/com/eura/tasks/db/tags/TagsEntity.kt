@@ -10,7 +10,7 @@ import java.util.UUID
     indices = [Index(value = ["uuid"], unique = true)]
 )
 data class TagsEntity(
-    val name: String,
+    val title: String,
     val uuid: String = UUID.randomUUID().toString(),
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,

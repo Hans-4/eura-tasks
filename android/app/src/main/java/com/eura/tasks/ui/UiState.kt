@@ -17,5 +17,7 @@ data class UiState(
     val isListConflictWarningAlertOpen: Boolean = false,
     val isDeleteAllCloudDataWarningDialogOpen: Boolean = false,
     val isAddTagsDialogOpen: Boolean = false,
-    val isAddTagTextFieldOpen: Boolean = false
+    val isAddTagTextFieldOpen: Boolean = false,
+
+    val isSetSearchFilterBottomSheetOpen: Boolean = false,
 )

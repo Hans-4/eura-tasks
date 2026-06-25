@@ -17,6 +17,7 @@ import com.eura.tasks.ui.viewModels.UiViewModel
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
+import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
 import kotlin.getValue
 
@@ -61,6 +62,20 @@ class MainActivity : ComponentActivity() {
         }
     )
 
+    private val searchViewModel by viewModels<SearchViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return SearchViewModel(
+                        taskDao = db.taskDao,
+                        listDao = db.listDao,
+                        tagDao = db.tagDao
+                    ) as T
+                }
+            }
+        }
+    )
+
     private val uiViewModel by viewModels<UiViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
@@ -90,15 +105,18 @@ class MainActivity : ComponentActivity() {
                 val taskState by taskDbViewModel.state.collectAsState()
                 val listState by listDbViewModel.state.collectAsState()
                 val tagState by tagDbViewModel.state.collectAsState()
+                val searchState by searchViewModel.state.collectAsState()
                 val uiState by uiViewModel.state.collectAsState()
                 AppNavHost(
                     taskDbState = taskState,
                     listDbState = listState,
                     tagDbState = tagState,
+                    searchState = searchState,
                     uiState = uiState,
                     onTaskDbEvent = taskDbViewModel::onEvent,
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onTagDbEvent = { event -> tagDbViewModel.onEvent(event, uiViewModel::onEvent) },
+                    onSearchEvent = searchViewModel::onEvent,
                     onUiEvent = uiViewModel::onEvent,
                     taskDbViewModel = taskDbViewModel,
                     listDbViewModel = listDbViewModel,

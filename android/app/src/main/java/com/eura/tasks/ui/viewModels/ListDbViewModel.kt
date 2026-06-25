@@ -50,7 +50,7 @@ class ListDbViewModel(
                         onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
                     } else {
                         val list = UserListEntity(
-                            name = title,
+                            title = title,
                             type = type,
                             colorString = color
                         )
@@ -114,7 +114,7 @@ class ListDbViewModel(
     ) {
         viewModelScope.launch {
             val list = UserListEntity(
-                name = name,
+                title = name,
                 type = type,
                 colorString = color,
                 uuid = uuid
@@ -133,7 +133,7 @@ class ListDbViewModel(
         uuid: String = UUID.randomUUID().toString()
     ) = withContext(Dispatchers.IO) {
         val list = UserListEntity(
-            name = name,
+            title = name,
             type = type,
             colorString = color,
             uuid = uuid

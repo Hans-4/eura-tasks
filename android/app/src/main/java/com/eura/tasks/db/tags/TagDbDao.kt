@@ -22,7 +22,7 @@ interface TagDbDao {
     suspend fun deleteByTaskId(taskUuid: String)
     @Query("DELETE FROM task_tags WHERE tagUuid = :taskUuid")
     suspend fun deleteByTagId(taskUuid: String)
-    @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(name) = LOWER(:title))")
+    @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(title) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean
     @Query("DELETE FROM deleted_tags WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
@@ -30,4 +30,6 @@ interface TagDbDao {
     suspend fun getAllTagsFromTask(taskUuid: String): List<TaskTagsEntity>
     @Query("SELECT * FROM tags WHERE uuid IN (:uuids)")
     suspend fun getTagsByUuids(uuids: List<String>): List<TagsEntity>
+    @Query("SELECT * FROM tags WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
+    suspend fun searchForTags(query: String): List<TagsEntity>
 }

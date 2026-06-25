@@ -1,39 +1,39 @@
 package com.eura.tasks.db.lists
 
 data class SystemListItem(
-    override val name: String,
+    override val title: String,
     override val type: String,
     override val colorString: String,
 ) : TaskList
 
 val systemTaskList = listOf(
     SystemListItem(
-        name = "SYSTEM_TODAY",
+        title = "SYSTEM_TODAY",
         type = "TODAY",
         colorString = "PURPLE"
     ),
     SystemListItem(
-        name = "SYSTEM_SCHEDULE",
+        title = "SYSTEM_SCHEDULE",
         type = "SCHEDULE",
         colorString = "PINK"
     ),
     SystemListItem(
-        name = "SYSTEM_ALL",
+        title = "SYSTEM_ALL",
         type = "ALL",
         colorString = "RED"
     ),
     SystemListItem(
-        name = "SYSTEM_FAVORITES",
+        title = "SYSTEM_FAVORITES",
         type = "FAVORITES",
         colorString = "YELLOW"
     ),
     SystemListItem(
-        name = "SYSTEM_IMPORTANT",
+        title = "SYSTEM_IMPORTANT",
         type = "IMPORTANT",
         colorString = "GREEN"
     ),
     SystemListItem(
-        name = "SYSTEM_SHOPPING",
+        title = "SYSTEM_SHOPPING",
         type = "SHOPPING",
         colorString = "BLUE"
     ),

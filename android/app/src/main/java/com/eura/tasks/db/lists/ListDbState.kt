@@ -6,4 +6,7 @@ data class ListDbState(
     val listTitle: String = "",
     val listType: String = "OTHER",
     val listColor: String = "RED",
+
+    val searchQuery: String = "",
+    val searchResults: List<UserListEntity> = emptyList()
 )

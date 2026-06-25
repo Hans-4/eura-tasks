@@ -14,19 +14,21 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.eura.tasks.db.SearchEvent
+import com.eura.tasks.db.SearchState
 import com.eura.tasks.db.lists.ListDbEvent
 import com.eura.tasks.db.lists.ListDbState
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
-import com.eura.tasks.ui.screens.HomeScreen
-import com.eura.tasks.ui.screens.SearchScreen
-import com.eura.tasks.ui.screens.SettingsScreen
-import com.eura.tasks.ui.screens.TaskDetailsScreen
-import com.eura.tasks.ui.screens.TaskScreen
-import com.eura.tasks.ui.screens.homeScreenComponents.settingsChildrenScreens.LinkGoogleAccountScreen
-import com.eura.tasks.ui.screens.sychronice.ListConflictWarningDialog
+import com.eura.tasks.ui.screens.homeScreen.HomeScreen
+import com.eura.tasks.ui.screens.searchScreen.SearchScreen
+import com.eura.tasks.ui.screens.settingsScreen.SettingsScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.TaskDetailsScreen
+import com.eura.tasks.ui.screens.taskScreen.TaskScreen
+import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
+import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
@@ -37,10 +39,12 @@ fun AppNavHost(
     taskDbState: TaskDbState,
     listDbState: ListDbState,
     tagDbState: TagDbState,
+    searchState: SearchState,
     uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
     onTagDbEvent: (TagDbEvent) -> Unit,
+    onSearchEvent: (SearchEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
@@ -169,7 +173,11 @@ fun AppNavHost(
                 onTaskDbEvent = onTaskDbEvent,
                 onTaskDetails = { taskId, parentScreen ->
                     navController.navigate("taskDetails/$taskId/$parentScreen")
-                }
+                },
+                uiState = uiState,
+                onSearchEvent = onSearchEvent,
+                searchState = searchState,
+                onUiEvent = onUiEvent
             )
         }
 

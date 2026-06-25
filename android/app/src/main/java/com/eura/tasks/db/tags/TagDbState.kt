@@ -5,4 +5,7 @@ data class TagDbState (
     val tagTitle: String = "",
     val selectedTagUuids: List<String> = emptyList(),
     val tagsFromCurrentTask: List<TagsEntity> = emptyList(),
+
+    val searchQuery: String = "",
+    val searchResults: List<TagsEntity> = emptyList()
 )

@@ -15,11 +15,11 @@ interface ListDbDao {
     suspend fun update(list: UserListEntity)
     @Query("DELETE FROM user_lists WHERE id = :id")
     suspend fun deleteListById(id: Int)
-    @Query("DELETE FROM user_lists WHERE name = :name")
+    @Query("DELETE FROM user_lists WHERE title = :name")
     suspend fun deleteListByName(name: String)
     @Query("SELECT uuid FROM user_lists WHERE id = :id")
     suspend fun getListUuidById(id: Int): String
-    @Query("SELECT uuid FROM user_lists WHERE name = :name")
+    @Query("SELECT uuid FROM user_lists WHERE title = :name")
     suspend fun getListUuidByName(name: String): String
     @Query("SELECT * FROM user_lists")
     fun getAllLists(): kotlinx.coroutines.flow.Flow<List<UserListEntity>>
@@ -27,10 +27,12 @@ interface ListDbDao {
     fun getAllDeletedLists(): kotlinx.coroutines.flow.Flow<List<DeletedUserListEntity>>
     @Query("DELETE FROM deleted_user_lists WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
-    @Query("SELECT EXISTS(SELECT 1 FROM user_lists WHERE LOWER(name) = LOWER(:title))")
+    @Query("SELECT EXISTS(SELECT 1 FROM user_lists WHERE LOWER(title) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM user_lists WHERE uuid = :uuid)")
     suspend fun listExists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_user_lists WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
+    @Query("SELECT * FROM user_lists WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
+    suspend fun searchForLists(query: String): List<UserListEntity>
 }

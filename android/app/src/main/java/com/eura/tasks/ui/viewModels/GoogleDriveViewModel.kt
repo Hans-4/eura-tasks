@@ -336,7 +336,7 @@ class GoogleDriveViewModel(
                 transformToRemote = { entity ->
                     ListSyncModel(
                         uuid = entity.uuid,
-                        title = entity.name,
+                        title = entity.title,
                         color = entity.colorString,
                         type = entity.type
                     )
@@ -345,7 +345,7 @@ class GoogleDriveViewModel(
                 transformToLocal = { model ->
                     UserListEntity(
                         uuid = model.uuid,
-                        name = model.title,
+                        title = model.title,
                         colorString = model.color,
                         type = model.type
                     )
@@ -507,7 +507,7 @@ class GoogleDriveViewModel(
 
                             for (cloudList in cleanActiveLists) {
                                 if (cloudList.uuid !in localActiveListUuids) {
-                                    val conflict = localActiveLists.find { it.name == cloudList.name }
+                                    val conflict = localActiveLists.find { it.title == cloudList.title }
                                     if (conflict != null) {
                                         val deferred = CompletableDeferred<UserListEntity>()
                                         _listConflict.value = ListConflict(
@@ -525,22 +525,22 @@ class GoogleDriveViewModel(
                                                 colorString = cloudList.colorString,
                                                 type = cloudList.type
                                             ))
-                                            Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.name}")
-                                            _syncMessage.value = "Conflict resolved: Kept cloud list ${cloudList.name}"
+                                            Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.title}")
+                                            _syncMessage.value = "Conflict resolved: Kept cloud list ${cloudList.title}"
                                             needsReupload = true
                                         } else {
-                                            Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.name}")
-                                            _syncMessage.value = "Conflict resolved: Kept local list ${conflict.name}"
+                                            Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.title}")
+                                            _syncMessage.value = "Conflict resolved: Kept local list ${conflict.title}"
                                         }
                                     } else {
                                         listDbViewModel.insertList(
-                                            name = cloudList.name,
+                                            name = cloudList.title,
                                             color = cloudList.colorString,
                                             type = cloudList.type,
                                             uuid = cloudList.uuid
                                         )
-                                        Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.name}")
-                                        _syncMessage.value = "Downloaded new cloud list: ${cloudList.name}"
+                                        Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.title}")
+                                        _syncMessage.value = "Downloaded new cloud list: ${cloudList.title}"
                                     }
                                 }
                             }
@@ -562,7 +562,7 @@ class GoogleDriveViewModel(
                                         val syncLists = finalLocalLists.map { entity ->
                                             ListSyncModel(
                                                 uuid = entity.uuid,
-                                                title = entity.name,
+                                                title = entity.title,
                                                 color = entity.colorString,
                                                 type = entity.type
                                             )
@@ -651,7 +651,7 @@ class GoogleDriveViewModel(
                                 taskDao.getAllTasksByIdAsc().first().map { it.uuid }.toSet()
 
                             // Get names of lists that are currently available locally
-                            val localActiveListNames = listDao.getAllLists().first().map { it.name }.toMutableSet()
+                            val localActiveListNames = listDao.getAllLists().first().map { it.title }.toMutableSet()
 
                             cloudTasks.forEach { task ->
                                 if (task.uuid in allDeletedTaskUuids) {

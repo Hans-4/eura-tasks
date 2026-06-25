@@ -30,4 +30,7 @@ sealed interface UiEvent {
     object CloseAddTagsDialog: UiEvent
     object OpenAddTagTextField: UiEvent
     object CloseAddTagTextField: UiEvent
+
+    object OpenSetSearchFilterBottomSheet: UiEvent
+    object CloseSetSearchFilterBottomSheet: UiEvent
 }
