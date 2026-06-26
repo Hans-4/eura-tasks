@@ -14,7 +14,7 @@ fun ItemWithSimilarNameWarningDialog(
     reason: Int
 ) {
     val type = when (reason) {
-        1 -> stringResource(R.string.list)
+        1 -> stringResource(R.string.lists)
         2 -> stringResource(R.string.tag)
         else -> ":("
     }

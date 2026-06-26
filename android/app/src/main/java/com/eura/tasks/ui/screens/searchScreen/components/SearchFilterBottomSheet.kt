@@ -15,7 +15,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -38,9 +37,7 @@ fun SearchFilterBottomSheet(
         onDismissRequest = { onDismiss() },
         dragHandle = null
     ) {
-        Column(
-
-        ) {
+        Column {
             SearchFilter.values().forEach { searchFilter ->
                 Button(
                     colors = ButtonDefaults.buttonColors(
@@ -48,7 +45,7 @@ fun SearchFilterBottomSheet(
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier.fillMaxWidth(),
-                    onClick = { onSearchEvent(SearchEvent.SetSearchFilter(searchFilter))  },
+                    onClick = { onSearchEvent(SearchEvent.SetSearchFilter(searchFilter)) },
                     shape = RoundedCornerShape(0.dp)
                 ) {
                     Row(
@@ -69,7 +66,7 @@ fun SearchFilterBottomSheet(
 
                         val filterLabel = when(searchFilter) {
                             SearchFilter.TASK -> stringResource(R.string.tasks)
-                            SearchFilter.LIST -> stringResource(R.string.list)
+                            SearchFilter.LIST -> stringResource(R.string.lists)
                             SearchFilter.TAG -> stringResource(R.string.tags)
                         }
 

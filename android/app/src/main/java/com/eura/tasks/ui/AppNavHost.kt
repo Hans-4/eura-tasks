@@ -171,13 +171,19 @@ fun AppNavHost(
                 onClose = { navController.popBackStack() },
                 taskDbState = taskDbState,
                 onTaskDbEvent = onTaskDbEvent,
-                onTaskDetails = { taskId, parentScreen ->
-                    navController.navigate("taskDetails/$taskId/$parentScreen")
-                },
+
                 uiState = uiState,
                 onSearchEvent = onSearchEvent,
                 searchState = searchState,
-                onUiEvent = onUiEvent
+                onUiEvent = onUiEvent,
+                listDbState = listDbState,
+                tagDbState = tagDbState,
+
+                onTaskDetails = { taskId, parentScreen ->
+                    navController.navigate("taskDetails/$taskId/$parentScreen")
+                },
+                onTaskList = { listName -> navController.navigate("taskLists/$listName") },
+                onTagDetails = { tagId, parentScreen -> TODO()}
             )
         }
 
