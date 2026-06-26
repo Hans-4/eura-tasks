@@ -131,7 +131,7 @@ fun AddNewTaskListDialog(
         ),
         TypeItems(
             icon = Icons.Outlined.ShoppingCart,
-            title = stringResource(R.string.shopping),
+            title = stringResource(R.string.with_tags),
             identificationTitle = "SHOPPING",
             color = yellow
         ),

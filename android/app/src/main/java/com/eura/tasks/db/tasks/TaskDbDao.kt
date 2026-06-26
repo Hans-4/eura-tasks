@@ -48,6 +48,6 @@ interface TaskDbDao {
     @Query("UPDATE tasks SET description = :newDescription WHERE id = :id")
     suspend fun updateTaskDescription(id: Int, newDescription: String)
     @Transaction
-    @Query("SELECT * FROM tasks WHERE id = :id")
-    suspend fun getTaskWithTags(id: Int): TaskWithTags?
+    @Query("SELECT * FROM tasks WHERE taskList = :taskList")
+    suspend fun getTaskWithTags(taskList: String): TaskWithTags?
 }

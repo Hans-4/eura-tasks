@@ -313,6 +313,10 @@ fun HomeScreen(
                                         taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
                                         taskDbState.tasks.filter { it.isFavorite }.size
                                     )
+                                    "SYSTEM_WITH_TAGS" -> Pair(
+                                        taskDbState.tasks.filter { it.hasTags && it.isCompleted }.size,
+                                        taskDbState.tasks.filter { it.hasTags }.size
+                                    )
                                     else -> Pair(0, 0)
                                 }
 

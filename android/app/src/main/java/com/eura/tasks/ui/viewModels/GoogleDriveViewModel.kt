@@ -38,6 +38,7 @@ data class TaskSyncModel(
     val description: String,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
+    val hasTags: Boolean,
     val taskList: String,
     val dueDateTime: LocalDateTime?,
     val creationTime: Instant,
@@ -414,6 +415,7 @@ class GoogleDriveViewModel(
                             description = syncModel.description,
                             isFavorite = syncModel.isFavorite,
                             isCompleted = syncModel.isCompleted,
+                            hasTags = syncModel.hasTags,
                             dueDateTime = syncModel.dueDateTime,
                             creationTime = syncModel.creationTime,
                             taskList = syncModel.taskList,
@@ -606,6 +608,7 @@ class GoogleDriveViewModel(
                                         description = entity.description,
                                         isFavorite = entity.isFavorite,
                                         isCompleted = entity.isCompleted,
+                                        hasTags = entity.hasTags,
                                         dueDateTime = entity.dueDateTime,
                                         creationTime = entity.creationTime,
                                         taskList = entity.taskList

@@ -33,8 +33,8 @@ val systemTaskList = listOf(
         colorString = "GREEN"
     ),
     SystemListItem(
-        title = "SYSTEM_SHOPPING",
-        type = "SHOPPING",
+        title = "SYSTEM_WITH_TAGS",
+        type = "WITH_TAGS",
         colorString = "BLUE"
     ),
 )

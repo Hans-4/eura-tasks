@@ -115,6 +115,7 @@ fun TaskScreen(
     val tasksToShow = when (pageName) {
         "SYSTEM_ALL" -> taskDbState.tasks
         "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
+        "SYSTEM_WITH_TAGS" -> taskDbState.tasks.filter { it.hasTags }
         else -> taskDbState.tasks.filter { it.taskList == pageName }
     }
 

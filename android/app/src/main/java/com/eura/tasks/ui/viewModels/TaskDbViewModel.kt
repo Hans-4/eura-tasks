@@ -70,6 +70,7 @@ class TaskDbViewModel(
                     description = description,
                     isFavorite = favorite,
                     isCompleted = false,
+                    hasTags = state.value.tags.isNotEmpty(),
                     dueDateTime = null,
                     taskList = parentList,
                     creationTime = currentDateTime,

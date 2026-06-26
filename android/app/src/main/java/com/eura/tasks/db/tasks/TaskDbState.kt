@@ -8,6 +8,7 @@ data class TaskDbState(
     val todoDescription: String = "",
     val todoIsFavorite: Boolean = false,
     val todoIsCompleted: Boolean = false,
+    val taskHasTags: Boolean = false,
     val dueDateTime: LocalDateTime? = null,
     val taskParentList: String = "",
     val tags: List<String> = emptyList(),

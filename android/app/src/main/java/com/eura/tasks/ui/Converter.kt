@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material.icons.outlined.Work
 import androidx.compose.material.icons.rounded.Event
 import androidx.compose.material.icons.rounded.PriorityHigh
-import androidx.compose.material.icons.rounded.ShoppingCart
+import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.Today
 import androidx.compose.runtime.Composable
@@ -40,7 +40,7 @@ class Converter() {
                  "SYSTEM_ALL" -> stringResource(R.string.all)
                  "SYSTEM_FAVORITES" -> stringResource(R.string.favorites)
                  "SYSTEM_IMPORTANT" -> stringResource(R.string.important)
-                 "SYSTEM_SHOPPING" -> stringResource(R.string.shopping)
+                 "SYSTEM_WITH_TAGS" -> stringResource(R.string.with_tags)
                  "MY_TASKS" -> stringResource(R.string.my_tasks)
                  else -> pageName
             }
@@ -54,7 +54,7 @@ class Converter() {
                 "ALL" -> Icons.AutoMirrored.Rounded.List
                 "FAVORITES" -> Icons.Rounded.Star
                 "IMPORTANT" -> Icons.Rounded.PriorityHigh
-                "SHOPPING" -> Icons.Rounded.ShoppingCart
+                "WITH_TAGS" -> Icons.Rounded.Sell
                 else -> Icons.Outlined.BugReport
             }
         }
