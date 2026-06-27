@@ -103,14 +103,10 @@ fun TaskScreen(
         taskLists.find { it.title == pageName } ?: systemTaskList.find { it.title == pageName }
     }
 
-    Log.d("List", "$pageList")
-
     val pageColor = Converter.colorStringConverter(
         systemThemeIndex = systemThemeIndex,
         colorString = pageList?.colorString
     )
-
-    Log.d("Color", "$pageColor")
 
     val tasksToShow = when (pageName) {
         "SYSTEM_ALL" -> taskDbState.tasks

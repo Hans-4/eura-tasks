@@ -12,7 +12,7 @@ import com.eura.tasks.db.tasks.tags.TaskWithTags
 @Dao
 interface TaskDbDao {
     @Upsert
-    suspend fun upsertTask(todo: TaskEntity)
+    suspend fun upsertTask(todo: TaskEntity): Long
     @Upsert
     suspend fun upsertDeletedTask(deletedTask: DeletedTasksEntity)
     @Update
@@ -50,4 +50,6 @@ interface TaskDbDao {
     @Transaction
     @Query("SELECT * FROM tasks WHERE taskList = :taskList")
     suspend fun getTaskWithTags(taskList: String): TaskWithTags?
+    @Query("SELECT * FROM tasks WHERE id IN (:ids)")
+    suspend fun getTasksByIds(ids: List<Int>): List<TaskEntity>
 }

@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
             Database::class.java,
             "database.db"
         )
+            .fallbackToDestructiveMigration()
             .build()
     }
 

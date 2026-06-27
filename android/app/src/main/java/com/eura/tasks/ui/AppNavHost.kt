@@ -29,6 +29,7 @@ import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.TaskDetailsScre
 import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
 import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
+import com.eura.tasks.ui.screens.tagScreen.TagScreen
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
@@ -122,7 +123,9 @@ fun AppNavHost(
                 onTaskDbEvent = onTaskDbEvent,
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
+
                 onTaskList = { listName -> navController.navigate("taskLists/$listName")},
+                onTagList = { tagId -> navController.navigate("tagList/$tagId")},
                 onSettings = { navController.navigate("settings")},
                 onSearch = { navController.navigate("search") }
             )
@@ -278,6 +281,32 @@ fun AppNavHost(
                     tagDbState = tagDbState
                 )
             }
+        }
+
+        composable(
+            route = "tagList/{tagId}",
+            enterTransition = {
+                defaultEnterTransition()
+            },
+            exitTransition = {
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
+            }
+        ) { backStackEntry ->
+            val tagId = backStackEntry.arguments?.getString("tagId")?.toIntOrNull()
+            val tagEntity = tagDbState.tags.find { it.id == tagId }
+            onTaskDbEvent(TaskDbEvent.GetTaskById(tagId!!))
+            val tasks = taskDbState.tasksFromCurrentTag
+            TagScreen(
+                tagEntity = tagEntity,
+                tasks = tasks,
+                onClose = { navController.popBackStack() }
+            )
         }
     }
 }

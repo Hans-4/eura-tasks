@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents
+package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +21,8 @@ import com.eura.tasks.R
 fun TagListColumnItem(
     noTags: Boolean,
     tagList: List<TagsEntity>,
+
+    onTagList: (Int) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -37,7 +39,7 @@ fun TagListColumnItem(
         if (!noTags) {
             tagList.forEachIndexed { index, item ->
                 Button(
-                    onClick = { TODO("Add screen with all tasks with this tag") },
+                    onClick = { onTagList(item.id) },
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surface,

@@ -1,23 +1,26 @@
 package com.eura.tasks.db.tags
 
 import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TagDbDao {
     @Upsert
-    suspend fun upsertTag(tag: TagsEntity)
+    suspend fun upsertTag(tag: TagsEntity): Long
 
     @Query("SELECT * FROM tags")
     fun getAllTags(): Flow<List<TagsEntity>>
 
     @Upsert
     suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
-    @Query("INSERT INTO task_tags (taskUuid, tagUuid) VALUES (:taskUuid, :tagUuid)")
-    suspend fun insertTaskTags(taskUuid: String, tagUuid: String)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertTaskTag(taskTag: TaskTagsEntity)
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun deleteByTaskId(taskUuid: String)
     @Query("DELETE FROM task_tags WHERE tagUuid = :taskUuid")
@@ -30,6 +33,8 @@ interface TagDbDao {
     suspend fun getAllTagsFromTask(taskUuid: String): List<TaskTagsEntity>
     @Query("SELECT * FROM tags WHERE uuid IN (:uuids)")
     suspend fun getTagsByUuids(uuids: List<String>): List<TagsEntity>
+    @Query("SELECT taskId FROM task_tags WHERE tagId = :tagId")
+    suspend fun getTasksByTagId(tagId: Int): List<Int>
     @Query("SELECT * FROM tags WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTags(query: String): List<TagsEntity>
 }

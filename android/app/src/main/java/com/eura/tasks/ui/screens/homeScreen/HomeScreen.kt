@@ -86,7 +86,7 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewT
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.FabMenuItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SystemTaskLists
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.TagListColumnItem
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.UserListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
 
@@ -100,7 +100,9 @@ fun HomeScreen(
     listDbState: ListDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
+
     onTaskList: (String) -> Unit,
+    onTagList: (Int) -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
     uiState: UiState,
@@ -326,8 +328,6 @@ fun HomeScreen(
                                     (completedTaskCount.toFloat() / totalTaskCount.toFloat())
                                 }
 
-                                Log.d("Ouput test", "Value: $progress, Completed: $completedTaskCount, All: $totalTaskCount")
-
                                 Box(modifier = Modifier.weight(1f)) {
                                     SystemTaskLists(
                                         count = totalTaskCount,
@@ -383,6 +383,7 @@ fun HomeScreen(
                         1 -> TagListColumnItem(
                             noTags = noTags,
                             tagList = tagList,
+                            onTagList = onTagList
                         )
                     }
                 }

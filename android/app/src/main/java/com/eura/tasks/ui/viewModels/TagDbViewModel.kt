@@ -36,29 +36,23 @@ class TagDbViewModel(
         when(event) {
             TagDbEvent.SaveTag -> {
                 val title = _state.value.tagTitle.trim()
-
-                if (title.isBlank()) {
-                    return
-                }
+                if (title.isBlank()) return
 
                 viewModelScope.launch {
                     if (tagDao.searchForExistingTitle(title)) {
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val tag = TagsEntity(
-                            title = title,
-                        )
-
-                        tagDao.upsertTag(tag)
+                        val tag = TagsEntity(title = title)
+                        val generatedId = tagDao.upsertTag(tag).toInt()
 
                         _state.update {
                             it.copy(
                                 tagTitle = "",
                                 selectedTagUuids = it.selectedTagUuids + tag.uuid,
+                                selectedTagIds = it.selectedTagIds + generatedId
                             )
                         }
-
                         cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(CloseAddTagTextField)
                     }
@@ -76,13 +70,16 @@ class TagDbViewModel(
             is TagDbEvent.SelectTag -> {
                 _state.update {
                     it.copy(
+                        selectedTagIds = it.selectedTagIds + event.id,
                         selectedTagUuids = it.selectedTagUuids + event.uuid
                     )
                 }
             }
+
             is TagDbEvent.UnselectTag -> {
                 _state.update {
                     it.copy(
+                        selectedTagIds = it.selectedTagIds - event.id,
                         selectedTagUuids = it.selectedTagUuids - event.uuid
                     )
                 }
@@ -91,7 +88,8 @@ class TagDbViewModel(
             TagDbEvent.UncheckAllTags -> {
                 _state.update {
                     it.copy(
-                        selectedTagUuids = emptyList()
+                        selectedTagUuids = emptyList(),
+                        selectedTagIds = emptyList()
                     )
                 }
             }

@@ -19,6 +19,7 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.ui.UiState
 import kotlin.time.Clock
 import kotlin.time.Instant
@@ -57,8 +58,6 @@ class TaskDbViewModel(
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
-                Log.d("Check", "Selected tags ${state.value.tags}")
-
                 val currentDateTime: Instant = Clock.System.now()
 
                 if (title.isBlank() || parentList.isBlank()) {
@@ -70,34 +69,54 @@ class TaskDbViewModel(
                     description = description,
                     isFavorite = favorite,
                     isCompleted = false,
-                    hasTags = state.value.tags.isNotEmpty(),
+                    hasTags = state.value.tagIds.isNotEmpty(),
                     dueDateTime = null,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
 
-                if (_state.value.tags.isEmpty()) {
+                if (_state.value.tagIds.isEmpty() && _state.value.tagUuids.isEmpty()) {
                     viewModelScope.launch {
                         taskDao.upsertTask(task)
                         cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
+                    Log.d("Test", "1")
                 } else {
                     viewModelScope.launch {
-                        taskDao.upsertTask(task)
-                        val entryUuid = task.uuid
+                        // Capture the generated ID returned by the database
+                        val generatedTaskId = taskDao.upsertTask(task).toInt()
+                        Log.d("Test", "2 - Generated ID: $generatedTaskId")
 
-                        for (tag in _state.value.tags) {
-                            tagDao.insertTaskTags(entryUuid, tag)
+                        Log.d("Values", "${_state.value.tagIds.size} ${_state.value.tagUuids.size}")
+                        if (_state.value.tagIds.size == _state.value.tagUuids.size) {
+                            for ((tagId, tagUuid) in _state.value.tagIds.zip(_state.value.tagUuids)) {
+                                Log.d("Values", "$tagId $tagUuid")
+                                // Use generatedTaskId instead of task.id
+                                tagDao.insertTaskTag(
+                                    TaskTagsEntity(
+                                        generatedTaskId,
+                                        task.uuid,
+                                        tagId,
+                                        tagUuid
+                                    )
+                                )
+                            }
+                        } else {
+                            Log.e("Values", "tagIds and tagUuids have different sizes!")
                         }
-
+                        Log.d("Test", "3")
                         cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
                 }
-                _state.update { it.copy(
-                    todoTitle = "",
-                    todoDescription = "",
-                    todoIsFavorite = false,
-                ) }
+
+                Log.d("Test", "Saved")
+                _state.update {
+                    it.copy(
+                        todoTitle = "",
+                        todoDescription = "",
+                        todoIsFavorite = false,
+                    )
+                }
                 _uiState.update {
                     it.copy(
                         isAddingTask = false
@@ -218,8 +237,21 @@ class TaskDbViewModel(
             is TaskDbEvent.SetTaskTags -> {
                 _state.update {
                     it.copy(
-                        tags = event.tags
+                        tagIds = event.tagsId,
+                        tagUuids = event.tagsUuid
                     )
+                }
+            }
+
+            is TaskDbEvent.GetTaskById -> {
+                viewModelScope.launch {
+                    val taskIds = tagDao.getTasksByTagId(event.id)
+                    val tasks = taskDao.getTasksByIds(taskIds)
+                    _state.update {
+                        it.copy(
+                            tasksFromCurrentTag = tasks
+                        )
+                    }
                 }
             }
         }
