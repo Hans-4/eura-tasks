@@ -28,10 +28,11 @@ import com.eura.tasks.db.tasks.TaskEntity
 fun TaskItem(
     item: TaskEntity,
     onTaskDetails: (Int, String) -> Unit,
+    parentScreen: String,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
 ) {
     Button(
-        onClick = { onTaskDetails(item.id, "search") },
+        onClick = { onTaskDetails(item.id, parentScreen) },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant

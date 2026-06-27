@@ -247,6 +247,7 @@ fun SearchScreen(
                             TaskItem(
                                 item = taskItem,
                                 onTaskDetails = onTaskDetails,
+                                parentScreen = "search",
                                 onTaskDbEvent = onTaskDbEvent
                             )
                         }

@@ -1,6 +1,9 @@
 package com.eura.tasks.ui.screens.tagScreen
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -12,16 +15,24 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.eura.tasks.db.tags.TagsEntity
+import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskEntity
+import com.eura.tasks.ui.screens.searchScreen.components.TaskItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagScreen(
     tagEntity: TagsEntity?,
     tasks: List<TaskEntity>,
-    onClose: () -> Unit
+    onClose: () -> Unit,
+    onTaskDetails: (Int, String) -> Unit,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
 ) {
+    val title = tagEntity?.title ?: "Tags"
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -37,16 +48,25 @@ fun TagScreen(
                 },
                 actions = {},
                 title = {
-                    Text(tagEntity?.title ?: "Tags")
+                    Text(title)
                 }
             )
         }
-    ) { paddingValues ->
+    ) { innerPadding ->
         LazyColumn(
-            contentPadding = paddingValues
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 8.dp),
+            contentPadding = innerPadding,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(tasks) { item ->
-                Text(text = item.title)
+                TaskItem(
+                    item = item,
+                    onTaskDetails = onTaskDetails,
+                    parentScreen = title,
+                    onTaskDbEvent = onTaskDbEvent
+                )
             }
         }
     }
