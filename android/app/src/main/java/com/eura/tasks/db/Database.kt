@@ -12,6 +12,7 @@ import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskEntity
+import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Database(
@@ -22,8 +23,9 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
         DeletedUserListEntity::class,
         TagsEntity::class,
         DeletedTagsEntity::class,
-        TaskTagsEntity::class
-               ],
+        TaskTagsEntity::class,
+        DeletedTaskTagsEntity::class
+    ],
     version = 1
 )
 @TypeConverters(
