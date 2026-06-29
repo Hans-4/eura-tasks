@@ -1,6 +1,7 @@
 package com.eura.tasks.db.tags
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -14,6 +15,13 @@ import kotlinx.coroutines.flow.Flow
 interface TagDbDao {
     @Upsert
     suspend fun upsertTag(tag: TagsEntity): Long
+    @Delete
+    suspend fun deleteTag(tag: TagsEntity)
+    @Upsert
+    suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
+
+    @Query("SELECT uuid FROM tags WHERE id = :id")
+    suspend fun getTagUuidById(id: Int): String
 
     @Query("SELECT * FROM tags")
     fun getAllTags(): Flow<List<TagsEntity>>
@@ -26,8 +34,6 @@ interface TagDbDao {
     @Query("SELECT * FROM deleted_tags")
     fun getAllDeletedTags(): Flow<List<DeletedTagsEntity>>
 
-    @Upsert
-    suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
     @Upsert
     suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
     @Insert(onConflict = OnConflictStrategy.IGNORE)

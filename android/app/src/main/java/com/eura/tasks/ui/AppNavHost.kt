@@ -307,7 +307,10 @@ fun AppNavHost(
                 tasks = tasks,
                 onClose = { navController.popBackStack() },
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
-                onTaskDbEvent = onTaskDbEvent
+                onTaskDbEvent = onTaskDbEvent,
+                onUiEvent = onUiEvent,
+                uiState = uiState,
+                onTagDbEvent = onTagDbEvent,
             )
         }
     }

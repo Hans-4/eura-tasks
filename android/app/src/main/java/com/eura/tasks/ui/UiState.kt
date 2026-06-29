@@ -20,4 +20,6 @@ data class UiState(
     val isAddTagTextFieldOpen: Boolean = false,
 
     val isSetSearchFilterBottomSheetOpen: Boolean = false,
+
+    val isManageTagSheetOpen: Boolean = false
 )

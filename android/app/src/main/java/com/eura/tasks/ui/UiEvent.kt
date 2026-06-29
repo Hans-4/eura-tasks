@@ -33,4 +33,6 @@ sealed interface UiEvent {
 
     object OpenSetSearchFilterBottomSheet: UiEvent
     object CloseSetSearchFilterBottomSheet: UiEvent
+    object OpenManageTagSheet: UiEvent
+    object CloseManageTagSheet: UiEvent
 }

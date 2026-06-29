@@ -7,4 +7,5 @@ sealed interface TagDbEvent {
     data class SelectTag(val id: Int, val uuid: String): TagDbEvent
     data class UnselectTag(val id: Int, val uuid: String): TagDbEvent
     data class GetAllTagsByUuid(val uuid: String): TagDbEvent
+    data class DeleteTag(val tag: TagsEntity): TagDbEvent
 }

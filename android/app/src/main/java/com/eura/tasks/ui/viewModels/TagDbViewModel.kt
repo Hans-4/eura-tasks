@@ -3,6 +3,7 @@ package com.eura.tasks.ui.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
+import com.eura.tasks.db.tags.DeletedTagsEntity
 import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
@@ -17,6 +18,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlin.time.Clock
+import kotlin.time.Instant
 
 class TagDbViewModel(
     private val tagDao: TagDbDao
@@ -105,6 +108,19 @@ class TagDbViewModel(
                             tagsFromCurrentTask = allTags
                         )
                     }
+                }
+            }
+
+            is TagDbEvent.DeleteTag -> {
+                val currentDateTime: Instant = Clock.System.now()
+
+                viewModelScope.launch {
+                    val deletedTag = DeletedTagsEntity(
+                        deletedUuid = tagDao.getTagUuidById(event.tag.id),
+                        deletionDate = currentDateTime
+                    )
+                    tagDao.upsertDeletedTag(deletedTag)
+                    tagDao.deleteTag(event.tag)
                 }
             }
         }

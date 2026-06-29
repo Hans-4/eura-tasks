@@ -245,6 +245,21 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseManageTagSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageTagSheetOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenManageTagSheet -> {
+                _state.update {
+                    it.copy(
+                        isManageTagSheetOpen = true
+                    )
+                }
+            }
         }
     }
 }
