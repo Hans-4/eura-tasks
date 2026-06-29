@@ -25,6 +25,8 @@ interface TaskDbDao {
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT uuid FROM tasks WHERE id = :id")
     suspend fun getTaskUuid(id: Int): String
+    @Query("SELECT id FROM tasks WHERE uuid = :uuid")
+    suspend fun getTaskIdByUuid(uuid: String): Int
     @Query("DELETE FROM tasks WHERE id = :id")
     suspend fun deleteTodoById(id: Int)
     @Query("SELECT * FROM tasks ORDER BY id ASC")

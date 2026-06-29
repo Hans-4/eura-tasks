@@ -140,7 +140,7 @@ fun SettingsScreen(
                         expandFrom = Alignment.Top
                     ) + fadeIn(animationSpec = tween(300, delayMillis = 100))
                 ) {
-                    Text(syncMessage)
+                    Text(text = if (isDriveReady) syncMessage else "Not connected to Google Drive")
                 }
 
                 Button(

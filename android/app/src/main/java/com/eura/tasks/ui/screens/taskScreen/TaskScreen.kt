@@ -159,40 +159,17 @@ fun TaskScreen(
                         }
                     },
                     actions = {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
+                        IconButton(
+                            onClick = { onUiEvent(UiEvent.OpenManageListSheet) },
+                            shape = CircleShape
                         ) {
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = {TODO()},
-                                shape = CircleShape
-                            ) {
-                                Icon(
-                                    modifier = Modifier
-                                        .size(30.dp),
-                                    imageVector = Icons.Rounded.IosShare,
-                                    contentDescription = null,
-                                    tint = pageColor.primary
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(8.dp))
-
-                            IconButton(
-                                modifier = Modifier.size(32.dp),
-                                onClick = { onUiEvent(UiEvent.OpenManageListSheet) },
-                                shape = CircleShape
-                            ) {
-                                Icon(
-                                    modifier = Modifier
-                                        .size(30.dp),
-                                    imageVector = Icons.Rounded.MoreVert,
-                                    contentDescription = null,
-                                    tint = pageColor.primary
-                                )
-                            }
+                            Icon(
+                                modifier = Modifier
+                                    .size(30.dp),
+                                imageVector = Icons.Rounded.MoreVert,
+                                contentDescription = null,
+                                tint = pageColor.primary
+                            )
                         }
                     }
                 )
@@ -290,7 +267,7 @@ fun TaskScreen(
                                 }
 
                                 IconButton(
-                                    onClick = { TODO() }
+                                    onClick = { TODO("Options like delete all uncompleted or completed or all tasks") }
                                 ) {
                                     Icon(
                                         imageVector = Icons.Rounded.MoreVert,

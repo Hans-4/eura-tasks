@@ -91,7 +91,7 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return GoogleDriveViewModel(taskDao = db.taskDao, listDao = db.listDao) as T
+                    return GoogleDriveViewModel(taskDao = db.taskDao, listDao = db.listDao, tagDao = db.tagDao) as T
                 }
             }
         }
