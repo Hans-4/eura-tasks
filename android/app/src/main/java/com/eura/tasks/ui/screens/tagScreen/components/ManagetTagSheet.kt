@@ -20,12 +20,23 @@ fun ManageTagSheet(
     onDeletedTag: () -> Unit
 ) {
     ModalBottomSheet(
-        onDismissRequest = {},
+        onDismissRequest = { onDismiss() },
         dragHandle = null
     ) {
         Column(
 
         ) {
+            Button(
+                onClick = { TODO() },
+                shape = RoundedCornerShape(0.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = "Rename Tag",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Start
+                )
+            }
             Button(
                 onClick = { onDeletedTag() },
                 shape = RoundedCornerShape(0.dp),

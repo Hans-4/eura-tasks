@@ -1,15 +1,14 @@
-package com.eura.tasks.ui.screens.tagScreen
+package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
-import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,59 +16,63 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.db.tags.TagDbEvent
-import com.eura.tasks.db.tags.TagsEntity
+import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
-import com.eura.tasks.ui.screens.tagScreen.components.ManageTagSheet
-import com.eura.tasks.ui.screens.tagScreen.components.TaskTagItem
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.AddTagsDialog
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.tagManagmentScreenComponentes.TagItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TagScreen(
-    tagEntity: TagsEntity?,
-    tasks: List<TaskEntity>,
+fun TagManagementScreen(
     onClose: () -> Unit,
-    onTaskDetails: (Int, String) -> Unit,
-    onTaskDbEvent: (TaskDbEvent) -> Unit,
-    onUiEvent: (UiEvent) -> Unit,
+    task: TaskEntity,
+    tagDbState: TagDbState,
+    onTagDbEvent: (TagDbEvent) -> Unit,
     uiState: UiState,
-    onTagDbEvent: (TagDbEvent) -> Unit
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
+    onUiEvent: (UiEvent) -> Unit
 ) {
-    val title = tagEntity?.title ?: "Tags"
+    val taskTags = tagDbState.tagsFromCurrentTask
+
+    BackHandler(
+        enabled = true,
+        onBack = { onClose() }
+    )
+
+    LaunchedEffect(taskTags) {
+        onTagDbEvent(TagDbEvent.GetAllTagsByUuid(task.uuid))
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(
-                        onClick = { onClose() }
-                    ) {
+                    IconButton(onClick = { onClose() }) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = null
-                        )
-                    }
-                },
-                actions = {
-                    IconButton(
-                        onClick = { onUiEvent(UiEvent.OpenManageTagSheet) },
-                        shape = CircleShape
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .size(30.dp),
-                            imageVector = Icons.Rounded.MoreVert,
-                            contentDescription = null,
+                            contentDescription = "Back"
                         )
                     }
                 },
                 title = {
-                    Text(title)
+                    Text("Tag management")
+                },
+                actions = {
+                    IconButton(
+                        onClick = { onUiEvent(UiEvent.OpenAddTagsDialog) }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Add,
+                            contentDescription = null
+                        )
+                    }
                 }
             )
         }
@@ -81,24 +84,20 @@ fun TagScreen(
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(tasks) { item ->
-                TaskTagItem(
-                    item = item,
-                    onTaskDetails = onTaskDetails,
-                    parentScreen = title,
-                    onTaskDbEvent = onTaskDbEvent
-                )
+            items(taskTags) { item ->
+                TagItem(item = item)
             }
         }
     }
 
-    if (uiState.isManageTagSheetOpen) {
-        ManageTagSheet(
-            onDismiss = { onUiEvent(UiEvent.CloseManageTagSheet) },
-            onDeletedTag = {
-                onClose()
-                onTagDbEvent(TagDbEvent.DeleteTag(tagEntity!!))
-            }
+    if (uiState.isAddTagsDialogOpen) {
+        AddTagsDialog(
+            onClose = { onUiEvent(UiEvent.CloseAddTagsDialog) },
+            onTagDbEvent = onTagDbEvent,
+            tagDbState = tagDbState,
+            onTaskDbEvent = onTaskDbEvent,
+            onUiEvent = onUiEvent,
+            uiState = uiState
         )
     }
 }

@@ -74,6 +74,8 @@ fun TaskDetailsScreen(
     onTaskList: (String) -> Unit,
     onTagDbEvent: (TagDbEvent) -> Unit,
     tagDbState: TagDbState,
+
+    onTagManagement: () -> Unit
 ) {
     val scope = rememberCoroutineScope()
 
@@ -190,7 +192,8 @@ fun TaskDetailsScreen(
                         )
 
                         TagButton(
-                            taskTags = taskTags
+                            taskTags = taskTags,
+                            onTagManagement = onTagManagement
                         )
 
                         HorizontalDivider(
@@ -307,10 +310,11 @@ fun TitleCard(
 
 @Composable
 fun TagButton(
-    taskTags: List<TagsEntity>
+    taskTags: List<TagsEntity>,
+    onTagManagement: () -> Unit
 ) {
     Button(
-        onClick = { TODO() },
+        onClick = { onTagManagement() },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
         ),
@@ -334,13 +338,20 @@ fun TagButton(
                     modifier = Modifier.size(20.dp)
                 )
 
-                taskTags
-                    .take(2)
-                    .forEach { item ->
-                        TagDisplayCard(
-                            name = item.title
-                        )
-                    }
+                if (taskTags.isEmpty()) {
+                    Text(
+                        "No tags",
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                } else {
+                    taskTags
+                        .take(2)
+                        .forEach { item ->
+                            TagDisplayCard(
+                                name = item.title
+                            )
+                        }
+                }
 
                 if (taskTags.size > 2) {
                     val tagCount = taskTags.size - 2

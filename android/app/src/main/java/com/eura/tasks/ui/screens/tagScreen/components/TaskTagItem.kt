@@ -1,15 +1,12 @@
-package com.eura.tasks.ui.screens.searchScreen.components
+package com.eura.tasks.ui.screens.tagScreen.components
 
-import android.widget.RadioButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Star
-import androidx.compose.material.icons.rounded.StarBorder
+import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -26,7 +23,7 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskEntity
 
 @Composable
-fun TaskItem(
+fun TaskTagItem(
     item: TaskEntity,
     onTaskDetails: (Int, String) -> Unit,
     parentScreen: String,
@@ -61,13 +58,11 @@ fun TaskItem(
                 )
             }
             IconButton(
-                onClick = {
-                    onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(!item.isFavorite, item))
-                }
+                onClick = { TODO("Remove task from tag")}
             ) {
                 Icon(
-                    imageVector = if (item.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                    contentDescription = "Toggle favorite",
+                    imageVector = Icons.Rounded.Remove,
+                    contentDescription = null
                 )
             }
         }

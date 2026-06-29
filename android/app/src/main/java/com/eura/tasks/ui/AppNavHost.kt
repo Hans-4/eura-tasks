@@ -30,6 +30,7 @@ import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
 import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.TagManagementScreen
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
@@ -278,7 +279,39 @@ fun AppNavHost(
                     onTaskList = { listName -> navController.navigate("taskLists/$listName") },
                     parentScreen = parentScreen,
                     onTagDbEvent = onTagDbEvent,
-                    tagDbState = tagDbState
+                    tagDbState = tagDbState,
+
+                    onTagManagement = { navController.navigate("tagManagement/${taskId}") }
+                )
+            }
+        }
+
+        composable(
+            route = "tagManagement/{taskId}",
+            enterTransition = {
+                defaultEnterTransition()
+            },
+            exitTransition = {
+                defaultExitTransition()
+            },
+            popEnterTransition = {
+                defaultPopEnterTransition()
+            },
+            popExitTransition = {
+                defaultPopExitTransition()
+            }
+        ) { backStackEntry ->
+            val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
+            val task = taskDbState.tasks.find { it.id == taskId }
+            if (task != null) {
+                TagManagementScreen(
+                    onClose = { navController.popBackStack() },
+                    task = task,
+                    tagDbState = tagDbState,
+                    onTagDbEvent = onTagDbEvent,
+                    uiState = uiState,
+                    onTaskDbEvent = onTaskDbEvent,
+                    onUiEvent = onUiEvent
                 )
             }
         }
