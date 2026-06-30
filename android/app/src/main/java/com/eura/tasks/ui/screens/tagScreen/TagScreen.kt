@@ -17,31 +17,43 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.db.tags.TagDbEvent
+import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskDbEvent
+import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
 import com.eura.tasks.ui.screens.tagScreen.components.ManageTagSheet
-import com.eura.tasks.ui.screens.tagScreen.components.TaskTagItem
+import com.eura.tasks.ui.screens.tagScreen.components.TaskItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagScreen(
-    tagEntity: TagsEntity?,
-    tasks: List<TaskEntity>,
+    tagEntity: TagsEntity,
     onClose: () -> Unit,
     onTaskDetails: (Int, String) -> Unit,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState,
-    onTagDbEvent: (TagDbEvent) -> Unit
+    onTagDbEvent: (TagDbEvent) -> Unit,
+
+    tagDbState: TagDbState,
+    taskDbState: TaskDbState
 ) {
-    val title = tagEntity?.title ?: "Tags"
+    val title = tagEntity.title
+
+    val tasks = taskDbState.tasks
+    val taskTags = taskDbState.taskTags
+
+    LaunchedEffect(tagEntity.id) {
+        onTaskDbEvent(TaskDbEvent.GetAllTasksByTagId(tagEntity.id))
+    }
 
     Scaffold(
         topBar = {
@@ -83,11 +95,14 @@ fun TagScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(tasks) { item ->
-                TaskTagItem(
+                TaskItem(
                     item = item,
                     onTaskDetails = onTaskDetails,
                     parentScreen = title,
-                    onTaskDbEvent = onTaskDbEvent
+                    onTaskDbEvent = onTaskDbEvent,
+
+                    tagEntity = tagEntity,
+                    taskTags = taskTags
                 )
             }
 
@@ -110,7 +125,7 @@ fun TagScreen(
             onDismiss = { onUiEvent(UiEvent.CloseManageTagSheet) },
             onDeletedTag = {
                 onClose()
-                onTagDbEvent(TagDbEvent.DeleteTag(tagEntity!!))
+                onTagDbEvent(TagDbEvent.DeleteTag(tagEntity))
                 onUiEvent(UiEvent.CloseManageTagSheet)
             }
         )

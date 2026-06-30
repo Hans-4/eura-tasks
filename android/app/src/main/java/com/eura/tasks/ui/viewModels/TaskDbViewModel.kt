@@ -249,6 +249,51 @@ class TaskDbViewModel(
                     }
                 }
             }
+
+            is TaskDbEvent.GetAllTasksByTagId -> {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            taskTags = taskDao.getAllTasksFromTagById(event.tagId)
+                        )
+                    }
+                }
+            }
+
+            is TaskDbEvent.RemoveFromTagByTaskId -> {
+                viewModelScope.launch {
+                    taskDao.removeByTaskId(event.taskId)
+                    _state.update { it ->
+                        it.copy(
+                            taskTags = it.taskTags.filter { it.taskId != event.taskId }
+                        )
+                    }
+                }
+            }
+
+            is TaskDbEvent.InsertNewTaskTag -> {
+                viewModelScope.launch {
+                    tagDao.insertTaskTag(
+                        TaskTagsEntity(
+                            taskId = event.taskId,
+                            taskUuid = event.taskUuid,
+                            tagId = event.tagId,
+                            tagUuid = event.tagUuid
+                        )
+                    )
+                    _state.update {
+                        it.copy(
+                            taskTags = it.taskTags + TaskTagsEntity(
+                                taskId = event.taskId,
+                                taskUuid = event.taskUuid,
+                                tagId = event.tagId,
+                                tagUuid = event.tagUuid
+                            )
+                        )
+                    }
+
+                }
+            }
         }
     }
 

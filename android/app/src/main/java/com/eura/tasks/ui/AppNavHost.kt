@@ -337,17 +337,19 @@ fun AppNavHost(
             val tagId = backStackEntry.arguments?.getString("tagId")?.toIntOrNull()
             val tagEntity = tagDbState.tags.find { it.id == tagId }
             onTaskDbEvent(TaskDbEvent.GetTaskById(tagId!!))
-            val tasks = taskDbState.tasksFromCurrentTag
-            TagScreen(
-                tagEntity = tagEntity,
-                tasks = tasks,
-                onClose = { navController.popBackStack() },
-                onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
-                onTaskDbEvent = onTaskDbEvent,
-                onUiEvent = onUiEvent,
-                uiState = uiState,
-                onTagDbEvent = onTagDbEvent,
-            )
+            if (tagEntity != null) {
+                TagScreen(
+                    tagEntity = tagEntity,
+                    onClose = { navController.popBackStack() },
+                    onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
+                    onTaskDbEvent = onTaskDbEvent,
+                    onUiEvent = onUiEvent,
+                    uiState = uiState,
+                    onTagDbEvent = onTagDbEvent,
+                    tagDbState = tagDbState,
+                    taskDbState = taskDbState
+                )
+            }
         }
     }
 }

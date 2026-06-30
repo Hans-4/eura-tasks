@@ -19,4 +19,7 @@ sealed interface TaskDbEvent {
     data class UpdateTaskTitleById(val id: Int, val newTitle: String): TaskDbEvent
     data class UpdateDescriptionById(val id: Int, val newDescription: String): TaskDbEvent
     data class GetTaskById(val id: Int): TaskDbEvent
+    data class GetAllTasksByTagId(val tagId: Int): TaskDbEvent
+    data class InsertNewTaskTag(val taskId: Int, val taskUuid: String, val tagId: Int, val tagUuid: String): TaskDbEvent
+    data class RemoveFromTagByTaskId(val taskId: Int): TaskDbEvent
 }

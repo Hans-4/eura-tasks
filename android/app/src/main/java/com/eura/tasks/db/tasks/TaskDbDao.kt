@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
 import com.eura.tasks.db.tasks.tags.TaskWithTags
 
@@ -54,4 +55,9 @@ interface TaskDbDao {
     suspend fun getTaskWithTags(taskList: String): TaskWithTags?
     @Query("SELECT * FROM tasks WHERE id IN (:ids)")
     suspend fun getTasksByIds(ids: List<Int>): List<TaskEntity>
+    @Query("SELECT * FROM task_tags WHERE tagId = :tagId")
+    suspend fun getAllTasksFromTagById(tagId: Int): List<TaskTagsEntity>
+
+    @Query("DELETE FROM task_tags WHERE taskId = :taskId")
+    suspend fun removeByTaskId(taskId: Int)
 }

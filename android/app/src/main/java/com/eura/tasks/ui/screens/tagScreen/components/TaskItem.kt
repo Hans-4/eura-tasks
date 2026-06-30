@@ -5,30 +5,33 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskEntity
+import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Composable
-fun TaskTagItem(
+fun TaskItem(
     item: TaskEntity,
     onTaskDetails: (Int, String) -> Unit,
     parentScreen: String,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
+
+    tagEntity: TagsEntity,
+    taskTags: List<TaskTagsEntity>
 ) {
+    val checked = taskTags.any { it.taskId == item.id }
+
     Button(
         onClick = { onTaskDetails(item.id, parentScreen) },
         colors = ButtonDefaults.buttonColors(
@@ -43,11 +46,22 @@ fun TaskTagItem(
                 .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadioButton(
-                onClick = {
-                    onTaskDbEvent(TaskDbEvent.SetIsCompleted(!item.isCompleted, item))
+            Checkbox(
+                onCheckedChange = {
+                    if (checked) {
+                        onTaskDbEvent(TaskDbEvent.RemoveFromTagByTaskId(item.id))
+                    } else {
+                        onTaskDbEvent(
+                            TaskDbEvent.InsertNewTaskTag(
+                                item.id,
+                                item.uuid,
+                                tagEntity.id,
+                                tagEntity.uuid
+                            )
+                        )
+                    }
                 },
-                selected = item.isCompleted
+                checked = checked
             )
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.title, fontSize = 18.sp)
@@ -55,14 +69,6 @@ fun TaskTagItem(
                     text = item.taskList,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            IconButton(
-                onClick = { TODO("Remove task from tag")}
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Remove,
-                    contentDescription = null
                 )
             }
         }

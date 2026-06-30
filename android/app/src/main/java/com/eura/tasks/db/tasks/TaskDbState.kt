@@ -1,5 +1,6 @@
 package com.eura.tasks.db.tasks
 
+import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import java.time.LocalDateTime
 
 data class TaskDbState(
@@ -17,5 +18,7 @@ data class TaskDbState(
     val tasksFromCurrentTag: List<TaskEntity> = emptyList(),
 
     val searchQuery: String = "",
-    val searchResults: List<TaskEntity> = emptyList()
+    val searchResults: List<TaskEntity> = emptyList(),
+
+    val taskTags: List<TaskTagsEntity> = emptyList()
 )

@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,12 +15,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+data class Button(
+    val text: String,
+    val onClick: () -> Unit
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageTagSheet(
     onDismiss: () -> Unit,
     onDeletedTag: () -> Unit
 ) {
+    val buttonList = listOf(
+        Button("Rename Tag") { TODO() },
+        Button("Delete Tag") { onDeletedTag() }
+    )
+
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         dragHandle = null
@@ -26,27 +38,24 @@ fun ManageTagSheet(
         Column(
 
         ) {
-            Button(
-                onClick = { TODO() },
-                shape = RoundedCornerShape(0.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Rename Tag",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
-            }
-            Button(
-                onClick = { onDeletedTag() },
-                shape = RoundedCornerShape(0.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    text = "Delete Tag",
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Start
-                )
+            buttonList.forEach { item ->
+                Button(
+                    onClick = { item.onClick() },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface,
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledContentColor = MaterialTheme.colorScheme.outline
+                    ),
+                    shape = RoundedCornerShape(0.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = item.text,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Start
+                    )
+                }
             }
         }
     }
