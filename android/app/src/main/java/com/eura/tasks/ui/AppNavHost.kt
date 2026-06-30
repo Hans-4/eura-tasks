@@ -312,7 +312,9 @@ fun AppNavHost(
                     onTagDbEvent = onTagDbEvent,
 
                     uiState = uiState,
-                    onUiEvent = onUiEvent
+                    onUiEvent = onUiEvent,
+
+                    onTagList = { tagId -> navController.navigate("tagList/$tagId") }
                 )
             }
         }

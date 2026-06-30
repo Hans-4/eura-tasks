@@ -42,6 +42,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagManagementScreen(
+    onTagList: (Int) -> Unit,
     onClose: () -> Unit,
     task: TaskEntity,
 
@@ -138,10 +139,24 @@ fun TagManagementScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(checked, key = { it.id }) { item ->
-                TagItem(tag = item, taskTag = taskTags, task = task, onTagDbEvent = onTagDbEvent)
+                TagItem(
+                    onTagList = onTagList,
+
+                    tag = item,
+                    taskTag = taskTags,
+                    task = task,
+                    onTagDbEvent = onTagDbEvent
+                )
             }
             items(unchecked, key = { it.id }) { item ->
-                TagItem(tag = item, taskTag = taskTags, task = task, onTagDbEvent = onTagDbEvent)
+                TagItem(
+                    onTagList = onTagList,
+
+                    tag = item,
+                    taskTag = taskTags,
+                    task = task,
+                    onTagDbEvent = onTagDbEvent
+                )
             }
         }
     }

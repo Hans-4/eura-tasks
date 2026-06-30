@@ -22,6 +22,8 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Composable
 fun TagItem(
+    onTagList: (Int) -> Unit,
+
     tag: TagsEntity,
     taskTag: List<TaskTagsEntity>,
     task: TaskEntity,
@@ -30,7 +32,7 @@ fun TagItem(
     val checked = taskTag.any { it.tagId == tag.id }
 
     Button(
-        onClick = {TODO("Navigate to tag screen")},
+        onClick = { onTagList(tag.id) },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant

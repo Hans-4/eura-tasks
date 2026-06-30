@@ -18,6 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagsEntity
@@ -89,6 +90,18 @@ fun TagScreen(
                     onTaskDbEvent = onTaskDbEvent
                 )
             }
+
+            item {
+                if (tasks.isEmpty()) {
+                    Text(
+                        text = "No linked tasks",
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(top = 200.dp)
+                    )
+                }
+            }
         }
     }
 
@@ -98,6 +111,7 @@ fun TagScreen(
             onDeletedTag = {
                 onClose()
                 onTagDbEvent(TagDbEvent.DeleteTag(tagEntity!!))
+                onUiEvent(UiEvent.CloseManageTagSheet)
             }
         )
     }
