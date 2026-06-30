@@ -8,6 +8,7 @@ import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tags.TagsEntity
+import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiEvent.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -98,6 +99,7 @@ class TagDbViewModel(
             }
 
             is TagDbEvent.GetAllTagsByUuid -> {
+                //TODO: Improve this
                 viewModelScope.launch {
                     val taskTagsEntity = tagDao.getAllTagsFromTask(event.uuid)
                     val tagsUuids = taskTagsEntity.map { it.tagUuid }
@@ -106,6 +108,16 @@ class TagDbViewModel(
                     _state.update {
                         it.copy(
                             tagsFromCurrentTask = allTags
+                        )
+                    }
+                }
+            }
+
+            is TagDbEvent.GetAllTagsByTaskId -> {
+                viewModelScope.launch {
+                    _state.update {
+                        it.copy(
+                            taskTags = tagDao.getAllTagsFromTaskById(event.taskId)
                         )
                     }
                 }
@@ -121,6 +133,40 @@ class TagDbViewModel(
                     )
                     tagDao.upsertDeletedTag(deletedTag)
                     tagDao.deleteTag(event.tag)
+                }
+            }
+
+            is TagDbEvent.InsertNewTaskTag -> {
+                viewModelScope.launch {
+                    tagDao.insertTaskTag(
+                        TaskTagsEntity(
+                            taskId = event.taskId,
+                            taskUuid = event.taskUuid,
+                            tagId = event.tagId,
+                            tagUuid = event.tagUuid
+                        )
+                    )
+                    _state.update {
+                        it.copy(
+                            taskTags = it.taskTags + TaskTagsEntity(
+                                taskId = event.taskId,
+                                taskUuid = event.taskUuid,
+                                tagId = event.tagId,
+                                tagUuid = event.tagUuid
+                            )
+                        )
+                        }
+                }
+            }
+
+            is TagDbEvent.RemoveFromTaskByTagId -> {
+                viewModelScope.launch {
+                    tagDao.removeByTagId(event.tagId)
+                    _state.update { it ->
+                        it.copy(
+                            taskTags = it.taskTags.filter { it.tagId != event.tagId }
+                        )
+                    }
                 }
             }
         }

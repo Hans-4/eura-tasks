@@ -80,12 +80,10 @@ class TaskDbViewModel(
                         taskDao.upsertTask(task)
                         cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
-                    Log.d("Test", "1")
                 } else {
                     viewModelScope.launch {
                         // Capture the generated ID returned by the database
                         val generatedTaskId = taskDao.upsertTask(task).toInt()
-                        Log.d("Test", "2 - Generated ID: $generatedTaskId")
 
                         Log.d("Values", "${_state.value.tagIds.size} ${_state.value.tagUuids.size}")
                         if (_state.value.tagIds.size == _state.value.tagUuids.size) {
@@ -101,10 +99,7 @@ class TaskDbViewModel(
                                     )
                                 )
                             }
-                        } else {
-                            Log.e("Values", "tagIds and tagUuids have different sizes!")
                         }
-                        Log.d("Test", "3")
                         cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
                 }

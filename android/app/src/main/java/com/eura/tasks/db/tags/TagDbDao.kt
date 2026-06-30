@@ -6,7 +6,6 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
-import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
@@ -38,16 +37,24 @@ interface TagDbDao {
     suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
+
+    //TODO: Switch to remove by id
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
-    suspend fun deleteByTaskId(taskUuid: String)
-    @Query("DELETE FROM task_tags WHERE tagUuid = :taskUuid")
-    suspend fun deleteByTagId(taskUuid: String)
+    suspend fun deleteByTaskUuid(taskUuid: String)
+    @Query("DELETE FROM task_tags WHERE tagUuid = :tagUuid")
+    suspend fun deleteByTagUuid(tagUuid: String)
+
+    @Query("DELETE FROM task_tags WHERE tagId = :tagId")
+    suspend fun removeByTagId(tagId: Int)
+
     @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(title) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean
     @Query("DELETE FROM deleted_tags WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT * FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun getAllTagsFromTask(taskUuid: String): List<TaskTagsEntity>
+    @Query("SELECT * FROM task_tags WHERE taskId = :taskId")
+    suspend fun getAllTagsFromTaskById(taskId: Int): List<TaskTagsEntity>
     @Query("SELECT * FROM tags WHERE uuid IN (:uuids)")
     suspend fun getTagsByUuids(uuids: List<String>): List<TagsEntity>
     @Query("SELECT id FROM tags WHERE uuid = :uuid")
