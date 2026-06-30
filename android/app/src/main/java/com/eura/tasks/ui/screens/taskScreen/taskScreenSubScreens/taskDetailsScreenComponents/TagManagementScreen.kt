@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,6 +34,7 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.tagManagmentScreenComponentes.TagItem
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,20 +44,31 @@ fun TagManagementScreen(
     tagDbState: TagDbState,
     onTagDbEvent: (TagDbEvent) -> Unit,
 ) {
-    val taskTags = tagDbState.taskTags
-
-    val tags = tagDbState.tags
-
-    val tabs = listOf("Selected", "Unselected")
-
+    val tabs = listOf("Checked", "Unchecked")
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    BackHandler(
-        enabled = true,
-        onBack = { onClose() }
-    )
+    // 1. Initialize scroll state and scope
+    val listState = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    LaunchedEffect(taskTags) {
+    val taskTags = tagDbState.taskTags
+    val tags = tagDbState.tags
+
+    val (checked, unchecked) = remember(tags, taskTags) {
+        val checkedIds = taskTags.map { it.tagId }.toSet()
+        tags.sortedBy { it.title }.partition { it.id in checkedIds }
+    }
+
+    // 2. Sync tab selection with scroll position when scrolling stops
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            selectedTab = if (checked.isNotEmpty() && listState.firstVisibleItemIndex < checked.size) 0 else 1
+        }
+    }
+
+    BackHandler(enabled = true, onBack = { onClose() })
+
+    LaunchedEffect(task.id) {
         onTagDbEvent(TagDbEvent.GetAllTagsByTaskId(task.id))
     }
 
@@ -67,24 +81,19 @@ fun TagManagementScreen(
             ) {
                 TopAppBar(
                     navigationIcon = {
-                        IconButton(onClick = { onClose() }) {
+                        IconButton(
+                            onClick = { onClose() }
+                        ) {
                             Icon(
                                 imageVector = Icons.Rounded.ArrowBackIosNew,
                                 contentDescription = "Back"
                             )
                         }
                     },
-                    title = {
-                        Text("Tag management")
-                    },
+                    title = { Text("Tag management") },
                     actions = {
-                        IconButton(
-                            onClick = { TODO() }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Rounded.Add,
-                                contentDescription = null
-                            )
+                        IconButton(onClick = { /* TODO */ }) {
+                            Icon(imageVector = Icons.Rounded.Add, contentDescription = null)
                         }
                     }
                 )
@@ -96,7 +105,14 @@ fun TagManagementScreen(
                     tabs.forEachIndexed { index, title ->
                         Tab(
                             selected = index == selectedTab,
-                            onClick = { selectedTab = index },
+                            onClick = {
+                                selectedTab = index
+                                // 3. Scroll to the corresponding section
+                                scope.launch {
+                                    val targetIndex = if (index == 0) 0 else checked.size
+                                    listState.animateScrollToItem(targetIndex)
+                                }
+                            },
                             modifier = Modifier.height(40.dp)
                         ) {
                             Text(text = title)
@@ -110,17 +126,15 @@ fun TagManagementScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 8.dp),
+            state = listState,
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(tags) { item ->
-                TagItem(
-                    tag = item,
-                    taskTag = taskTags,
-                    task = task,
-
-                    onTagDbEvent = onTagDbEvent
-                )
+            items(checked, key = { it.id }) { item ->
+                TagItem(tag = item, taskTag = taskTags, task = task, onTagDbEvent = onTagDbEvent)
+            }
+            items(unchecked, key = { it.id }) { item ->
+                TagItem(tag = item, taskTag = taskTags, task = task, onTagDbEvent = onTagDbEvent)
             }
         }
     }

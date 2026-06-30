@@ -309,9 +309,6 @@ fun AppNavHost(
                     task = task,
                     tagDbState = tagDbState,
                     onTagDbEvent = onTagDbEvent,
-                    uiState = uiState,
-                    onTaskDbEvent = onTaskDbEvent,
-                    onUiEvent = onUiEvent
                 )
             }
         }
