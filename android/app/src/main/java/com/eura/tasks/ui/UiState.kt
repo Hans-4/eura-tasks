@@ -21,5 +21,5 @@ data class UiState(
 
     val isSetSearchFilterBottomSheetOpen: Boolean = false,
 
-    val isManageTagSheetOpen: Boolean = false
+    val isManageTagSheetOpen: Boolean = false,
 )

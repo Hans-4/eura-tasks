@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens
+package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -59,7 +59,7 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.DeleteTaskAlertDialog
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.components.DeleteTaskAlertDialog
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents
+package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.components
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.material3.AlertDialog

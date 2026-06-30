@@ -205,7 +205,7 @@ fun AddTagsDialog(
                                 }
                                 TextButton(
                                     onClick = {
-                                        onTagDbEvent(TagDbEvent.SaveTag)
+                                        onTagDbEvent(TagDbEvent.SaveTagForTask)
                                 }
                                 ) {
                                     Text(

@@ -38,7 +38,7 @@ class TagDbViewModel(
 
     fun onEvent(event: TagDbEvent, onUiEvent: (UiEvent) -> Unit) {
         when(event) {
-            TagDbEvent.SaveTag -> {
+            TagDbEvent.SaveTagForTask -> {
                 val title = _state.value.tagTitle.trim()
                 if (title.isBlank()) return
 
@@ -59,6 +59,44 @@ class TagDbViewModel(
                         }
                         cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(CloseAddTagTextField)
+                    }
+                }
+            }
+
+            is TagDbEvent.SaveTagInTask -> {
+                val title = _state.value.tagTitle.trim()
+                if (title.isBlank()) return
+
+                viewModelScope.launch {
+                    if (tagDao.searchForExistingTitle(title)) {
+                        onUiEvent(SetReason(2))
+                        onUiEvent(OpenItemWithSimilarNameWarningDialog)
+                    } else {
+                        val tag = TagsEntity(title = title)
+
+                        val tagId = tagDao.upsertTag(tag).toInt()
+
+                        tagDao.insertTaskTag(
+                            TaskTagsEntity(
+                                taskId = event.taskId,
+                                taskUuid = event.taskUuid,
+                                tagId = tagId,
+                                tagUuid = tag.uuid
+                            )
+                        )
+                        _state.update {
+                            it.copy(
+                                taskTags = it.taskTags + TaskTagsEntity(
+                                    taskId = event.taskId,
+                                    taskUuid = event.taskUuid,
+                                    tagId = tagId,
+                                    tagUuid = event.taskUuid
+                                )
+                            )
+                        }
+
+                        cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
+                        onUiEvent(CloseAddTagsDialog)
                     }
                 }
             }
@@ -155,7 +193,7 @@ class TagDbViewModel(
                                 tagUuid = event.tagUuid
                             )
                         )
-                        }
+                    }
                 }
             }
 

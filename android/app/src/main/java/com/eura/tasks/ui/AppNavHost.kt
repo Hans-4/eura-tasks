@@ -25,12 +25,12 @@ import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.ui.screens.homeScreen.HomeScreen
 import com.eura.tasks.ui.screens.searchScreen.SearchScreen
 import com.eura.tasks.ui.screens.settingsScreen.SettingsScreen
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.TaskDetailsScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
 import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
 import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.TagManagementScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
@@ -307,8 +307,12 @@ fun AppNavHost(
                 TagManagementScreen(
                     onClose = { navController.popBackStack() },
                     task = task,
+
                     tagDbState = tagDbState,
                     onTagDbEvent = onTagDbEvent,
+
+                    uiState = uiState,
+                    onUiEvent = onUiEvent
                 )
             }
         }

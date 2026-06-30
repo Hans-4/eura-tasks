@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents
+package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
@@ -33,7 +33,10 @@ import androidx.compose.ui.unit.dp
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskEntity
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreenComponents.tagManagmentScreenComponentes.TagItem
+import com.eura.tasks.ui.UiEvent
+import com.eura.tasks.ui.UiState
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.TagItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,8 +44,12 @@ import kotlinx.coroutines.launch
 fun TagManagementScreen(
     onClose: () -> Unit,
     task: TaskEntity,
+
     tagDbState: TagDbState,
     onTagDbEvent: (TagDbEvent) -> Unit,
+
+    uiState: UiState,
+    onUiEvent: (UiEvent) -> Unit
 ) {
     val tabs = listOf("Checked", "Unchecked")
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -92,7 +99,7 @@ fun TagManagementScreen(
                     },
                     title = { Text("Tag management") },
                     actions = {
-                        IconButton(onClick = { /* TODO */ }) {
+                        IconButton(onClick = { onUiEvent(UiEvent.OpenAddTagsDialog) }) {
                             Icon(imageVector = Icons.Rounded.Add, contentDescription = null)
                         }
                     }
@@ -137,5 +144,15 @@ fun TagManagementScreen(
                 TagItem(tag = item, taskTag = taskTags, task = task, onTagDbEvent = onTagDbEvent)
             }
         }
+    }
+
+    if (uiState.isAddTagsDialogOpen) {
+        AddTagDialog(
+            onConfirm = { onTagDbEvent(TagDbEvent.SaveTagInTask(task.id, task.uuid)) },
+            onDismiss = { onUiEvent(UiEvent.CloseAddTagsDialog) },
+
+            tagDbState = tagDbState,
+            onTagDbEvent = onTagDbEvent
+        )
     }
 }
