@@ -75,7 +75,7 @@ fun SearchScreen(
     onUiEvent: (UiEvent) -> Unit,
 
     onTaskList: (String) -> Unit,
-    onTagDetails: (Int, String) -> Unit,
+    onTagDetails: (Int) -> Unit,
 ) {
     var textValue by remember { mutableStateOf(taskDbState.searchQuery) }
 

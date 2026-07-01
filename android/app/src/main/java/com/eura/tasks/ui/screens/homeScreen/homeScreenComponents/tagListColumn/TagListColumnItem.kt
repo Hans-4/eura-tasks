@@ -38,7 +38,7 @@ fun TagListColumnItem(
         )
 
         if (!noTags) {
-            tagList.forEachIndexed { index, item ->
+            tagList.forEach { item ->
                 Button(
                     onClick = { onTagList(item.id) },
                     shape = MaterialTheme.shapes.medium,

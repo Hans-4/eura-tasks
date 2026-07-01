@@ -187,7 +187,7 @@ fun AppNavHost(
                     navController.navigate("taskDetails/$taskId/$parentScreen")
                 },
                 onTaskList = { listName -> navController.navigate("taskLists/$listName") },
-                onTagDetails = { tagId, parentScreen -> TODO()}
+                onTagDetails = { tagId -> navController.navigate("tagList/$tagId") }
             )
         }
 
