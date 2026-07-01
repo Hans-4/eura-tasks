@@ -90,7 +90,7 @@ class TagDbViewModel(
                                     taskId = event.taskId,
                                     taskUuid = event.taskUuid,
                                     tagId = tagId,
-                                    tagUuid = event.taskUuid
+                                    tagUuid = tag.uuid
                                 )
                             )
                         }
