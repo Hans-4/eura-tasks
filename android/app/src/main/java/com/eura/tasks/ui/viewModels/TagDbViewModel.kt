@@ -207,6 +207,28 @@ class TagDbViewModel(
                     }
                 }
             }
+
+            TagDbEvent.SaveTag -> {
+                val title = _state.value.tagTitle.trim()
+                if (title.isBlank()) return
+
+                viewModelScope.launch {
+                    if (tagDao.searchForExistingTitle(title)) {
+                        onUiEvent(SetReason(2))
+                        onUiEvent(OpenItemWithSimilarNameWarningDialog)
+                    } else {
+                        tagDao.upsertTag(TagsEntity(title = title)).toInt()
+
+                        _state.update {
+                            it.copy(
+                                tagTitle = "",
+                            )
+                        }
+
+                        onUiEvent(CloseAddTagsDialog)
+                    }
+                }
+            }
         }
     }
 }

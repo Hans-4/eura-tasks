@@ -2,6 +2,7 @@ package com.eura.tasks.db.tags
 
 sealed interface TagDbEvent {
     object SaveTagForTask: TagDbEvent
+    object SaveTag: TagDbEvent
     data class SaveTagInTask(val taskId: Int, val taskUuid: String): TagDbEvent
     object UncheckAllTags: TagDbEvent
     data class SetTagTitle(val title: String): TagDbEvent

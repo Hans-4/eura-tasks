@@ -346,7 +346,6 @@ fun AppNavHost(
                     onUiEvent = onUiEvent,
                     uiState = uiState,
                     onTagDbEvent = onTagDbEvent,
-                    tagDbState = tagDbState,
                     taskDbState = taskDbState
                 )
             }

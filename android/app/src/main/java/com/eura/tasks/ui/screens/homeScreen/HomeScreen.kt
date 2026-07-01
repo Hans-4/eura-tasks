@@ -1,6 +1,5 @@
 package com.eura.tasks.ui.screens.homeScreen
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -38,6 +37,7 @@ import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AddTask
 import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material.icons.rounded.Search
+import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -89,6 +89,7 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SystemTaskLists
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.UserListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -254,6 +255,12 @@ fun HomeScreen(
                             label = "New Task",
                             icon = Icons.Rounded.AddTask,
                             onClick = { onUiEvent(UiEvent.OpenAddTaskSheet) },
+                            onUiEvent = onUiEvent
+                        )
+                        FabMenuItem(
+                            label = "New Tag",
+                            icon = Icons.Rounded.Sell,
+                            onClick = { onUiEvent(UiEvent.OpenAddTagsDialog) },
                             onUiEvent = onUiEvent
                         )
                     }
@@ -443,5 +450,14 @@ fun HomeScreen(
             )
         }
 
+        if (uiState.isAddTagsDialogOpen) {
+            AddTagDialog(
+                onConfirm = { onTagDbEvent(TagDbEvent.SaveTag) },
+                onDismiss = { onUiEvent(UiEvent.CloseAddTagsDialog) },
+
+                tagDbState = tagDbState,
+                onTagDbEvent = onTagDbEvent
+            )
+        }
     }
 }
