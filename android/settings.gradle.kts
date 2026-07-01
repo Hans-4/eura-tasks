@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Eura-ToDo"
+rootProject.name = "Eura-Tasks"
 include(":app")
  
