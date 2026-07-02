@@ -5,18 +5,19 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ShortText
+import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -146,7 +147,9 @@ fun AddTaskScreen(
             )
         }
 
-        Row{
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             IconButton(
                 onClick = {
                     if (uiState.isAddingDescription) {
@@ -162,20 +165,27 @@ fun AddTaskScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
-
             IconButton(
                 onClick = {
                     onUiEvent(UiEvent.OpenAddTagsDialog)
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Tag,
+                    imageVector = Icons.Rounded.Sell,
                     contentDescription = null,
                 )
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
+            IconButton(
+                onClick = {
+                    onUiEvent(UiEvent.OpenAddReminderDialog)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Alarm,
+                    contentDescription = null,
+                )
+            }
 
             IconButton(
                 onClick = {
@@ -213,6 +223,20 @@ fun AddTaskScreen(
             onTaskDbEvent = onDbEvent,
             onUiEvent = onUiEvent,
             uiState = uiState
+        )
+    }
+
+    if (uiState.isAddReminderDialogOpen) {
+        AddReminderDialog(
+            onDismiss = { onUiEvent(UiEvent.CloseAddReminderDialog) },
+            onUiEvent = onUiEvent
+        )
+    }
+
+    if (uiState.isPickingTime) {
+        TimePickDialog(
+            onDismiss = { onUiEvent(UiEvent.CloseTimePickDialog) },
+            onTimeSelected = { hour, minute ->}
         )
     }
 }

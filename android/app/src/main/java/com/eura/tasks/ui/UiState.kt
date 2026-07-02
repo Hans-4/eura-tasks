@@ -22,4 +22,8 @@ data class UiState(
     val isSetSearchFilterBottomSheetOpen: Boolean = false,
 
     val isManageTagSheetOpen: Boolean = false,
+
+    val isAddReminderDialogOpen: Boolean = false,
+
+    val isPickingTime: Boolean = false
 )

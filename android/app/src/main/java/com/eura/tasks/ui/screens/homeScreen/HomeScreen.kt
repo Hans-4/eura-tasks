@@ -168,7 +168,9 @@ fun HomeScreen(
                         },
                         actions = {
                             IconButton(
-                                modifier = Modifier.size(32.dp),
+                                modifier = Modifier
+                                    .size(32.dp)
+                                ,
                                 onClick = { onSettings() },
                                 colors = IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.onPrimaryContainer,

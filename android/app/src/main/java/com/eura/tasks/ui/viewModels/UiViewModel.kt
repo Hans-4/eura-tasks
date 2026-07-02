@@ -260,6 +260,36 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseAddReminderDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddReminderDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenAddReminderDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddReminderDialogOpen = true
+                    )
+                }
+            }
+
+            UiEvent.CloseTimePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isPickingTime = false
+                    )
+                }
+            }
+            UiEvent.OpenTimePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isPickingTime = true
+                    )
+                }
+            }
         }
     }
 }
