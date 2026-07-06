@@ -381,6 +381,9 @@ fun TagButton(
 }
 
 @Composable
+fun TimeCard() {}
+
+@Composable
 fun DescriptionCard(
     task: TaskEntity,
     onTaskDbEvent: (TaskDbEvent) -> Unit
