@@ -253,7 +253,11 @@ fun SettingsScreen(
 
             item {
                 Button(onClick = {
-                    service.showNotification(Counter.value)
+                    service.showNotification(
+                        Counter.value,
+                        "Task",
+                        ""
+                    )
                 }) {
                     Text("Show notification")
                 }

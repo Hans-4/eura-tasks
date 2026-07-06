@@ -98,6 +98,10 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTask
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.components.DatePickDialog
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.TimePickDialog
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -337,7 +341,7 @@ fun HomeScreen(
                                     .padding(vertical = 4.dp),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                for (item in list) {
+                                list.forEach { item ->
                                     val icon = Converter.systemTypeConverter(item.type)
                                     val color = Converter.colorStringConverter(
                                         systemThemeIndex = systemThemeIndex,
@@ -345,7 +349,20 @@ fun HomeScreen(
                                     )
                                     val title = Converter.pageNameConverter(pageName = item.title)
 
+                                    val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
+
                                     val (completedTaskCount, totalTaskCount) = when (item.title) {
+                                        "SYSTEM_TODAY" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size,
+                                            taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size
+                                        )
+
+                                        "SYSTEM_SCHEDULE" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime != null }.size,
+                                            taskDbState.tasks.filter { it.dueDateTime != null }.size
+                                        )
+
+
                                         "SYSTEM_ALL" -> Pair(
                                             taskDbState.tasks.filter { it.isCompleted }.size,
                                             taskDbState.tasks.size

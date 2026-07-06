@@ -71,6 +71,10 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTask
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SortItemsSheet
 import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.DeleteAllTasksInListAlert
 import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.ManageListSheet
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -107,6 +111,8 @@ fun TaskScreen(
     )
 
     val tasksToShow = when (pageName) {
+        "SYSTEM_TODAY" -> taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+        "SYSTEM_SCHEDULE" -> taskDbState.tasks.filter { it.dueDateTime != null }
         "SYSTEM_ALL" -> taskDbState.tasks
         "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
         "SYSTEM_WITH_TAGS" -> taskDbState.tasks.filter { it.hasTags }
