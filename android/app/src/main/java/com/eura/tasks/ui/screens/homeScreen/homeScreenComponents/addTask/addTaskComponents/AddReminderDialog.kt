@@ -35,7 +35,7 @@ fun AddReminderDialog(
     onDismiss: () -> Unit,
     onDateSelected: (Long?) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
-    taskDbState: TaskDbState
+    taskDbState: TaskDbState,
 ) {
     val datePickerState = rememberDatePickerState(
         initialSelectedDateMillis = taskDbState.taskDate
@@ -93,7 +93,7 @@ fun AddReminderDialog(
                 )
 
                 Button(
-                    onClick = { TODO() },
+                    onClick = { onUiEvent(UiEvent.OpenAddRepeatsDialog) },
                     shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

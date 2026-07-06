@@ -5,6 +5,7 @@ data class UiState(
     val isAddingNewTaskList: Boolean = false,
     val isSelectingTaskList: Boolean = false,
     val isAddingTask: Boolean = false,
+    val isAddingRepeats: Boolean = false,
     val isAddingDescription: Boolean = false,
     val isConfirmingDeletion: Boolean = false,
     val isHomeFABMenuExpanded: Boolean = false,
@@ -25,5 +26,8 @@ data class UiState(
 
     val isAddReminderDialogOpen: Boolean = false,
 
-    val isPickingTime: Boolean = false
+    val isPickingTime: Boolean = false,
+
+    val isDatePickDialogOpen: Boolean = false,
+    val datePickDialogOpenedFrom: Int = 1, //1 = Start date, 2 = End date
 )

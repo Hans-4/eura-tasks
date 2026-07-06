@@ -37,7 +37,7 @@ fun AddTaskBottomSheet(
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,
-    taskLists: List<UserListEntity>
+    taskLists: List<UserListEntity>,
 ) {
     ModalBottomSheet(
         modifier = Modifier
@@ -91,7 +91,7 @@ fun AddTaskBottomSheet(
                         currentTab = currentTab,
                         firstUserTaskList = firstUserTaskList,
                         onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") },
-                        taskLists = taskLists
+                        taskLists = taskLists,
                     )
                 }
 

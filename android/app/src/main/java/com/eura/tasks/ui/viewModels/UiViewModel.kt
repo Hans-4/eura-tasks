@@ -290,6 +290,39 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseAddRepeatsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingRepeats = false,
+                        isAddingTask = true
+                    )
+                }
+            }
+            UiEvent.OpenAddRepeatsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingTask = false,
+                        isAddingRepeats = true
+                    )
+                }
+            }
+
+            UiEvent.CloseDatePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isDatePickDialogOpen = false
+                    )
+                }
+            }
+            is UiEvent.OpenDatePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isDatePickDialogOpen = true,
+                        datePickDialogOpenedFrom = event.openedFrom
+                    )
+                }
+            }
         }
     }
 }

@@ -79,6 +79,8 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
@@ -89,6 +91,9 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SystemTaskLists
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.UserListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.AddRepeatsDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.components.DatePickDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.TimePickDialog
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -101,6 +106,10 @@ fun HomeScreen(
     listDbState: ListDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState,
+
 
     onTaskList: (String) -> Unit,
     onTagList: (Int) -> Unit,
@@ -440,9 +449,45 @@ fun HomeScreen(
                     uiState = uiState,
                     currentTab = "HOME_SCREEN",
                     firstUserTaskList = taskLists.first().title,
-                    taskLists = taskLists
+                    taskLists = taskLists,
                 )
             }
+            else if (uiState.isAddingRepeats) {
+                AddRepeatsDialog(
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState,
+
+                    onUiEvent = onUiEvent,
+
+                    onDismiss = { onUiEvent(UiEvent.CloseAddRepeatsDialog) }
+                )
+            }
+        }
+
+        if (uiState.isPickingTime) {
+            TimePickDialog(
+                onDismiss = { onUiEvent(UiEvent.CloseTimePickDialog) },
+                onTimeSelected = { hour, minute ->
+                    onRepeatDbEvent(RepeatDbEvent.SetRepeatTime(hour, minute))
+                    onUiEvent(UiEvent.CloseTimePickDialog)
+                },
+                taskState = taskDbState
+            )
+        }
+        if (uiState.isDatePickDialogOpen) {
+            DatePickDialog(
+                repeatDbState = repeatDbState,
+
+                onDismiss = { onUiEvent(UiEvent.CloseDatePickDialog) },
+                onDateSelected = {
+                    when (uiState.datePickDialogOpenedFrom) {
+                        1 -> onRepeatDbEvent(RepeatDbEvent.SetStartDate(it))
+                        2 -> onRepeatDbEvent(RepeatDbEvent.SetEndDate(it))
+                    }
+
+                    onUiEvent(UiEvent.CloseDatePickDialog)
+                }
+            )
         }
 
         if (uiState.isItemWithSimilarNameWarningDialogOpen) {

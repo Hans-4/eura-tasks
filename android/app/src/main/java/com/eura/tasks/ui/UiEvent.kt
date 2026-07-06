@@ -44,4 +44,10 @@ sealed interface UiEvent {
 
     object OpenTimePickDialog: UiEvent
     object CloseTimePickDialog: UiEvent
+
+    object OpenAddRepeatsDialog: UiEvent
+    object CloseAddRepeatsDialog: UiEvent
+
+    data class OpenDatePickDialog(val openedFrom: Int): UiEvent //1 = Start date, 2 = End date
+    object CloseDatePickDialog: UiEvent
 }

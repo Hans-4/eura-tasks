@@ -58,7 +58,7 @@ fun AddTaskScreen(
     firstUserTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
     taskLists: List<UserListEntity>,
-    darkTheme: Boolean = isSystemInDarkTheme()
+    darkTheme: Boolean = isSystemInDarkTheme(),
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -236,7 +236,7 @@ fun AddTaskScreen(
                 onUiEvent(UiEvent.CloseAddReminderDialog)
             },
             onUiEvent = onUiEvent,
-            taskDbState = taskDbState
+            taskDbState = taskDbState,
         )
     }
 

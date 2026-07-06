@@ -22,6 +22,8 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.screens.homeScreen.HomeScreen
 import com.eura.tasks.ui.screens.searchScreen.SearchScreen
 import com.eura.tasks.ui.screens.settingsScreen.SettingsScreen
@@ -38,16 +40,23 @@ import com.eura.tasks.ui.viewModels.ListDbViewModel
 
 @Composable
 fun AppNavHost(
-    taskDbState: TaskDbState,
-    listDbState: ListDbState,
-    tagDbState: TagDbState,
-    searchState: SearchState,
-    uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
+    taskDbState: TaskDbState,
+
     onListDbEvent: (ListDbEvent) -> Unit,
+    listDbState: ListDbState,
+
     onTagDbEvent: (TagDbEvent) -> Unit,
+    tagDbState: TagDbState,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState,
+
     onSearchEvent: (SearchEvent) -> Unit,
+    searchState: SearchState,
+
     onUiEvent: (UiEvent) -> Unit,
+    uiState: UiState,
     taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel
@@ -125,10 +134,14 @@ fun AppNavHost(
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
 
+                onRepeatDbEvent = onRepeatDbEvent,
+                repeatDbState = repeatDbState,
+
+
                 onTaskList = { listName -> navController.navigate("taskLists/$listName")},
                 onTagList = { tagId -> navController.navigate("tagList/$tagId")},
                 onSettings = { navController.navigate("settings")},
-                onSearch = { navController.navigate("search") }
+                onSearch = { navController.navigate("search") },
             )
         }
 
@@ -248,6 +261,7 @@ fun AppNavHost(
                 onUiEvent = onUiEvent,
                 onClose = {navController.popBackStack()},
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
+                onRepeats = { navController.navigate("repeats") }
             )
         }
 

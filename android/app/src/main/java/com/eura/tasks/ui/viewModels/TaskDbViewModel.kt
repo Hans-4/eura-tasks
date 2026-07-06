@@ -23,8 +23,6 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.ui.UiState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
@@ -45,6 +43,9 @@ class TaskDbViewModel(
 
     private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(TaskDbState())
+
+    private val converter = TypeConverter()
+
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
@@ -67,13 +68,13 @@ class TaskDbViewModel(
                     val timeString = "${_state.value.taskTimeHour}:${_state.value.taskTimeMinute}:00"
 
                     val timestamp = _state.value.taskDate
-                    val formattedDate = timestampToDateString(timestamp!!)
+                    val formattedDate = converter.timestampToDateString(timestamp!!)
                     val dueDateTimeString = "${formattedDate}T${timeString}Z"
                     dueDateTime = Instant.parse(dueDateTimeString)
 
                 } else if (_state.value.taskDate != null) {
                     val timestamp = _state.value.taskDate
-                    val formattedDate = timestampToDateString(timestamp!!)
+                    val formattedDate = converter.timestampToDateString(timestamp!!)
                     dueDateTime = Instant.parse(formattedDate)
 
                 } else {
@@ -132,7 +133,7 @@ class TaskDbViewModel(
                         todoDescription = "",
                         todoIsFavorite = false,
 
-                        taskDate = 0L,
+                        taskDate = null,
                         taskTimeHour = null,
                         taskTimeMinute = null,
                     )
@@ -336,20 +337,6 @@ class TaskDbViewModel(
                 }
             }
         }
-    }
-
-    private fun timestampToDateString(
-        timestamp: Long
-    ): String {
-        val instant = Instant.fromEpochMilliseconds(timestamp)
-
-        // Convert to Local Date in UTC
-        val localDate = instant.toLocalDateTime(TimeZone.UTC).date
-
-        // Formatted to YYYY-MM-DD
-        val formattedDate = localDate.toString()
-
-        return formattedDate
     }
 
 

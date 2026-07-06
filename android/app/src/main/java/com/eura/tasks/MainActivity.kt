@@ -17,6 +17,7 @@ import com.eura.tasks.ui.viewModels.UiViewModel
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
+import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
 import kotlin.getValue
@@ -58,6 +59,16 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return TagDbViewModel(tagDao = db.tagDao) as T
+                }
+            }
+        }
+    )
+
+    private val repeatDbViewModel by viewModels<RepeatDbViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return RepeatDbViewModel(repeatDao = db.repeatDao) as T
                 }
             }
         }
@@ -106,15 +117,25 @@ class MainActivity : ComponentActivity() {
                 val taskState by taskDbViewModel.state.collectAsState()
                 val listState by listDbViewModel.state.collectAsState()
                 val tagState by tagDbViewModel.state.collectAsState()
+                val repeatState by repeatDbViewModel.state.collectAsState()
+
                 val searchState by searchViewModel.state.collectAsState()
+
                 val uiState by uiViewModel.state.collectAsState()
+
                 AppNavHost(
+                    onTaskDbEvent = taskDbViewModel::onEvent,
                     taskDbState = taskState,
+
                     listDbState = listState,
                     tagDbState = tagState,
+
+                    onRepeatDbEvent = repeatDbViewModel::onEvent,
+                    repeatDbState = repeatState,
+
                     searchState = searchState,
                     uiState = uiState,
-                    onTaskDbEvent = taskDbViewModel::onEvent,
+
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onTagDbEvent = { event -> tagDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onSearchEvent = searchViewModel::onEvent,
