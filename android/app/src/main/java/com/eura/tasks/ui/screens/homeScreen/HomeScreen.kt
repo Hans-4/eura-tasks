@@ -1,5 +1,8 @@
 package com.eura.tasks.ui.screens.homeScreen
 
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -154,6 +157,22 @@ fun HomeScreen(
                 withDismissAction = true
             )
             onUiEvent(UiEvent.CloseAddTaskSheet)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onUiEvent(UiEvent.SetPermissionState(true))
+        } else {
+            onUiEvent(UiEvent.SetPermissionState(false))
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

@@ -338,6 +338,14 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            is UiEvent.SetPermissionState -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionGranted = event.state
+                    )
+                }
+            }
         }
     }
 }

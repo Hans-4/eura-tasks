@@ -32,4 +32,6 @@ data class UiState(
     val datePickDialogOpenedFrom: Int = 1, //1 = Start date, 2 = End date
 
     val isNotificationPermissionScreenOpen: Boolean = false,
+
+    val isNotificationPermissionGranted: Boolean = false
 )

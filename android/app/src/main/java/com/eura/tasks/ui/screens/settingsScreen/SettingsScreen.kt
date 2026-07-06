@@ -52,13 +52,13 @@ import kotlinx.coroutines.delay
 import com.eura.tasks.R
 import com.eura.tasks.ui.notifications.Counter
 import com.eura.tasks.ui.notifications.CounterNotificationService
-import com.eura.tasks.ui.notifications.NotificationTriggerButton
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import kotlin.time.Duration.Companion.milliseconds
 import android.provider.Settings
+import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -212,7 +212,11 @@ fun SettingsScreen(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Synchronisation")
+                    Text(
+                        "Synchronisation",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
@@ -239,19 +243,15 @@ fun SettingsScreen(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Notifications")
+                    Text(
+                        "Notifications",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
             item {
-                NotificationTriggerButton(
-                    onPermissionGranted = {}
-                )
-            }
-
-            item {
-                val context = LocalContext.current
-
                 Button(onClick = {
                     service.showNotification(Counter.value)
                 }) {
