@@ -261,7 +261,6 @@ fun AppNavHost(
                 onUiEvent = onUiEvent,
                 onClose = {navController.popBackStack()},
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
-                onRepeats = { navController.navigate("repeats") }
             )
         }
 

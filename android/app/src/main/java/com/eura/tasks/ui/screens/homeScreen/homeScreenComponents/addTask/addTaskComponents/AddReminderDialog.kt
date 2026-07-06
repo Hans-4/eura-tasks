@@ -1,5 +1,6 @@
 package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -23,11 +24,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.ui.UiEvent
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.rounded.Close
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,11 +52,25 @@ fun AddReminderDialog(
     onDismiss: () -> Unit,
     onDateSelected: (Long?) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
+
+    taskDbEvent: (TaskDbEvent) -> Unit,
     taskDbState: TaskDbState,
 ) {
+    val defaultDate = taskDbState.taskDate ?: remember {
+        val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
+        val tomorrow = today.plus(1, DateTimeUnit.DAY)
+        tomorrow.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+    }
+
     val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = taskDbState.taskDate
+        initialSelectedDateMillis = defaultDate
     )
+
+    LaunchedEffect(Unit) {
+        if (taskDbState.taskDate == null) {
+            taskDbEvent(TaskDbEvent.SetTaskDate(defaultDate))
+        }
+    }
 
     Dialog(
         onDismissRequest = { onDismiss() },
@@ -74,16 +105,59 @@ fun AddReminderDialog(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.MoreTime,
                             contentDescription = null
                         )
-                        Text(
-                            text = "Add time",
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+
+                        if (taskDbState.taskTimeHour != null && taskDbState.taskTimeMinute != null) {
+                            val hour = if (taskDbState.taskTimeHour < 10) "0${taskDbState.taskTimeHour}" else taskDbState.taskTimeHour
+                            val minute = if (taskDbState.taskTimeMinute < 10) "0${taskDbState.taskTimeMinute}" else taskDbState.taskTimeMinute
+
+                            Button(
+                                onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
+                                shape = MaterialTheme.shapes.small,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    brush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                contentPadding = PaddingValues(start = 6.dp, end = 4.dp),
+                                modifier = Modifier.height(30.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "${hour}:${minute}"
+                                    )
+
+                                    IconButton(
+                                        onClick = { taskDbEvent(TaskDbEvent.SetTaskTime(null, null)) },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Close,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            Text(
+                                text = "Add time",
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
                     }
                 }
 

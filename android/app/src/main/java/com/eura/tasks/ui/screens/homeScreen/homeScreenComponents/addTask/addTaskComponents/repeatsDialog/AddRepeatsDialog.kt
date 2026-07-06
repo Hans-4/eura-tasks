@@ -67,10 +67,6 @@ fun AddRepeatsDialog(
 
     onDismiss: () -> Unit,
 ) {
-    var text by remember { mutableStateOf("1") }
-
-    var endText by remember { mutableStateOf("10") }
-
     val maxCharacter = 2
 
     var expanded by remember { mutableStateOf(false) }
@@ -251,15 +247,11 @@ fun AddRepeatsDialog(
                                 .height(56.dp)
                                 .fillMaxWidth()
                         ) {
-                            if (repeatDbState.repeatTimeHour == null && repeatDbState.repeatTimeMinute == null) {
-                                Text(
-                                    text = "Set time",
-                                    textAlign = TextAlign.Start,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            } else {
-                                val hour = repeatDbState.repeatTimeHour ?: "00"
-                                val minute = repeatDbState.repeatTimeMinute ?: "00"
+                            if (repeatDbState.repeatTimeHour != null && repeatDbState.repeatTimeMinute != null) {
+                                val hour = if (repeatDbState.repeatTimeHour < 10) "0${repeatDbState.repeatTimeHour}" else repeatDbState.repeatTimeHour
+                                val minute = if (repeatDbState.repeatTimeMinute < 10) "0${repeatDbState.repeatTimeMinute}" else repeatDbState.repeatTimeMinute
+
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -278,15 +270,19 @@ fun AddRepeatsDialog(
                                         )
                                     }
                                 }
+                            } else {
+                                Text(
+                                    text = "Set time",
+                                    textAlign = TextAlign.Start,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
                             }
                         }
                     }
                 }
 
                 item {
-                    Column(
-
-                    ) {
+                    Column {
                         Text(
                             "Starts"
                         )
@@ -325,9 +321,7 @@ fun AddRepeatsDialog(
                 }
 
                 item {
-                    Column(
-
-                    ) {
+                    Column {
                         Text(text = "Ends")
 
                         Row(

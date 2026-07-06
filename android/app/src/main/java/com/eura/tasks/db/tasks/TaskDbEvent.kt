@@ -24,5 +24,5 @@ sealed interface TaskDbEvent {
     data class RemoveFromTagByTaskId(val taskId: Int): TaskDbEvent
 
     data class SetTaskDate(val date: Long?): TaskDbEvent
-    data class SetTaskTime(val hour: Int, val minute: Int): TaskDbEvent
+    data class SetTaskTime(val hour: Int?, val minute: Int?): TaskDbEvent
 }

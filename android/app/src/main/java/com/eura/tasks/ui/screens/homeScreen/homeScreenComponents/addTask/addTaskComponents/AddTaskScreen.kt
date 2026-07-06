@@ -236,6 +236,8 @@ fun AddTaskScreen(
                 onUiEvent(UiEvent.CloseAddReminderDialog)
             },
             onUiEvent = onUiEvent,
+
+            taskDbEvent = onTaskDbEvent,
             taskDbState = taskDbState,
         )
     }
