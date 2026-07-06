@@ -3,20 +3,25 @@ package com.eura.tasks
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
-import com.eura.tasks.ui.notifications.CounterNotificationService
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.eura.tasks.notifications.FullDayNotificationService
+import com.eura.tasks.notifications.FullDayTaskNotificationWorker
+import java.util.concurrent.TimeUnit
 
 class MyApp: Application() {
 
     override fun onCreate() {
         super.onCreate()
         createGeneralNotificationChannel()
+        setupBackgroundWorker()
     }
 
     private fun createGeneralNotificationChannel() {
 
         val channel = NotificationChannel(
-            CounterNotificationService.COUNTER_CHANNEL_ID,
+            FullDayNotificationService.COUNTER_CHANNEL_ID,
             "General",
             NotificationManager.IMPORTANCE_DEFAULT
         )
@@ -24,5 +29,19 @@ class MyApp: Application() {
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun setupBackgroundWorker() {
+        // Enqueue background work every 15 minutes (Android system minimum limit)
+        val repeatingWorkRequest = PeriodicWorkRequestBuilder<FullDayTaskNotificationWorker>(
+            15, TimeUnit.MINUTES
+        ).build()
+
+        // ExistingPeriodicWorkPolicy.KEEP ensures we don't restart the timer every time the app opens
+        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+            "TaskNotificationWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            repeatingWorkRequest
+        )
     }
 }

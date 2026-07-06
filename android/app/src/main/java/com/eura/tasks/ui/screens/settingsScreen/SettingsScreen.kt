@@ -50,8 +50,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import com.eura.tasks.R
-import com.eura.tasks.ui.notifications.Counter
-import com.eura.tasks.ui.notifications.CounterNotificationService
+import com.eura.tasks.notifications.FullDayNotificationService
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
@@ -69,7 +68,7 @@ fun SettingsScreen(
     taskDbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
 
-    service: CounterNotificationService
+    service: FullDayNotificationService
 ) {
     val context = LocalContext.current
     val packageName = context.packageName
@@ -248,18 +247,6 @@ fun SettingsScreen(
                         textAlign = TextAlign.Start,
                         modifier = Modifier.fillMaxWidth()
                     )
-                }
-            }
-
-            item {
-                Button(onClick = {
-                    service.showNotification(
-                        Counter.value,
-                        "Task",
-                        ""
-                    )
-                }) {
-                    Text("Show notification")
                 }
             }
         }

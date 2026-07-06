@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.ui.AppNavHost
-import com.eura.tasks.ui.notifications.CounterNotificationService
+import com.eura.tasks.notifications.FullDayNotificationService
 import com.eura.tasks.ui.theme.EuraTasksTheme
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val service = CounterNotificationService(applicationContext)
+        val service = FullDayNotificationService(applicationContext)
 
         enableEdgeToEdge()
 

@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
 
-        <receiver android:name=".ui.notifications.CounterNotificationReceiver" />
+        <receiver android:name=".notifications.FullDayNotificationReceiver" />
     </application>
 
 </manifest>

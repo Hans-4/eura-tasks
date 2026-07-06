@@ -381,7 +381,10 @@ fun TagButton(
 }
 
 @Composable
-fun TimeCard() {}
+fun TimeCard(
+
+) {
+}
 
 @Composable
 fun DescriptionCard(

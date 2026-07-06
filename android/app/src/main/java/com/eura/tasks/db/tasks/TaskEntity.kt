@@ -13,7 +13,7 @@ import java.util.UUID
 )
 data class TaskEntity(
     val title: String,
-    val description: String,
+    val description: String, //TODO: Refactor to nullable
     val isFavorite: Boolean,
     val isCompleted: Boolean,
     val hasTags: Boolean,

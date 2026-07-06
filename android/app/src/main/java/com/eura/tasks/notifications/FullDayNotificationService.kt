@@ -1,5 +1,6 @@
-package com.eura.tasks.ui.notifications
+package com.eura.tasks.notifications
 
+import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
@@ -7,27 +8,29 @@ import androidx.core.app.NotificationCompat
 import com.eura.tasks.MainActivity
 import com.eura.tasks.R
 
-class CounterNotificationService(
+class FullDayNotificationService(
     private val context: Context
 ) {
-    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as android.app.NotificationManager
+    private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
     fun showNotification(
-        counter: Int,
+        id: Int,
         taskTitle: String,
         taskDescription: String
     ) {
         val activityIntent = Intent(context, MainActivity::class.java)
         val activityPendingIntent = PendingIntent.getActivity(
             context,
-            1,
+            id,
             activityIntent,
             PendingIntent.FLAG_IMMUTABLE
         )
         val incrementIntent = PendingIntent.getBroadcast(
             context,
-            2,
-            Intent(context, CounterNotificationReceiver::class.java),
+            id,
+            Intent(context, FullDayNotificationReceiver::class.java).apply {
+                putExtra("id", id)
+            },
             PendingIntent.FLAG_IMMUTABLE
         )
         val notification = NotificationCompat.Builder(context, COUNTER_CHANNEL_ID)
@@ -41,7 +44,7 @@ class CounterNotificationService(
                 incrementIntent
                 )
             .build()
-        notificationManager.notify(1, notification)
+        notificationManager.notify(id, notification)
     }
 
     companion object {

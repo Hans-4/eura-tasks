@@ -64,4 +64,7 @@ interface TaskDbDao {
 
     @Query("SELECT * FROM tasks WHERE fullDay = 1 AND isCompleted = 0")
     suspend fun getAllFullDayTasks(): List<TaskEntity>
+
+    @Query("UPDATE tasks SET isCompleted = 1 WHERE id = :id")
+    suspend fun markAsCompleteById(id: Int)
 }
