@@ -7,15 +7,17 @@ data class RepeatDbState(
     val yearRepeats: List<RepeatEveryYearEntity> = emptyList(),
     val endRepeats: List<EndRepeatsEntity> = emptyList(),
 
-    val selectedRepeatType: Int = 1,
+    val selectedRepeatType: Int = 1, //0: Day, 1: Week, 2: Month, 3: Year
     val repeatEvery: String = "1",
     val repeatTimeHour: Int? = null,
     val repeatTimeMinute: Int? = null,
     val startDate: Long? = null,
     val startDateString: String? = null,
 
-    val selectedRadioButton: Int = 1, //1 = Never, 2 = On, 3 = After
+    val selectedRadioButton: Int = 0, //0 = Never, 1 = On, 2 = After
     val endDate: Long? = null,
     val endDateString: String? = null,
-    val endAfterRepeats: String = "7"
+    val endAfterRepeats: String = "7",
+
+    val toSave: Boolean = false
 )

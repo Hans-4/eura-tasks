@@ -459,7 +459,14 @@ fun HomeScreen(
 
                     onUiEvent = onUiEvent,
 
-                    onDismiss = { onUiEvent(UiEvent.CloseAddRepeatsDialog) }
+                    onConfirm = {
+                        onRepeatDbEvent(RepeatDbEvent.SetToSave)
+                        onUiEvent(UiEvent.CloseAddRepeatsDialog)
+                    },
+                    onDismiss = {
+                        onRepeatDbEvent(RepeatDbEvent.ResetState)
+                        onUiEvent(UiEvent.CloseAddRepeatsDialog)
+                    }
                 )
             }
         }

@@ -7,8 +7,14 @@ import com.eura.tasks.db.tasks.TaskEntity
 import kotlinx.datetime.Instant
 
 @Entity(
-    tableName = "task_repeats",
+    tableName = "end_repeats",
     foreignKeys = [
+        ForeignKey(
+            entity = TaskEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["taskId"],
+            onDelete = ForeignKey.CASCADE
+        ),
         ForeignKey(
             entity = TaskEntity::class,
             parentColumns = ["uuid"],
@@ -19,8 +25,9 @@ import kotlinx.datetime.Instant
 )
 data class EndRepeatsEntity(
     val taskUuid: String,
+    val endsNever: Boolean,
     val endDate: Instant?,
     val endAfterRepetitions: Int?,
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+    @PrimaryKey
+    val taskId: Int,
 )

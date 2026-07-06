@@ -17,6 +17,7 @@ data class TaskEntity(
     val isFavorite: Boolean,
     val isCompleted: Boolean,
     val hasTags: Boolean,
+    val repeatType: Int? = null, //0: Day, 1: Week, 2: Month, 3: Year
     val dueDateTime: Instant?,
     val taskList: String,
     val creationTime: Instant,

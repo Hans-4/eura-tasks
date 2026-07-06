@@ -124,7 +124,12 @@ class MainActivity : ComponentActivity() {
                 val uiState by uiViewModel.state.collectAsState()
 
                 AppNavHost(
-                    onTaskDbEvent = taskDbViewModel::onEvent,
+                    onTaskDbEvent = { event ->
+                        taskDbViewModel.onEvent(
+                            event,
+                            repeatDbViewModel::onEvent,
+                            repeatState
+                        ) },
                     taskDbState = taskState,
 
                     listDbState = listState,

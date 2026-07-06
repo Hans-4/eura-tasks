@@ -13,4 +13,6 @@ interface RepeatDbDao {
     suspend fun upsertRepeatMonth(repeat: RepeatEveryMonthEntity)
     @Upsert
     suspend fun upsertRepeatYear(repeat: RepeatEveryYearEntity)
+    @Upsert
+    suspend fun upsertEndRepeat(repeat: EndRepeatsEntity)
 }

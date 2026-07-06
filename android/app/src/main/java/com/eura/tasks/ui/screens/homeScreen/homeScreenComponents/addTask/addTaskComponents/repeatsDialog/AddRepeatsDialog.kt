@@ -65,6 +65,7 @@ fun AddRepeatsDialog(
 
     onUiEvent: (UiEvent) -> Unit,
 
+    onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val maxCharacter = 2
@@ -95,7 +96,7 @@ fun AddRepeatsDialog(
     }
 
     Dialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { onDismiss() },
         properties = DialogProperties(
             usePlatformDefaultWidth = false,
             decorFitsSystemWindows = false
@@ -117,7 +118,7 @@ fun AddRepeatsDialog(
                     title = { Text("Repeats") },
                     actions = {
                         TextButton(
-                            onClick = { TODO() }
+                            onClick = { onConfirm() }
                         ) {
                             Text("Save")
                         }
@@ -330,8 +331,8 @@ fun AddRepeatsDialog(
 
                         ) {
                             RadioButton(
-                                selected = repeatDbState.selectedRadioButton == 1,
-                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(1)) }
+                                selected = repeatDbState.selectedRadioButton == 0,
+                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(0)) }
                             )
 
                             Text("Never")
@@ -343,8 +344,8 @@ fun AddRepeatsDialog(
 
                         ) {
                             RadioButton(
-                                selected = repeatDbState.selectedRadioButton == 2,
-                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(2)) }
+                                selected = repeatDbState.selectedRadioButton == 1,
+                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(1)) }
                             )
 
                             Text("On")
@@ -387,8 +388,8 @@ fun AddRepeatsDialog(
 
                         ) {
                             RadioButton(
-                                selected = repeatDbState.selectedRadioButton == 3,
-                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(3)) }
+                                selected = repeatDbState.selectedRadioButton == 2,
+                                onClick = { onRepeatDbEvent(RepeatDbEvent.SetRepeatEndType(2)) }
                             )
 
                             Text("After")

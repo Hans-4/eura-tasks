@@ -19,10 +19,16 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.ui.UiState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
@@ -44,8 +50,6 @@ class TaskDbViewModel(
     private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(TaskDbState())
 
-    private val converter = TypeConverter()
-
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
@@ -53,32 +57,30 @@ class TaskDbViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskDbState())
 
-    fun onEvent(event: TaskDbEvent) {
+    fun onEvent(
+        event: TaskDbEvent,
+        onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+        repeatDbState: RepeatDbState
+    ) {
         when(event) {
             TaskDbEvent.SaveTask -> {
                 val title = state.value.todoTitle
                 val description = state.value.todoDescription
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
+                val repeatType = if (repeatDbState.toSave) repeatDbState.selectedRepeatType else null
 
 
-                var dueDateTime: Instant?
-
-                if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
-                    val timeString = "${_state.value.taskTimeHour}:${_state.value.taskTimeMinute}:00"
-
-                    val timestamp = _state.value.taskDate
-                    val formattedDate = converter.timestampToDateString(timestamp!!)
-                    val dueDateTimeString = "${formattedDate}T${timeString}Z"
-                    dueDateTime = Instant.parse(dueDateTimeString)
-
-                } else if (_state.value.taskDate != null) {
-                    val timestamp = _state.value.taskDate
-                    val formattedDate = converter.timestampToDateString(timestamp!!)
-                    dueDateTime = Instant.parse(formattedDate)
-
-                } else {
-                    dueDateTime = null
+                val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
+                    val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.UTC).date
+                    if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
+                        LocalDateTime(
+                            date.year, date.month, date.dayOfMonth,
+                            _state.value.taskTimeHour!!, _state.value.taskTimeMinute!!
+                        ).toInstant(TimeZone.UTC)
+                    } else {
+                        Instant.fromEpochMilliseconds(timestamp)
+                    }
                 }
 
 
@@ -94,24 +96,27 @@ class TaskDbViewModel(
                     isFavorite = favorite,
                     isCompleted = false,
                     hasTags = state.value.tagIds.isNotEmpty(),
+                    repeatType = repeatType,
                     dueDateTime = dueDateTime,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
 
-                if (_state.value.tagIds.isEmpty() && _state.value.tagUuids.isEmpty()) {
-                    viewModelScope.launch {
-                        taskDao.upsertTask(task)
-                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
-                    }
-                } else {
-                    viewModelScope.launch {
-                        val generatedTaskId = taskDao.upsertTask(task).toInt()
+                var generatedTaskId: Int
 
-                        Log.d("Values", "${_state.value.tagIds.size} ${_state.value.tagUuids.size}")
+                viewModelScope.launch {
+                    if (_state.value.tagIds.isEmpty() && _state.value.tagUuids.isEmpty()) {
+                        generatedTaskId = taskDao.upsertTask(task).toInt()
+
+                    } else {
+                        generatedTaskId = taskDao.upsertTask(task).toInt()
+
+                        Log.d(
+                            "Values",
+                            "${_state.value.tagIds.size} ${_state.value.tagUuids.size}"
+                        )
                         if (_state.value.tagIds.size == _state.value.tagUuids.size) {
                             for ((tagId, tagUuid) in _state.value.tagIds.zip(_state.value.tagUuids)) {
-                                Log.d("Values", "$tagId $tagUuid")
                                 tagDao.insertTaskTag(
                                     TaskTagsEntity(
                                         generatedTaskId,
@@ -122,8 +127,13 @@ class TaskDbViewModel(
                                 )
                             }
                         }
-                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
+
+                    if (repeatDbState.toSave) {
+                        onRepeatDbEvent(RepeatDbEvent.SaveRepeat(generatedTaskId, task.uuid))
+                    }
+
+                    cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                 }
 
                 Log.d("Test", "Saved")
