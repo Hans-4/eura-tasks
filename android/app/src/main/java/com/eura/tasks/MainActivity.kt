@@ -10,23 +10,17 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.ui.AppNavHost
-import com.eura.tasks.ui.notifications.EventCheckWorker
-import com.eura.tasks.ui.notifications.createGeneralNotificationChannel
+import com.eura.tasks.ui.notifications.CounterNotificationService
 import com.eura.tasks.ui.theme.EuraTasksTheme
-import com.eura.tasks.ui.viewModels.UiViewModel
-import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
-import java.util.concurrent.TimeUnit
-import kotlin.getValue
+import com.eura.tasks.ui.viewModels.TaskDbViewModel
+import com.eura.tasks.ui.viewModels.UiViewModel
 
 class MainActivity : ComponentActivity() {
 
@@ -117,12 +111,10 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Pass 'this' (the MainActivity context) into the function
-        createGeneralNotificationChannel(this)
-
-        scheduleBackgroundCheck()
+        val service = CounterNotificationService(applicationContext)
 
         enableEdgeToEdge()
+
         setContent {
             EuraTasksTheme {
                 val taskState by taskDbViewModel.state.collectAsState()
@@ -158,21 +150,12 @@ class MainActivity : ComponentActivity() {
                     onUiEvent = uiViewModel::onEvent,
                     taskDbViewModel = taskDbViewModel,
                     listDbViewModel = listDbViewModel,
-                    googleDriveViewModel = googleDriveViewModel
+                    googleDriveViewModel = googleDriveViewModel,
+
+                    service = service
                 )
             }
         }
     }
 
-    private fun scheduleBackgroundCheck() {
-        val repeatingRequest = PeriodicWorkRequestBuilder<EventCheckWorker>(
-            15, TimeUnit.MINUTES
-        ).build()
-
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "EuraTasksBackgroundCheck",
-            ExistingPeriodicWorkPolicy.REPLACE,
-            repeatingRequest
-        )
-    }
 }

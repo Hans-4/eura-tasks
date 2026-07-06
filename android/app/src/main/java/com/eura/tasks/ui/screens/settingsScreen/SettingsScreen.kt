@@ -1,5 +1,7 @@
 package com.eura.tasks.ui.screens.settingsScreen
 
+import android.content.Intent
+import android.net.Uri
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -48,13 +50,15 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import com.eura.tasks.R
+import com.eura.tasks.ui.notifications.Counter
+import com.eura.tasks.ui.notifications.CounterNotificationService
 import com.eura.tasks.ui.notifications.NotificationTriggerButton
-import com.eura.tasks.ui.notifications.scheduleExactReminder
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import kotlin.time.Duration.Companion.milliseconds
+import android.provider.Settings
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -64,9 +68,14 @@ fun SettingsScreen(
     listDbViewModel: ListDbViewModel,
     taskDbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
+
+    service: CounterNotificationService
 ) {
-    val isDriveReady by googleDriveViewModel.isDriveServiceReady.collectAsState()
     val context = LocalContext.current
+    val packageName = context.packageName
+
+    val isDriveReady by googleDriveViewModel.isDriveServiceReady.collectAsState()
+    val currentContext = LocalContext.current
 
     var isShowingSyncDetails by remember { mutableStateOf(false) }
 
@@ -80,7 +89,7 @@ fun SettingsScreen(
     val syncMessage by googleDriveViewModel.syncMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        googleDriveViewModel.checkExistingLogin(context)
+        googleDriveViewModel.checkExistingLogin(currentContext)
     }
 
     LaunchedEffect(syncState) {
@@ -208,6 +217,33 @@ fun SettingsScreen(
             }
 
             item {
+                Button(
+                    onClick = {
+                        val intent = Intent().apply {
+                            action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                        }
+
+                        try {
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            try {
+                                val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                    data = Uri.fromParts("package", packageName, null)
+                                }
+                                context.startActivity(fallbackIntent)
+                            } catch (anr: Exception) {
+                            }
+                        }
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Notifications")
+                }
+            }
+
+            item {
                 NotificationTriggerButton(
                     onPermissionGranted = {}
                 )
@@ -217,12 +253,9 @@ fun SettingsScreen(
                 val context = LocalContext.current
 
                 Button(onClick = {
-                    // Get current time and add 10 seconds (10,000 milliseconds) for testing
-                    val triggerTime = System.currentTimeMillis() + 10000
-
-                    scheduleExactReminder(context, triggerTime)
+                    service.showNotification(Counter.value)
                 }) {
-                    Text("Remind me in 10 seconds")
+                    Text("Show notification")
                 }
             }
         }

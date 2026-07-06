@@ -31,6 +31,7 @@ import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScre
 import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
 import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
+import com.eura.tasks.ui.notifications.CounterNotificationService
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
@@ -59,7 +60,9 @@ fun AppNavHost(
     uiState: UiState,
     taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
-    googleDriveViewModel: GoogleDriveViewModel
+    googleDriveViewModel: GoogleDriveViewModel,
+
+    service: CounterNotificationService
 ) {
     val navController = rememberNavController()
 
@@ -165,7 +168,9 @@ fun AppNavHost(
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
                 listDbViewModel = listDbViewModel,
                 taskDbViewModel = taskDbViewModel,
-                googleDriveViewModel = googleDriveViewModel
+                googleDriveViewModel = googleDriveViewModel,
+
+                service = service
             )
         }
 
