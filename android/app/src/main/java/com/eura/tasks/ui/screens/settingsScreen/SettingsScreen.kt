@@ -48,6 +48,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import com.eura.tasks.R
+import com.eura.tasks.ui.notifications.NotificationTriggerButton
+import com.eura.tasks.ui.notifications.scheduleExactReminder
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
@@ -202,6 +204,25 @@ fun SettingsScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Synchronisation")
+                }
+            }
+
+            item {
+                NotificationTriggerButton(
+                    onPermissionGranted = {}
+                )
+            }
+
+            item {
+                val context = LocalContext.current
+
+                Button(onClick = {
+                    // Get current time and add 10 seconds (10,000 milliseconds) for testing
+                    val triggerTime = System.currentTimeMillis() + 10000
+
+                    scheduleExactReminder(context, triggerTime)
+                }) {
+                    Text("Remind me in 10 seconds")
                 }
             }
         }

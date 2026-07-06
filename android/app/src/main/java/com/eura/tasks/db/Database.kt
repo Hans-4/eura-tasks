@@ -43,9 +43,28 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 @TypeConverters(
     Converters::class
 )
-abstract class Database: RoomDatabase() {
+abstract class AppDatabase: RoomDatabase() {
     abstract val taskDao: TaskDbDao
     abstract val listDao: ListDbDao
     abstract val tagDao: TagDbDao
     abstract val repeatDao: RepeatDbDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: AppDatabase? = null
+
+        fun getDatabase(context: android.content.Context): AppDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = androidx.room.Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "database.db"
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
 }

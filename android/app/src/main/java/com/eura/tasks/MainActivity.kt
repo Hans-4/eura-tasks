@@ -10,8 +10,13 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.room.Room
-import com.eura.tasks.db.Database
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.ui.AppNavHost
+import com.eura.tasks.ui.notifications.EventCheckWorker
+import com.eura.tasks.ui.notifications.createGeneralNotificationChannel
 import com.eura.tasks.ui.theme.EuraTasksTheme
 import com.eura.tasks.ui.viewModels.UiViewModel
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
@@ -20,6 +25,7 @@ import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
+import java.util.concurrent.TimeUnit
 import kotlin.getValue
 
 class MainActivity : ComponentActivity() {
@@ -27,7 +33,7 @@ class MainActivity : ComponentActivity() {
     private val db by lazy {
         Room.databaseBuilder(
             applicationContext,
-            Database::class.java,
+            AppDatabase::class.java,
             "database.db"
         )
             .fallbackToDestructiveMigration()
@@ -111,6 +117,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Pass 'this' (the MainActivity context) into the function
+        createGeneralNotificationChannel(this)
+
+        scheduleBackgroundCheck()
+
         enableEdgeToEdge()
         setContent {
             EuraTasksTheme {
@@ -151,5 +162,17 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+    }
+
+    private fun scheduleBackgroundCheck() {
+        val repeatingRequest = PeriodicWorkRequestBuilder<EventCheckWorker>(
+            15, TimeUnit.MINUTES
+        ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "EuraTasksBackgroundCheck",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            repeatingRequest
+        )
     }
 }

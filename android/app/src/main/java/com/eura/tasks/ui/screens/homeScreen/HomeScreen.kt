@@ -304,69 +304,74 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Column(modifier = Modifier
-                    .padding(vertical = 8.dp, horizontal = 8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp, horizontal = 8.dp)
+                ) {
                     systemTaskList
                         .take(6)
                         .chunked(2)
                         .forEach { list ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            for (item in list) {
-                                val icon = Converter.systemTypeConverter(item.type)
-                                val color = Converter.colorStringConverter(
-                                    systemThemeIndex = systemThemeIndex,
-                                    colorString = item.colorString
-                                )
-                                val title = Converter.pageNameConverter(pageName = item.title)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                for (item in list) {
+                                    val icon = Converter.systemTypeConverter(item.type)
+                                    val color = Converter.colorStringConverter(
+                                        systemThemeIndex = systemThemeIndex,
+                                        colorString = item.colorString
+                                    )
+                                    val title = Converter.pageNameConverter(pageName = item.title)
 
-                                val (completedTaskCount, totalTaskCount) = when (item.title) {
-                                    "SYSTEM_ALL" -> Pair(
-                                        taskDbState.tasks.filter { it.isCompleted }.size,
-                                        taskDbState.tasks.size
-                                    )
-                                    "SYSTEM_FAVORITES" -> Pair(
-                                        taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
-                                        taskDbState.tasks.filter { it.isFavorite }.size
-                                    )
-                                    "SYSTEM_WITH_TAGS" -> Pair(
-                                        taskDbState.tasks.filter { it.hasTags && it.isCompleted }.size,
-                                        taskDbState.tasks.filter { it.hasTags }.size
-                                    )
-                                    else -> Pair(0, 0)
-                                }
+                                    val (completedTaskCount, totalTaskCount) = when (item.title) {
+                                        "SYSTEM_ALL" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted }.size,
+                                            taskDbState.tasks.size
+                                        )
 
-                                val progress: Float = if (totalTaskCount == 0) {
-                                    0f
-                                } else {
-                                    (completedTaskCount.toFloat() / totalTaskCount.toFloat())
-                                }
+                                        "SYSTEM_FAVORITES" -> Pair(
+                                            taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
+                                            taskDbState.tasks.filter { it.isFavorite }.size
+                                        )
 
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SystemTaskLists(
-                                        count = totalTaskCount,
-                                        icon = icon,
-                                        title = title,
-                                        progress = progress,
-                                        color = color,
-                                        onTask = { onTaskList(item.title)}
-                                    )
+                                        "SYSTEM_WITH_TAGS" -> Pair(
+                                            taskDbState.tasks.filter { it.hasTags && it.isCompleted }.size,
+                                            taskDbState.tasks.filter { it.hasTags }.size
+                                        )
+
+                                        else -> Pair(0, 0)
+                                    }
+
+                                    val progress: Float = if (totalTaskCount == 0) {
+                                        0f
+                                    } else {
+                                        (completedTaskCount.toFloat() / totalTaskCount.toFloat())
+                                    }
+
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        SystemTaskLists(
+                                            count = totalTaskCount,
+                                            icon = icon,
+                                            title = title,
+                                            progress = progress,
+                                            color = color,
+                                            onTask = { onTaskList(item.title) }
+                                        )
+                                    }
                                 }
-                            }
-                            if (list.size < 2) {
-                                Spacer(modifier = Modifier.weight(1f))
+                                if (list.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
-                    }
                 }
             }
 
             //TODO: Change to stickyHeader
-            item{
+            item {
                 SecondaryTabRow(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier
@@ -377,7 +382,7 @@ fun HomeScreen(
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 coroutineScope.launch { pagerState.animateScrollToPage(index) }
-                                      },
+                            },
                             text = { Text(title) }
                         )
                     }
@@ -398,6 +403,7 @@ fun HomeScreen(
                             taskDbState = taskDbState,
                             onTaskList = onTaskList
                         )
+
                         1 -> TagListColumnItem(
                             noTags = noTags,
                             tagList = tagList,
@@ -451,8 +457,7 @@ fun HomeScreen(
                     firstUserTaskList = taskLists.first().title,
                     taskLists = taskLists,
                 )
-            }
-            else if (uiState.isAddingRepeats) {
+            } else if (uiState.isAddingRepeats) {
                 AddRepeatsDialog(
                     onRepeatDbEvent = onRepeatDbEvent,
                     repeatDbState = repeatDbState,

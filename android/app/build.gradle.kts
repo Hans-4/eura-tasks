@@ -91,4 +91,6 @@ dependencies {
     implementation("com.google.http-client:google-http-client-gson:2.1.0")
 
     implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
 }

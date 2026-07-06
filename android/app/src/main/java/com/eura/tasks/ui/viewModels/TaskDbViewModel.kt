@@ -70,15 +70,19 @@ class TaskDbViewModel(
                 val parentList = state.value.taskParentList
                 val repeatType = if (repeatDbState.toSave) repeatDbState.selectedRepeatType else null
 
+                var fullDay = false
 
                 val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
                     val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.UTC).date
                     if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
+                        fullDay = false
+
                         LocalDateTime(
                             date.year, date.month, date.dayOfMonth,
                             _state.value.taskTimeHour!!, _state.value.taskTimeMinute!!
                         ).toInstant(TimeZone.UTC)
                     } else {
+                        fullDay = true
                         Instant.fromEpochMilliseconds(timestamp)
                     }
                 }
@@ -98,6 +102,7 @@ class TaskDbViewModel(
                     hasTags = state.value.tagIds.isNotEmpty(),
                     repeatType = repeatType,
                     dueDateTime = dueDateTime,
+                    fullDay = fullDay,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )

@@ -50,4 +50,7 @@ sealed interface UiEvent {
 
     data class OpenDatePickDialog(val openedFrom: Int): UiEvent //1 = Start date, 2 = End date
     object CloseDatePickDialog: UiEvent
+
+    object OpenNotificationPermissionScreen: UiEvent
+    object CloseNotificationPermissionScreen: UiEvent
 }

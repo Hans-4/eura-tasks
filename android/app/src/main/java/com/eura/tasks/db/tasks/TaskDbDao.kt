@@ -60,4 +60,8 @@ interface TaskDbDao {
 
     @Query("DELETE FROM task_tags WHERE taskId = :taskId")
     suspend fun removeByTaskId(taskId: Int)
+
+
+    @Query("SELECT * FROM tasks WHERE fullDay = 1 AND isCompleted = 0")
+    suspend fun getAllFullDayTasks(): List<TaskEntity>
 }

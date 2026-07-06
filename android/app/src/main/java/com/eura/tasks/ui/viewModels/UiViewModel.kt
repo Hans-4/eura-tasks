@@ -323,6 +323,21 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
+            UiEvent.CloseNotificationPermissionScreen -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionScreenOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenNotificationPermissionScreen -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionScreenOpen = true
+                    )
+                }
+            }
         }
     }
 }
