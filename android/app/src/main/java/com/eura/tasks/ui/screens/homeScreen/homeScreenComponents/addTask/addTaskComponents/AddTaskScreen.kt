@@ -1,5 +1,6 @@
 package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -47,7 +48,7 @@ import com.eura.tasks.ui.UiState
 
 @Composable
 fun AddTaskScreen(
-    onDbEvent: (TaskDbEvent) -> Unit,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
     onTagDbEvent: (TagDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     taskDbState: TaskDbState,
@@ -80,7 +81,7 @@ fun AddTaskScreen(
 
     LaunchedEffect(currentTab) {
         if (isLockedAsFavorite) {
-            onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, task = null))
+            onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, task = null))
         }
     }
 
@@ -120,7 +121,7 @@ fun AddTaskScreen(
                 .fillMaxWidth(),
             value = taskDbState.todoTitle,
             onValueChange = {
-                onDbEvent(TaskDbEvent.SetTodoTitle(it))
+                onTaskDbEvent(TaskDbEvent.SetTodoTitle(it))
             },
             placeholder = {
                 Text(text = "Title")
@@ -139,7 +140,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth(),
                 value = taskDbState.todoDescription,
                 onValueChange = {
-                    onDbEvent(TaskDbEvent.SetTodoDescription(it))
+                    onTaskDbEvent(TaskDbEvent.SetTodoDescription(it))
                 },
                 placeholder = {
                     Text(text = "Description")
@@ -189,7 +190,7 @@ fun AddTaskScreen(
 
             IconButton(
                 onClick = {
-                    onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, task = null))
+                    onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, task = null))
                 },
                 enabled = !isLockedAsFavorite
             ) {
@@ -203,8 +204,9 @@ fun AddTaskScreen(
 
             TextButton(
                 onClick = {
-                    onDbEvent(TaskDbEvent.SetParentList(parentList))
-                    onDbEvent(TaskDbEvent.SaveTask)
+                    Log.d("Time test", "Hour: ${taskDbState.taskTimeHour} Minute: ${taskDbState.taskTimeMinute} Date: ${taskDbState.taskDate}")
+                    onTaskDbEvent(TaskDbEvent.SetParentList(parentList))
+                    onTaskDbEvent(TaskDbEvent.SaveTask)
                     onUiEvent(UiEvent.CloseAddTaskSheet)
                 }
             ) {
@@ -220,7 +222,7 @@ fun AddTaskScreen(
             onClose = { onUiEvent(UiEvent.CloseAddTagsDialog) },
             onTagDbEvent = onTagDbEvent,
             tagDbState = tagDbState,
-            onTaskDbEvent = onDbEvent,
+            onTaskDbEvent = onTaskDbEvent,
             onUiEvent = onUiEvent,
             uiState = uiState
         )
@@ -229,14 +231,23 @@ fun AddTaskScreen(
     if (uiState.isAddReminderDialogOpen) {
         AddReminderDialog(
             onDismiss = { onUiEvent(UiEvent.CloseAddReminderDialog) },
-            onUiEvent = onUiEvent
+            onDateSelected = { date ->
+                onTaskDbEvent(TaskDbEvent.SetTaskDate(date))
+                onUiEvent(UiEvent.CloseAddReminderDialog)
+            },
+            onUiEvent = onUiEvent,
+            taskDbState = taskDbState
         )
     }
 
     if (uiState.isPickingTime) {
         TimePickDialog(
             onDismiss = { onUiEvent(UiEvent.CloseTimePickDialog) },
-            onTimeSelected = { hour, minute ->}
+            onTimeSelected = { hour, minute ->
+                onTaskDbEvent(TaskDbEvent.SetTaskTime(hour, minute))
+                onUiEvent(UiEvent.CloseTimePickDialog)
+            },
+            taskState = taskDbState
         )
     }
 }

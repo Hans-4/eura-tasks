@@ -3,9 +3,9 @@ package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Keyboard
 import androidx.compose.material.icons.rounded.MoreTime
@@ -27,29 +27,65 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.eura.tasks.db.tasks.TaskDbState
 import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickDialog(
     onDismiss: () -> Unit,
-    onTimeSelected: (hour: Int, minute: Int) -> Unit
+    onTimeSelected: (hour: Int, minute: Int) -> Unit,
+    taskState: TaskDbState
 ) {
-    // 1. Initialize the state with the current time
     val calendar = Calendar.getInstance()
+
     val timePickerState = rememberTimePickerState(
-        initialHour = calendar.get(Calendar.HOUR_OF_DAY),
-        initialMinute = calendar.get(Calendar.MINUTE),
-        is24Hour = false // Set to true if you want 24h format
+        initialHour = taskState.taskTimeHour ?: calendar.get(Calendar.HOUR_OF_DAY),
+        initialMinute = taskState.taskTimeMinute ?: calendar.get(Calendar.MINUTE),
+        is24Hour = true
     )
 
-    // 2. Track whether we are showing the Dial (1) or the Keyboard Input (2)
     var showKeyboardInput by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = { onDismiss() },
-        confirmButton = {},
-        dismissButton = {},
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    onTimeSelected(timePickerState.hour, timePickerState.minute)
+                }
+            ) {
+                Text("Save")
+            }
+        },
+        dismissButton = {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.width(204.dp)
+            ) {
+                IconButton(
+                    onClick = { showKeyboardInput = !showKeyboardInput }
+                ) {
+                    if (showKeyboardInput) {
+                        Icon(
+                            imageVector = Icons.Rounded.MoreTime,
+                            contentDescription = null
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Rounded.Keyboard,
+                            contentDescription = null
+                        )
+                    }
+                }
+
+                TextButton(
+                    onClick = onDismiss
+                ) {
+                    Text("Cancel")
+                }
+            }
+        },
         text = {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -66,47 +102,6 @@ fun TimePickDialog(
                     TimeInput(state = timePickerState)
                 } else {
                     TimePicker(state = timePickerState)
-                }
-
-                Spacer(modifier = Modifier.padding(top = 10.dp))
-
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    IconButton(
-                        onClick = { showKeyboardInput = !showKeyboardInput }
-                    ) {
-                        if (showKeyboardInput) {
-                            Icon(
-                                imageVector = Icons.Rounded.MoreTime,
-                                contentDescription = null
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Rounded.Keyboard,
-                                contentDescription = null
-                            )
-                        }
-                    }
-
-                    Row(
-
-                    ) {
-                        TextButton(
-                            onClick = onDismiss
-                        ) {
-                            Text("Cancel")
-                        }
-
-                        TextButton(
-                            onClick = {
-                                onTimeSelected(timePickerState.hour, timePickerState.minute)
-                            }
-                        ) {
-                            Text("Save")
-                        }
-                    }
                 }
             }
         }

@@ -2,7 +2,7 @@ package com.eura.tasks.db.tasks.tags
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlin.time.Instant
+import kotlinx.datetime.Instant
 
 @Entity(tableName = "deleted_task_tags")
 data class DeletedTaskTagsEntity(

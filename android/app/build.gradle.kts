@@ -89,4 +89,6 @@ dependencies {
     // Helper Libraries
     implementation("com.google.api-client:google-api-client-android:2.9.0")
     implementation("com.google.http-client:google-http-client-gson:2.1.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
 }

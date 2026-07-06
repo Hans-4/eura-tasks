@@ -2,7 +2,7 @@ package com.eura.tasks.db.lists
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import kotlin.time.Instant
+import kotlinx.datetime.Instant
 
 @Entity(tableName = "deleted_user_lists")
 data class DeletedUserListEntity(

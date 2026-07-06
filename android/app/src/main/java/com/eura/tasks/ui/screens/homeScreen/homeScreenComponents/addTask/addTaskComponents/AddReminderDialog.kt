@@ -1,89 +1,63 @@
 package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
 
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowForwardIos
-import androidx.compose.material.icons.rounded.ArrowBackIosNew
-import androidx.compose.material.icons.rounded.ArrowForwardIos
 import androidx.compose.material.icons.rounded.MoreTime
 import androidx.compose.material.icons.rounded.Repeat
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.ui.UiEvent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Surface
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import com.eura.tasks.db.tasks.TaskDbState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddReminderDialog(
     onDismiss: () -> Unit,
-    onUiEvent: (UiEvent) -> Unit
+    onDateSelected: (Long?) -> Unit,
+    onUiEvent: (UiEvent) -> Unit,
+    taskDbState: TaskDbState
 ) {
-    AlertDialog(
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = taskDbState.taskDate
+    )
+
+    Dialog(
         onDismissRequest = { onDismiss() },
-        confirmButton = {
-            TextButton(
-                onClick = { TODO() }
-            ) {
-                Text(
-                    text = "Save"
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        )
+    ) {
+        Surface(
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            modifier = Modifier
+                .widthIn(max = 380.dp)
+                .padding(horizontal = 16.dp)
+        ) {
+            Column {
+                DatePicker(
+                    state = datePickerState,
                 )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = { onDismiss() }
-            ) {
-                Text(
-                    text = "Cancel"
-                )
-            }
-        },
-        text = {
-            Column(
-
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    IconButton(
-                        onClick = { TODO() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.Rounded.ArrowBackIosNew,
-                            contentDescription = null
-                        )
-                    }
-
-                    Text(
-                        text = "July 2026"
-                    )
-
-                    IconButton(
-                        onClick = { TODO() }
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.ArrowForwardIos,
-                            contentDescription = null
-                        )
-                    }
-                }
 
                 HorizontalDivider(
                     thickness = 1.dp,
@@ -96,7 +70,8 @@ fun AddReminderDialog(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth()
@@ -105,9 +80,9 @@ fun AddReminderDialog(
                             imageVector = Icons.Rounded.MoreTime,
                             contentDescription = null
                         )
-
                         Text(
-                            text = "Add time"
+                            text = "Add time",
+                            modifier = Modifier.padding(start = 8.dp)
                         )
                     }
                 }
@@ -123,7 +98,8 @@ fun AddReminderDialog(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         contentColor = MaterialTheme.colorScheme.onSurface
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth()
@@ -132,13 +108,31 @@ fun AddReminderDialog(
                             imageVector = Icons.Rounded.Repeat,
                             contentDescription = null
                         )
-
                         Text(
-                            text = "Repeat"
+                            text = "Repeat",
+                            modifier = Modifier.padding(start = 8.dp)
                         )
+                    }
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    TextButton(
+                        onClick = { onDismiss() }
+                    ) {
+                        Text("Cancel")
+                    }
+                    TextButton(
+                        onClick = { onDateSelected(datePickerState.selectedDateMillis) }
+                    ) {
+                        Text("Save")
                     }
                 }
             }
         }
-    )
+    }
 }

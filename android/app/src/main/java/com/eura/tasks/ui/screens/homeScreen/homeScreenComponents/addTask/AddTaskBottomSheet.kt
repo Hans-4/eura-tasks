@@ -82,7 +82,7 @@ fun AddTaskBottomSheet(
                     }
                 ) {
                     AddTaskScreen(
-                        onDbEvent = onDbEvent,
+                        onTaskDbEvent = onDbEvent,
                         onTagDbEvent = onTagDbEvent,
                         onUiEvent = onUiEvent,
                         taskDbState = taskDbState,

@@ -20,5 +20,9 @@ data class TaskDbState(
     val searchQuery: String = "",
     val searchResults: List<TaskEntity> = emptyList(),
 
-    val taskTags: List<TaskTagsEntity> = emptyList()
+    val taskTags: List<TaskTagsEntity> = emptyList(),
+
+    val taskDate: Long? = null,
+    val taskTimeHour: Int? = null,
+    val taskTimeMinute: Int? = null,
 )

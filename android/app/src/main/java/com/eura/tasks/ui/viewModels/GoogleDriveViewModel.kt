@@ -33,9 +33,8 @@ import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
-import java.time.LocalDateTime
+import kotlinx.datetime.Instant
 import java.util.Collections
-import kotlin.time.Instant
 
 data class TaskSyncModel(
     val uuid: String,
@@ -45,7 +44,7 @@ data class TaskSyncModel(
     val isCompleted: Boolean,
     val hasTags: Boolean,
     val taskList: String,
-    val dueDateTime: LocalDateTime?,
+    val dueDateTime: Instant?,
     val creationTime: Instant,
 )
 

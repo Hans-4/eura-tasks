@@ -21,8 +21,10 @@ import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.ui.UiState
-import kotlin.time.Clock
-import kotlin.time.Instant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
@@ -58,6 +60,27 @@ class TaskDbViewModel(
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
 
+
+                var dueDateTime: Instant?
+
+                if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
+                    val timeString = "${_state.value.taskTimeHour}:${_state.value.taskTimeMinute}:00"
+
+                    val timestamp = _state.value.taskDate
+                    val formattedDate = timestampToDateString(timestamp!!)
+                    val dueDateTimeString = "${formattedDate}T${timeString}Z"
+                    dueDateTime = Instant.parse(dueDateTimeString)
+
+                } else if (_state.value.taskDate != null) {
+                    val timestamp = _state.value.taskDate
+                    val formattedDate = timestampToDateString(timestamp!!)
+                    dueDateTime = Instant.parse(formattedDate)
+
+                } else {
+                    dueDateTime = null
+                }
+
+
                 val currentDateTime: Instant = Clock.System.now()
 
                 if (title.isBlank() || parentList.isBlank()) {
@@ -70,7 +93,7 @@ class TaskDbViewModel(
                     isFavorite = favorite,
                     isCompleted = false,
                     hasTags = state.value.tagIds.isNotEmpty(),
-                    dueDateTime = null,
+                    dueDateTime = dueDateTime,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
@@ -82,14 +105,12 @@ class TaskDbViewModel(
                     }
                 } else {
                     viewModelScope.launch {
-                        // Capture the generated ID returned by the database
                         val generatedTaskId = taskDao.upsertTask(task).toInt()
 
                         Log.d("Values", "${_state.value.tagIds.size} ${_state.value.tagUuids.size}")
                         if (_state.value.tagIds.size == _state.value.tagUuids.size) {
                             for ((tagId, tagUuid) in _state.value.tagIds.zip(_state.value.tagUuids)) {
                                 Log.d("Values", "$tagId $tagUuid")
-                                // Use generatedTaskId instead of task.id
                                 tagDao.insertTaskTag(
                                     TaskTagsEntity(
                                         generatedTaskId,
@@ -110,6 +131,10 @@ class TaskDbViewModel(
                         todoTitle = "",
                         todoDescription = "",
                         todoIsFavorite = false,
+
+                        taskDate = 0L,
+                        taskTimeHour = null,
+                        taskTimeMinute = null,
                     )
                 }
                 _uiState.update {
@@ -119,7 +144,7 @@ class TaskDbViewModel(
                 }
             }
 
-            is TaskDbEvent.SetDueDateTime -> {
+            is TaskDbEvent.SetDate -> {
                 _state.update {
                     it.copy(
                         dueDateTime = event.date
@@ -294,8 +319,39 @@ class TaskDbViewModel(
 
                 }
             }
+
+            is TaskDbEvent.SetTaskDate -> {
+                _state.update {
+                    it.copy(
+                        taskDate = event.date
+                    )
+                }
+            }
+            is TaskDbEvent.SetTaskTime -> {
+                _state.update {
+                    it.copy(
+                        taskTimeHour = event.hour,
+                        taskTimeMinute = event.minute
+                    )
+                }
+            }
         }
     }
+
+    private fun timestampToDateString(
+        timestamp: Long
+    ): String {
+        val instant = Instant.fromEpochMilliseconds(timestamp)
+
+        // Convert to Local Date in UTC
+        val localDate = instant.toLocalDateTime(TimeZone.UTC).date
+
+        // Formatted to YYYY-MM-DD
+        val formattedDate = localDate.toString()
+
+        return formattedDate
+    }
+
 
     /**
      * Helper for the Cloud Sync: Insert a task downloaded from Drive
