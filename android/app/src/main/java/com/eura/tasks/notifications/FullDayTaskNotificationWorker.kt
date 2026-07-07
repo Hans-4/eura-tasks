@@ -1,7 +1,7 @@
 package com.eura.tasks.notifications
 
 import android.content.Context
-import androidx.room.Room
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.eura.tasks.db.AppDatabase
@@ -16,26 +16,21 @@ class FullDayTaskNotificationWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
+        Log.d("FullDayTaskWorker", "Worker started")
         return try {
-            // 1. Build a separate instance of your DB inside the background process
-            val db = Room.databaseBuilder(
-                appContext,
-                AppDatabase::class.java,
-                "database.db"
-            ).build()
+            val db = AppDatabase.getDatabase(appContext)
 
-            // 2. Fetch the tasks using your custom DAO query
             val fullDayTasks = db.taskDao.getAllFullDayTasks()
+            Log.d("FullDayTaskWorker", "Found ${fullDayTasks.size} full day tasks")
 
-            // 3. Trigger a notification if uncompleted tasks exist
             if (fullDayTasks.isNotEmpty()) {
                 val service = FullDayNotificationService(appContext)
-
                 val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
                 fullDayTasks.forEach { task ->
                     val taskDate = task.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date
                     if (taskDate == currentDate) {
+                        Log.d("FullDayTaskWorker", "Showing notification for task: ${task.title}")
                         service.showNotification(
                             id = task.id,
                             taskTitle = task.title,
@@ -44,10 +39,9 @@ class FullDayTaskNotificationWorker(
                     }
                 }
             }
-
             Result.success()
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("FullDayTaskWorker", "Error in worker", e)
             Result.retry()
         }
     }

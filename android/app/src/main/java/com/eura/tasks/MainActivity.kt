@@ -9,7 +9,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.room.Room
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.ui.AppNavHost
 import com.eura.tasks.notifications.FullDayNotificationService
@@ -25,13 +24,7 @@ import com.eura.tasks.ui.viewModels.UiViewModel
 class MainActivity : ComponentActivity() {
 
     private val db by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "database.db"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
+        AppDatabase.getDatabase(applicationContext)
     }
 
     private val taskDbViewModel by viewModels<TaskDbViewModel>(

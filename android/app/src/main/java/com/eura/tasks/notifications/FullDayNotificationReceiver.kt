@@ -4,7 +4,6 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.room.Room
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_MARK_AS_COMPLETE
 import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_RESCHEDULE_TOMORROW
@@ -34,11 +33,7 @@ class FullDayNotificationReceiver: BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val db = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "database.db"
-                ).build()
+                val db = AppDatabase.getDatabase(context)
 
                 val timeZone = TimeZone.currentSystemDefault()
                 val today: LocalDate = Clock.System.todayIn(timeZone)

@@ -36,10 +36,10 @@ class MyApp: Application() {
             15, TimeUnit.MINUTES
         ).build()
 
-        // ExistingPeriodicWorkPolicy.KEEP ensures we don't restart the timer every time the app opens
+        // ExistingPeriodicWorkPolicy.UPDATE ensures that if we change the request (e.g. interval), it gets updated
         WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
             "TaskNotificationWork",
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             repeatingWorkRequest
         )
     }
