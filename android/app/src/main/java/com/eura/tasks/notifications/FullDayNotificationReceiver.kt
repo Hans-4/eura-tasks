@@ -4,6 +4,7 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import androidx.room.Room
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_MARK_AS_COMPLETE
 import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_RESCHEDULE_TOMORROW
@@ -11,10 +12,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
+import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.Instant
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.plus
 import kotlinx.datetime.todayIn
 
 class FullDayNotificationReceiver: BroadcastReceiver() {
@@ -31,18 +34,25 @@ class FullDayNotificationReceiver: BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val db = AppDatabase.getDatabase(context)
+                val db = Room.databaseBuilder(
+                    context.applicationContext,
+                    AppDatabase::class.java,
+                    "database.db"
+                ).build()
 
-                //TODO: Dosent work. Dosent set a new date only increases the time
                 val timeZone = TimeZone.currentSystemDefault()
                 val today: LocalDate = Clock.System.todayIn(timeZone)
-                val midnightInstant: Instant = today.atStartOfDayIn(timeZone)
+                val tomorrow: LocalDate = today.plus(1, DateTimeUnit.DAY)
+                val tomorrowMidnightInstant: Instant = tomorrow.atStartOfDayIn(timeZone)
 
                 when (action) {
-                    ACTION_MARK_AS_COMPLETE -> { db.taskDao.markAsCompleteById(id) }
-                    ACTION_RESCHEDULE_TOMORROW -> { db.taskDao.updateTaskDateTime(id, midnightInstant) }
+                    ACTION_MARK_AS_COMPLETE -> {
+                        db.taskDao.markAsCompleteById(id)
+                    }
+                    ACTION_RESCHEDULE_TOMORROW -> {
+                        db.taskDao.updateTaskDateTime(id, tomorrowMidnightInstant)
+                    }
                 }
-
 
             } catch (e: Exception) {
                 e.printStackTrace()
