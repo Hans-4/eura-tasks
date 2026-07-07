@@ -2,6 +2,7 @@ package com.eura.tasks.ui.screens.settingsScreen
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -70,6 +71,8 @@ fun SettingsScreen(
 
     service: FullDayNotificationService
 ) {
+    var alarmButtonEnabled by remember { mutableStateOf(true) }
+
     val context = LocalContext.current
     val packageName = context.packageName
 
@@ -244,6 +247,42 @@ fun SettingsScreen(
                 ) {
                     Text(
                         "Notifications",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+
+                            try {
+                                context.startActivity(intent)
+                            } catch (e: Exception) {
+                                try {
+                                    val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                        data = Uri.fromParts("package", context.packageName, null)
+                                    }
+                                    context.startActivity(fallbackIntent)
+                                } catch (anr: Exception) {
+
+                                }
+                            }
+                        } else {
+                            alarmButtonEnabled = false
+                        }
+                    },
+                    enabled = alarmButtonEnabled,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Alarms & Reminders",
                         textAlign = TextAlign.Start,
                         modifier = Modifier.fillMaxWidth()
                     )
