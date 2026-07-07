@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.eura.tasks.db.AppDatabase
+import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.AppNavHost
 import com.eura.tasks.notifications.FullDayNotificationService
 import com.eura.tasks.ui.theme.EuraTasksTheme
@@ -31,7 +32,8 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TaskDbViewModel(db.taskDao, db.tagDao) as T
+                    return TaskDbViewModel(db.taskDao, db.tagDao,
+                        AlarmScheduler(applicationContext)) as T
                 }
             }
         }

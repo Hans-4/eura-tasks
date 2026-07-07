@@ -9,7 +9,7 @@ import androidx.core.net.toUri
 import com.eura.tasks.MainActivity
 import com.eura.tasks.R
 
-class FullDayNotificationService(
+class AlarmService (
     private val context: Context
 ) {
     private val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -30,13 +30,13 @@ class FullDayNotificationService(
             context,
             id,
             activityIntent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val markAsCompleteIntent = PendingIntent.getBroadcast(
             context,
             id,
-            Intent(context, FullDayNotificationReceiver::class.java).apply {
+            Intent(context, AlarmReceiver::class.java).apply {
                 action = ACTION_MARK_AS_COMPLETE
                 putExtra("id", id)
             },
@@ -46,14 +46,17 @@ class FullDayNotificationService(
         val rescheduleIntent = PendingIntent.getBroadcast(
             context,
             id + 1000000,
-            Intent(context, FullDayNotificationReceiver::class.java).apply {
+            Intent(context, AlarmReceiver::class.java).apply {
                 action = ACTION_RESCHEDULE_TOMORROW
                 putExtra("id", id)
+                putExtra("title", taskTitle)       // Added
+                putExtra("description", taskDescription) // Added
             },
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Added FLAG_UPDATE_CURRENT
         )
 
-        val notification = NotificationCompat.Builder(context, GENERAL_CHANNEL_ID)
+
+        val notification = NotificationCompat.Builder(context, ALARM_CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentTitle(taskTitle)
             .setContentText(taskDescription)
@@ -63,8 +66,8 @@ class FullDayNotificationService(
                 R.drawable.ic_launcher_foreground,
                 "Mark completed",
                 markAsCompleteIntent
-                )
-            .addAction(//TODO
+            )
+            .addAction(
                 R.drawable.ic_launcher_foreground,
                 "Reschedule to tomorrow",
                 rescheduleIntent
@@ -74,7 +77,7 @@ class FullDayNotificationService(
     }
 
     companion object {
-        const val GENERAL_CHANNEL_ID = "general_channel"
+        const val ALARM_CHANNEL_ID = "alarm_channel"
         const val ACTION_MARK_AS_COMPLETE = "ACTION_MARK_AS_COMPLETE"
         const val ACTION_RESCHEDULE_TOMORROW = "ACTION_RESCHEDULE_TOMORROW"
     }

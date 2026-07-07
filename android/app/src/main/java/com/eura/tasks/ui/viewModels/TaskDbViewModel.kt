@@ -22,6 +22,7 @@ import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
 import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
+import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.UiState
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -33,7 +34,8 @@ import kotlinx.datetime.toLocalDateTime
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
     private val taskDao: TaskDbDao,
-    private val tagDao: TagDbDao
+    private val tagDao: TagDbDao,
+    private val alarmScheduler: AlarmScheduler,
 ): ViewModel() {
 
     private val _sortType = MutableStateFlow(SortType.ID)
@@ -73,14 +75,14 @@ class TaskDbViewModel(
                 var fullDay = false
 
                 val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
-                    val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.UTC).date
+                    val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.currentSystemDefault()).date
                     if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
                         fullDay = false
 
                         LocalDateTime(
                             date.year, date.month, date.dayOfMonth,
                             _state.value.taskTimeHour!!, _state.value.taskTimeMinute!!
-                        ).toInstant(TimeZone.UTC)
+                        ).toInstant(TimeZone.currentSystemDefault())
                     } else {
                         fullDay = true
                         Instant.fromEpochMilliseconds(timestamp)
@@ -139,6 +141,17 @@ class TaskDbViewModel(
                     }
 
                     cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
+
+                    // Inside TaskDbViewModel's SaveTask event, after upsertTask:
+                    if (dueDateTime != null && !fullDay) {
+                        alarmScheduler.scheduleAlarm(
+                            id = generatedTaskId,
+                            title = title,
+                            description = description,
+                            triggerAtMillis = dueDateTime.toEpochMilliseconds()
+                        )
+                    }
+
                 }
 
                 Log.d("Test", "Saved")
@@ -232,6 +245,8 @@ class TaskDbViewModel(
                     )
                     taskDao.upsertDeletedTask(deletedTask)
                     taskDao.deleteTodoById(event.id)
+
+                    alarmScheduler.cancelAlarm(event.id)
                 }
             }
             is TaskDbEvent.SetParentList -> {

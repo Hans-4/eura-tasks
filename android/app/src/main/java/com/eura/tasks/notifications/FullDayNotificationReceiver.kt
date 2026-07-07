@@ -35,16 +35,15 @@ class FullDayNotificationReceiver: BroadcastReceiver() {
             try {
                 val db = AppDatabase.getDatabase(context)
 
-                val timeZone = TimeZone.currentSystemDefault()
-                val today: LocalDate = Clock.System.todayIn(timeZone)
-                val tomorrow: LocalDate = today.plus(1, DateTimeUnit.DAY)
-                val tomorrowMidnightInstant: Instant = tomorrow.atStartOfDayIn(timeZone)
-
                 when (action) {
                     ACTION_MARK_AS_COMPLETE -> {
                         db.taskDao.markAsCompleteById(id)
                     }
                     ACTION_RESCHEDULE_TOMORROW -> {
+                        val timeZone = TimeZone.currentSystemDefault()
+                        val today: LocalDate = Clock.System.todayIn(timeZone)
+                        val tomorrow: LocalDate = today.plus(1, DateTimeUnit.DAY)
+                        val tomorrowMidnightInstant: Instant = tomorrow.atStartOfDayIn(timeZone)
                         db.taskDao.updateTaskDateTime(id, tomorrowMidnightInstant)
                     }
                 }
