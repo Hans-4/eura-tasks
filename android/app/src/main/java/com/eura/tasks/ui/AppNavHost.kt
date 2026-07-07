@@ -11,9 +11,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.eura.tasks.db.SearchEvent
 import com.eura.tasks.db.SearchState
 import com.eura.tasks.db.lists.ListDbEvent
@@ -271,6 +274,13 @@ fun AppNavHost(
 
         composable(
             route = "taskDetails/{taskId}/{parentScreen}",
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "euratasks://taskdetails/{taskId}/{parentScreen}" }
+            ),
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.StringType },
+                navArgument("parentScreen") { defaultValue = "notification" }
+            ),
             enterTransition = {
                 defaultEnterTransition()
             },

@@ -21,7 +21,7 @@ class MyApp: Application() {
     private fun createGeneralNotificationChannel() {
 
         val channel = NotificationChannel(
-            FullDayNotificationService.COUNTER_CHANNEL_ID,
+            FullDayNotificationService.GENERAL_CHANNEL_ID,
             "General",
             NotificationManager.IMPORTANCE_DEFAULT
         )
@@ -32,7 +32,6 @@ class MyApp: Application() {
     }
 
     private fun setupBackgroundWorker() {
-        // Enqueue background work every 15 minutes (Android system minimum limit)
         val repeatingWorkRequest = PeriodicWorkRequestBuilder<FullDayTaskNotificationWorker>(
             15, TimeUnit.MINUTES
         ).build()

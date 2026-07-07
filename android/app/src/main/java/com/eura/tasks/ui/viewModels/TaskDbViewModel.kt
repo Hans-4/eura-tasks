@@ -303,7 +303,7 @@ class TaskDbViewModel(
 
             is TaskDbEvent.RemoveFromTagByTaskId -> {
                 viewModelScope.launch {
-                    taskDao.removeByTaskId(event.taskId)
+                    taskDao.removeTagByTaskId(event.taskId)
                     _state.update { it ->
                         it.copy(
                             taskTags = it.taskTags.filter { it.taskId != event.taskId }

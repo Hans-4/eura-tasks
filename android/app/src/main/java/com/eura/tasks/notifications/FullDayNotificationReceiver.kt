@@ -4,17 +4,25 @@ import android.app.NotificationManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.room.Room
 import com.eura.tasks.db.AppDatabase
+import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_MARK_AS_COMPLETE
+import com.eura.tasks.notifications.FullDayNotificationService.Companion.ACTION_RESCHEDULE_TOMORROW
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
+import kotlinx.datetime.todayIn
 
 class FullDayNotificationReceiver: BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
 
         val id = intent?.getIntExtra("id", -1) ?: -1
+        val action = intent?.action
 
         if (id == -1) return
 
@@ -23,13 +31,18 @@ class FullDayNotificationReceiver: BroadcastReceiver() {
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val db = Room.databaseBuilder(
-                    context.applicationContext,
-                    AppDatabase::class.java,
-                    "database.db"
-                ).build()
+                val db = AppDatabase.getDatabase(context)
 
-                db.taskDao.markAsCompleteById(id)
+                //TODO: Dosent work. Dosent set a new date only increases the time
+                val timeZone = TimeZone.currentSystemDefault()
+                val today: LocalDate = Clock.System.todayIn(timeZone)
+                val midnightInstant: Instant = today.atStartOfDayIn(timeZone)
+
+                when (action) {
+                    ACTION_MARK_AS_COMPLETE -> { db.taskDao.markAsCompleteById(id) }
+                    ACTION_RESCHEDULE_TOMORROW -> { db.taskDao.updateTaskDateTime(id, midnightInstant) }
+                }
+
 
             } catch (e: Exception) {
                 e.printStackTrace()
