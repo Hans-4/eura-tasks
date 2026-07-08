@@ -11,19 +11,18 @@ import kotlinx.datetime.Clock
 
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            val db = AppDatabase.getDatabase(context)
-            val scheduler = AlarmScheduler(context)
-            val now = Clock.System.now().toEpochMilliseconds()
-
+        val action = intent.action
+        if (action == Intent.ACTION_BOOT_COMPLETED || action?.contains("QUICKBOOT_POWERON") == true) {
+            val pendingResult = goAsync()
             CoroutineScope(Dispatchers.IO).launch {
-                val clock: Clock = Clock.System
+                try {
+                    val db = AppDatabase.getDatabase(context)
+                    val scheduler = AlarmScheduler(context)
+                    val now = Clock.System.now()
 
-                val pendingTasks = db.taskDao.getAllActiveTasksWithAlarms(clock.now())
-
-                pendingTasks.forEach { task ->
-                    val triggerTime = task.dueDateTime?.toEpochMilliseconds() ?: 0
-                    if (triggerTime > now) {
+                    val pendingTasks = db.taskDao.getAllActiveTasksWithAlarms(now)
+                    pendingTasks.forEach { task ->
+                        val triggerTime = task.dueDateTime?.toEpochMilliseconds() ?: 0
                         scheduler.scheduleAlarm(
                             id = task.id,
                             title = task.title,
@@ -31,6 +30,8 @@ class BootReceiver : BroadcastReceiver() {
                             triggerAtMillis = triggerTime
                         )
                     }
+                } finally {
+                    pendingResult.finish()
                 }
             }
         }
