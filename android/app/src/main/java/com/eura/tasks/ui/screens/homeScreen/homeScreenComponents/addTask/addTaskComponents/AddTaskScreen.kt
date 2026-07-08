@@ -239,7 +239,9 @@ fun AddTaskScreen(
                 onTaskDbEvent(TaskDbEvent.SetTaskDate(date))
                 onUiEvent(UiEvent.CloseAddReminderDialog)
             },
+
             onUiEvent = onUiEvent,
+            uiState = uiState,
 
             taskDbEvent = onTaskDbEvent,
             taskDbState = taskDbState,

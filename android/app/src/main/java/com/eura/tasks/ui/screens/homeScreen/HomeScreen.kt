@@ -84,6 +84,7 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
 import com.eura.tasks.db.tasks.repeats.RepeatDbState
+import com.eura.tasks.permissionLauncher
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
@@ -164,19 +165,16 @@ fun HomeScreen(
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            onUiEvent(UiEvent.SetPermissionState(true))
-        } else {
-            onUiEvent(UiEvent.SetPermissionState(false))
-        }
+    val permissionLauncher = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        permissionLauncher(onUiEvent = onUiEvent)
+    } else {
+        null
     }
 
     LaunchedEffect(Unit) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        //Ask for notification permission on first launch
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !uiState.isNotificationPermissionGranted) {
+            permissionLauncher?.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
     }
 

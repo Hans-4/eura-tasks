@@ -33,5 +33,7 @@ data class UiState(
 
     val isNotificationPermissionScreenOpen: Boolean = false,
 
-    val isNotificationPermissionGranted: Boolean = false
+    val isNotificationPermissionGranted: Boolean = false,
+
+    val isExactAlarmPermissionGranted: Boolean = false
 )

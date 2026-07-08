@@ -54,5 +54,6 @@ sealed interface UiEvent {
     object OpenNotificationPermissionScreen: UiEvent
     object CloseNotificationPermissionScreen: UiEvent
 
-    data class SetPermissionState(val state: Boolean): UiEvent
+    data class SetNotificationPermissionState(val state: Boolean): UiEvent
+    data class SetAlarmPermissionState(val state: Boolean): UiEvent
 }

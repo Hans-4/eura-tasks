@@ -1,8 +1,5 @@
 package com.eura.tasks.ui.screens.settingsScreen
 
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
@@ -46,19 +43,20 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import com.eura.tasks.R
 import com.eura.tasks.notifications.FullDayNotificationService
+import com.eura.tasks.openExactAlarmSettings
+import com.eura.tasks.openNotificationSettings
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
-import android.provider.Settings
-import androidx.compose.ui.text.style.TextAlign
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -225,22 +223,7 @@ fun SettingsScreen(
             item {
                 Button(
                     onClick = {
-                        val intent = Intent().apply {
-                            action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
-                            putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
-                        }
-
-                        try {
-                            context.startActivity(intent)
-                        } catch (e: Exception) {
-                            try {
-                                val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                    data = Uri.fromParts("package", packageName, null)
-                                }
-                                context.startActivity(fallbackIntent)
-                            } catch (anr: Exception) {
-                            }
-                        }
+                        openNotificationSettings(context)
                     },
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
@@ -255,28 +238,7 @@ fun SettingsScreen(
 
             item {
                 Button(
-                    onClick = {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                            val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
-                            }
-
-                            try {
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                try {
-                                    val fallbackIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                        data = Uri.fromParts("package", context.packageName, null)
-                                    }
-                                    context.startActivity(fallbackIntent)
-                                } catch (anr: Exception) {
-
-                                }
-                            }
-                        } else {
-                            alarmButtonEnabled = false
-                        }
-                    },
+                    onClick = { openExactAlarmSettings(context) },
                     enabled = alarmButtonEnabled,
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
