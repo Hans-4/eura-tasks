@@ -233,7 +233,7 @@ fun AddTaskScreen(
             onDismiss = {
                 onUiEvent(UiEvent.CloseAddReminderDialog)
                 onTaskDbEvent(TaskDbEvent.SetTaskDate(null))
-                onTaskDbEvent(TaskDbEvent.SetTaskTime(9, 0))
+                onTaskDbEvent(TaskDbEvent.SetTaskTime(null, null))
             },
             onDateSelected = { date ->
                 onTaskDbEvent(TaskDbEvent.SetTaskDate(date))

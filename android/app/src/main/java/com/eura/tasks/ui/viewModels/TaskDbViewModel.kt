@@ -76,16 +76,21 @@ class TaskDbViewModel(
                 val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
                     val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.currentSystemDefault()).date
 
+                    val taskHour = _state.value.taskTimeHour
+                    val taskMinute = _state.value.taskTimeMinute
+
+                    val hour = taskHour ?: 9
+                    val minute = taskMinute ?: 0
+
                     LocalDateTime(
                         date.year,
                         date.month,
                         date.dayOfMonth,
 
-                        _state.value.taskTimeHour,
-                        _state.value.taskTimeMinute
+                        hour,
+                        minute
                     ).toInstant(TimeZone.currentSystemDefault())
                 }
-
 
                 val currentDateTime: Instant = Clock.System.now()
 

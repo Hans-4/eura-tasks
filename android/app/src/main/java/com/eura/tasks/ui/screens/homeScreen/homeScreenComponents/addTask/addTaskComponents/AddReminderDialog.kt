@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreTime
 import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material3.Button
@@ -20,6 +22,7 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -128,31 +131,49 @@ fun AddReminderDialog(
                             contentDescription = null
                         )
 
-                        val hour = if (taskDbState.taskTimeHour < 10) "0${taskDbState.taskTimeHour}" else taskDbState.taskTimeHour
-                        val minute = if (taskDbState.taskTimeMinute < 10) "0${taskDbState.taskTimeMinute}" else taskDbState.taskTimeMinute
+                        if (taskDbState.taskTimeHour != null && taskDbState.taskTimeMinute != null) {
+                            val hour = if (taskDbState.taskTimeHour < 10) "0${taskDbState.taskTimeHour}" else taskDbState.taskTimeHour
+                            val minute = if (taskDbState.taskTimeMinute < 10) "0${taskDbState.taskTimeMinute}" else taskDbState.taskTimeMinute
 
-                        Button(
-                            onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
-                            shape = MaterialTheme.shapes.small,
-                            border = BorderStroke(
-                                width = 1.dp,
-                                brush = SolidColor(MaterialTheme.colorScheme.onSurface)
-                            ),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                                contentColor = MaterialTheme.colorScheme.onSurface
-                            ),
-                            contentPadding = PaddingValues(start = 6.dp, end = 4.dp),
-                            modifier = Modifier.height(30.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            Button(
+                                onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
+                                shape = MaterialTheme.shapes.small,
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    brush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                                ),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                                    contentColor = MaterialTheme.colorScheme.onSurface
+                                ),
+                                contentPadding = PaddingValues(start = 6.dp, end = 4.dp),
+                                modifier = Modifier.height(30.dp)
                             ) {
-                                Text(
-                                    text = "${hour}:${minute}"
-                                )
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Text(
+                                        text = "${hour}:${minute}"
+                                    )
+
+                                    IconButton(
+                                        onClick = { taskDbEvent(TaskDbEvent.SetTaskTime(null, null)) },
+                                        modifier = Modifier.size(20.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Close,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                }
                             }
+                        } else {
+                            Text(
+                                text = "Add time",
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
                         }
                     }
                 }
