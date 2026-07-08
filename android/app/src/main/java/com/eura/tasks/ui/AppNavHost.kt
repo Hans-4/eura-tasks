@@ -1,11 +1,13 @@
 package com.eura.tasks.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.End
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Start
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,18 +29,18 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
 import com.eura.tasks.db.tasks.repeats.RepeatDbState
+import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.homeScreen.HomeScreen
 import com.eura.tasks.ui.screens.searchScreen.SearchScreen
 import com.eura.tasks.ui.screens.settingsScreen.SettingsScreen
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
-import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
-import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
+import com.eura.tasks.ui.screens.taskScreen.TaskScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
-import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
+import com.eura.tasks.ui.viewModels.TaskDbViewModel
 
 
 @Composable
@@ -80,36 +82,38 @@ fun AppNavHost(
         )
     }
 
+    val animDuration = 300
+
     NavHost(
         navController = navController,
         startDestination = "home",
     ) {
         val defaultEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-            slideIntoContainer(
-                towards = Start,
-                animationSpec = tween(300)
-            )
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(animDuration)
+            ) + fadeIn(animationSpec = tween(animDuration))
         }
 
         val defaultExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-            slideOutOfContainer(
-                towards = Start,
-                animationSpec = tween(300)
-            )
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(animDuration)
+            ) + fadeOut(animationSpec = tween(animDuration))
         }
 
         val defaultPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-            slideIntoContainer(
-                towards = End,
-                animationSpec = tween(300)
-            )
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(animDuration)
+            ) + fadeIn(animationSpec = tween(animDuration))
         }
 
         val defaultPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-            slideOutOfContainer(
-                towards = End,
-                animationSpec = tween(300)
-            )
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(animDuration)
+            ) + fadeOut(animationSpec = tween(animDuration))
         }
 
         composable(
