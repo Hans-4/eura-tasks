@@ -72,21 +72,18 @@ class TaskDbViewModel(
                 val parentList = state.value.taskParentList
                 val repeatType = if (repeatDbState.toSave) repeatDbState.selectedRepeatType else null
 
-                var fullDay = false
 
                 val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
                     val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.currentSystemDefault()).date
-                    if (_state.value.taskTimeHour != null && _state.value.taskTimeMinute != null) {
-                        fullDay = false
 
-                        LocalDateTime(
-                            date.year, date.month, date.dayOfMonth,
-                            _state.value.taskTimeHour!!, _state.value.taskTimeMinute!!
-                        ).toInstant(TimeZone.currentSystemDefault())
-                    } else {
-                        fullDay = true
-                        Instant.fromEpochMilliseconds(timestamp)
-                    }
+                    LocalDateTime(
+                        date.year,
+                        date.month,
+                        date.dayOfMonth,
+
+                        _state.value.taskTimeHour,
+                        _state.value.taskTimeMinute
+                    ).toInstant(TimeZone.currentSystemDefault())
                 }
 
 
@@ -104,7 +101,6 @@ class TaskDbViewModel(
                     hasTags = state.value.tagIds.isNotEmpty(),
                     repeatType = repeatType,
                     dueDateTime = dueDateTime,
-                    fullDay = fullDay,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
@@ -143,7 +139,7 @@ class TaskDbViewModel(
                     cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
 
                     // Inside TaskDbViewModel's SaveTask event, after upsertTask:
-                    if (dueDateTime != null && !fullDay) {
+                    if (dueDateTime != null) {
                         alarmScheduler.scheduleAlarm(
                             id = generatedTaskId,
                             title = title,
@@ -162,8 +158,8 @@ class TaskDbViewModel(
                         todoIsFavorite = false,
 
                         taskDate = null,
-                        taskTimeHour = null,
-                        taskTimeMinute = null,
+                        taskTimeHour = 9,
+                        taskTimeMinute = 0,
                     )
                 }
                 _uiState.update {

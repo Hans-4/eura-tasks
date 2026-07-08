@@ -34,7 +34,6 @@ import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScre
 import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
 import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
-import com.eura.tasks.notifications.FullDayNotificationService
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
@@ -64,8 +63,6 @@ fun AppNavHost(
     taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
-
-    service: FullDayNotificationService
 ) {
     val navController = rememberNavController()
 
@@ -172,8 +169,6 @@ fun AppNavHost(
                 listDbViewModel = listDbViewModel,
                 taskDbViewModel = taskDbViewModel,
                 googleDriveViewModel = googleDriveViewModel,
-
-                service = service
             )
         }
 

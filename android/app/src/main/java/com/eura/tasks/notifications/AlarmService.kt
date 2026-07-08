@@ -49,8 +49,8 @@ class AlarmService (
             Intent(context, AlarmReceiver::class.java).apply {
                 action = ACTION_RESCHEDULE_TOMORROW
                 putExtra("id", id)
-                putExtra("title", taskTitle)       // Added
-                putExtra("description", taskDescription) // Added
+                putExtra("title", taskTitle)
+                putExtra("description", taskDescription)
             },
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE // Added FLAG_UPDATE_CURRENT
         )
@@ -78,6 +78,7 @@ class AlarmService (
 
     companion object {
         const val ALARM_CHANNEL_ID = "alarm_channel"
+        const val IMPORTANT_CHANNEL_ID = "important_channel"
         const val ACTION_MARK_AS_COMPLETE = "ACTION_MARK_AS_COMPLETE"
         const val ACTION_RESCHEDULE_TOMORROW = "ACTION_RESCHEDULE_TOMORROW"
     }

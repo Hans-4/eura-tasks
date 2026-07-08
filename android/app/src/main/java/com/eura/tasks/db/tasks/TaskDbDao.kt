@@ -72,11 +72,8 @@ interface TaskDbDao {
     suspend fun removeTagByTaskId(taskId: Int)
 
 
-    @Query("SELECT * FROM tasks WHERE fullDay = 1 AND isCompleted = 0")
-    suspend fun getAllFullDayTasks(): List<TaskEntity>
-
     @Query("SELECT dueDateTime FROM tasks WHERE id = :id")
     suspend fun getDueDateTimeById(id: Int): Instant?
-    @Query("SELECT * FROM tasks WHERE isCompleted = 0 AND dueDateTime > :now AND fullDay = 0")
+    @Query("SELECT * FROM tasks WHERE isCompleted = 0 AND dueDateTime > :now")
     suspend fun getAllActiveTasksWithAlarms(now: Instant): List<TaskEntity>
 }

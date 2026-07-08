@@ -3,31 +3,24 @@ package com.eura.tasks
 import android.app.Application
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
 import com.eura.tasks.notifications.AlarmService
-import com.eura.tasks.notifications.FullDayNotificationService
-import com.eura.tasks.notifications.FullDayTaskNotificationWorker
-import java.util.concurrent.TimeUnit
 
 class MyApp: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        createGeneralNotificationChannel()
+        createImportantNotificationChannel()
         createTimedNotificationChannel()
-        setupBackgroundWorker()
     }
 
-    private fun createGeneralNotificationChannel() {
+    private fun createImportantNotificationChannel() {
 
         val channel = NotificationChannel(
-            FullDayNotificationService.GENERAL_CHANNEL_ID,
-            "General",
-            NotificationManager.IMPORTANCE_DEFAULT
+            AlarmService.IMPORTANT_CHANNEL_ID,
+            "Important",
+            NotificationManager.IMPORTANCE_HIGH
         )
-        channel.description = "General task notifications"
+        channel.description = "Important tasks notifications"
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
@@ -44,17 +37,5 @@ class MyApp: Application() {
 
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
-    }
-
-    private fun setupBackgroundWorker() {
-        val repeatingWorkRequest = PeriodicWorkRequestBuilder<FullDayTaskNotificationWorker>(
-            15, TimeUnit.MINUTES
-        ).build()
-
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-            "TaskNotificationWork",
-            ExistingPeriodicWorkPolicy.UPDATE,
-            repeatingWorkRequest
-        )
     }
 }

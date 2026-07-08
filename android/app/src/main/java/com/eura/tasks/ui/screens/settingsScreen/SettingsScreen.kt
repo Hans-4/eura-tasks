@@ -48,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eura.tasks.R
-import com.eura.tasks.notifications.FullDayNotificationService
 import com.eura.tasks.openExactAlarmSettings
 import com.eura.tasks.openNotificationSettings
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
@@ -66,13 +65,10 @@ fun SettingsScreen(
     listDbViewModel: ListDbViewModel,
     taskDbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
-
-    service: FullDayNotificationService
 ) {
     var alarmButtonEnabled by remember { mutableStateOf(true) }
 
     val context = LocalContext.current
-    val packageName = context.packageName
 
     val isDriveReady by googleDriveViewModel.isDriveServiceReady.collectAsState()
     val currentContext = LocalContext.current

@@ -23,6 +23,6 @@ data class TaskDbState(
     val taskTags: List<TaskTagsEntity> = emptyList(),
 
     val taskDate: Long? = null,
-    val taskTimeHour: Int? = null,
-    val taskTimeMinute: Int? = null,
+    val taskTimeHour: Int = 9,
+    val taskTimeMinute: Int = 0,
 )
