@@ -40,8 +40,8 @@ fun TimePickDialog(
     val calendar = Calendar.getInstance()
 
     val timePickerState = rememberTimePickerState(
-        initialHour = taskState.taskTimeHour ?: calendar.get(Calendar.HOUR_OF_DAY),
-        initialMinute = taskState.taskTimeMinute ?: calendar.get(Calendar.MINUTE),
+        initialHour = taskState.taskTimeHour ?: if (calendar.get(Calendar.MINUTE) ==0) calendar.get(Calendar.HOUR_OF_DAY) else calendar.get(Calendar.HOUR_OF_DAY) + 1,
+        initialMinute = taskState.taskTimeMinute ?: 0,
         is24Hour = true
     )
 

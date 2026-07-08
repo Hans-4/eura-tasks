@@ -40,10 +40,8 @@ import androidx.compose.ui.window.DialogProperties
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
-import kotlinx.datetime.plus
 import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -58,8 +56,7 @@ fun AddReminderDialog(
 ) {
     val defaultDate = taskDbState.taskDate ?: remember {
         val today = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()).date
-        val tomorrow = today.plus(1, DateTimeUnit.DAY)
-        tomorrow.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
+        today.atStartOfDayIn(TimeZone.UTC).toEpochMilliseconds()
     }
 
     val datePickerState = rememberDatePickerState(
