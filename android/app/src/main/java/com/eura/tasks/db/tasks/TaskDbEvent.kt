@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 sealed interface TaskDbEvent {
     object SaveTask: TaskDbEvent
-    data class SetTodoTitle(val title: String): TaskDbEvent
+    data class SetTaskTitle(val title: String): TaskDbEvent
     data class SetTodoDescription(val description: String): TaskDbEvent
     data class SetTodoIsFavorite(val isFavorite: Boolean, val task: TaskEntity? = null): TaskDbEvent
     data class SetIsCompleted(val isCompleted: Boolean, val task: TaskEntity? = null): TaskDbEvent

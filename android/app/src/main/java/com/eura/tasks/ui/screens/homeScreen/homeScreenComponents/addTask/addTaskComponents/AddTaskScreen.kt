@@ -124,9 +124,9 @@ fun AddTaskScreen(
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
-            value = taskDbState.todoTitle,
+            value = taskDbState.taskTitle,
             onValueChange = {
-                onTaskDbEvent(TaskDbEvent.SetTodoTitle(it))
+                onTaskDbEvent(TaskDbEvent.SetTaskTitle(it))
             },
             placeholder = {
                 Text(text = "Title")

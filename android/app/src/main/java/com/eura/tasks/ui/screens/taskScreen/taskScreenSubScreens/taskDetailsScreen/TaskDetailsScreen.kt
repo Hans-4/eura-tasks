@@ -107,11 +107,25 @@ fun TaskDetailsScreen(
         onTagDbEvent(TagDbEvent.GetAllTagsByUuid(task.uuid))
     }
 
+    LaunchedEffect(Unit) {
+        onTaskDbEvent(TaskDbEvent.SetTaskTitle(task.title))
+    }
+
+
     Scaffold(
         topBar = {
             TopAppBar(
                 navigationIcon = {
-                    IconButton(onClick = { onClose() }) {
+                    IconButton(
+                        onClick = {
+                            // Saves the current title when exiting the screen to improve performance and prevent blank title
+                            val taskTitle = taskDbState.taskTitle
+                            if (taskTitle.isNotBlank()) {
+                                onTaskDbEvent(TaskDbEvent.UpdateTaskTitleById(task.id, taskTitle))
+                            }
+                            onClose()
+                        }
+                    ) {
                         Icon(
                             imageVector = Icons.Rounded.ArrowBackIosNew,
                             contentDescription = "Back"
@@ -199,6 +213,7 @@ fun TaskDetailsScreen(
                     ) {
                         TitleCard(
                             onTaskDbEvent = onTaskDbEvent,
+                            taskDbState = taskDbState,
                             task = task
                         )
 
@@ -299,7 +314,8 @@ fun TagDisplayCard(name: String) {
 @Composable
 fun TitleCard(
     task: TaskEntity,
-    onTaskDbEvent: (TaskDbEvent) -> Unit
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
+    taskDbState: TaskDbState
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -318,13 +334,10 @@ fun TitleCard(
         )
 
         BasicTextField(
-            value = task.title,
+            value = taskDbState.taskTitle,
             onValueChange = {
                 onTaskDbEvent(
-                    TaskDbEvent.UpdateTaskTitleById(
-                        id = task.id,
-                        newTitle = it
-                    )
+                    TaskDbEvent.SetTaskTitle(title = it)
                 )
             },
             textStyle = LocalTextStyle.current.copy(

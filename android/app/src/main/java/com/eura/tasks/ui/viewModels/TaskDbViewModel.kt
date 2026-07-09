@@ -67,7 +67,7 @@ class TaskDbViewModel(
     ) {
         when(event) {
             TaskDbEvent.SaveTask -> {
-                val title = state.value.todoTitle
+                val title = state.value.taskTitle
                 val description = state.value.todoDescription
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
@@ -159,7 +159,7 @@ class TaskDbViewModel(
                 Log.d("Test", "Saved")
                 _state.update {
                     it.copy(
-                        todoTitle = "",
+                        taskTitle = "",
                         todoDescription = "",
                         todoIsFavorite = false,
 
@@ -215,10 +215,10 @@ class TaskDbViewModel(
                     }
                 }
             }
-            is TaskDbEvent.SetTodoTitle -> {
+            is TaskDbEvent.SetTaskTitle -> {
                 _state.update {
                     it.copy(
-                        todoTitle = event.title
+                        taskTitle = event.title
                     )
                 }
             }
@@ -275,9 +275,15 @@ class TaskDbViewModel(
                 }
             }
 
+
             is TaskDbEvent.UpdateTaskTitleById -> {
                 viewModelScope.launch {
                     taskDao.updateTaskTitle(event.id, event.newTitle)
+                    _state.update {
+                        it.copy(
+                            taskTitle = ""
+                        )
+                    }
                 }
             }
 
