@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
+package com.eura.tasks.ui.globalComponents.reminderComponents
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

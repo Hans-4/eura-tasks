@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog
+package com.eura.tasks.ui.globalComponents.reminderComponents.repeatsDialog
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.border
@@ -231,7 +231,7 @@ fun AddRepeatsDialog(
                         }
 
                         Button(
-                            onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
+                            onClick = { onUiEvent(UiEvent.OpenTimePickDialog(2)) },
                             shape = MaterialTheme.shapes.small,
                             colors = MaterialTheme.colorScheme.run {
                                 ButtonDefaults.buttonColors(

@@ -41,10 +41,13 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.SYSTEM_LISTS
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
+import com.eura.tasks.ui.globalComponents.reminderComponents.ReminderDialogs
 
 @Composable
 fun AddTaskScreen(
@@ -59,6 +62,8 @@ fun AddTaskScreen(
     onNavigateToSelectTaskListScreen: () -> Unit,
     taskLists: List<UserListEntity>,
     darkTheme: Boolean = isSystemInDarkTheme(),
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -228,34 +233,17 @@ fun AddTaskScreen(
         )
     }
 
-    if (uiState.isAddReminderDialogOpen) {
-        AddReminderDialog(
-            onDismiss = {
-                onUiEvent(UiEvent.CloseAddReminderDialog)
-                onTaskDbEvent(TaskDbEvent.SetTaskDate(null))
-                onTaskDbEvent(TaskDbEvent.SetTaskTime(null, null))
-            },
-            onDateSelected = { date ->
-                onTaskDbEvent(TaskDbEvent.SetTaskDate(date))
-                onUiEvent(UiEvent.CloseAddReminderDialog)
-            },
+    ReminderDialogs(
+        onUiEvent = onUiEvent,
+        uiState = uiState,
+        onTaskDbEvent = onTaskDbEvent,
+        taskDbState = taskDbState,
+        onRepeatDbEvent = onRepeatDbEvent,
+        repeatDbState = repeatDbState,
 
-            onUiEvent = onUiEvent,
-            uiState = uiState,
-
-            taskDbEvent = onTaskDbEvent,
-            taskDbState = taskDbState,
-        )
-    }
-
-    if (uiState.isPickingTime) {
-        TimePickDialog(
-            onDismiss = { onUiEvent(UiEvent.CloseTimePickDialog) },
-            onTimeSelected = { hour, minute ->
-                onTaskDbEvent(TaskDbEvent.SetTaskTime(hour, minute))
-                onUiEvent(UiEvent.CloseTimePickDialog)
-            },
-            taskState = taskDbState
-        )
-    }
+        onDateSelected = { date ->
+            onTaskDbEvent(TaskDbEvent.SetTaskDate(date))
+            onUiEvent(UiEvent.CloseAddReminderDialog)
+        },
+    )
 }

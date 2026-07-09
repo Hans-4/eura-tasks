@@ -1,8 +1,6 @@
 package com.eura.tasks.ui.screens.homeScreen
 
 import android.os.Build
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -73,7 +71,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import com.eura.tasks.R
 import com.eura.tasks.db.lists.ListDbEvent
 import com.eura.tasks.db.lists.ListDbState
@@ -88,17 +85,15 @@ import com.eura.tasks.permissionLauncher
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewTaskListDialog
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.FabMenuItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SystemTaskLists
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewTaskListDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.UserListColumnItem
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.AddRepeatsDialog
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.components.DatePickDialog
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.TimePickDialog
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
+import kotlinx.coroutines.launch
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -490,50 +485,10 @@ fun HomeScreen(
                     currentTab = "HOME_SCREEN",
                     firstUserTaskList = taskLists.first().title,
                     taskLists = taskLists,
-                )
-            } else if (uiState.isAddingRepeats) {
-                AddRepeatsDialog(
                     onRepeatDbEvent = onRepeatDbEvent,
-                    repeatDbState = repeatDbState,
-
-                    onUiEvent = onUiEvent,
-
-                    onConfirm = {
-                        onRepeatDbEvent(RepeatDbEvent.SetToSave)
-                        onUiEvent(UiEvent.CloseAddRepeatsDialog)
-                    },
-                    onDismiss = {
-                        onRepeatDbEvent(RepeatDbEvent.ResetState)
-                        onUiEvent(UiEvent.CloseAddRepeatsDialog)
-                    }
+                    repeatDbState = repeatDbState
                 )
             }
-        }
-
-        if (uiState.isPickingTime) {
-            TimePickDialog(
-                onDismiss = { onUiEvent(UiEvent.CloseTimePickDialog) },
-                onTimeSelected = { hour, minute ->
-                    onRepeatDbEvent(RepeatDbEvent.SetRepeatTime(hour, minute))
-                    onUiEvent(UiEvent.CloseTimePickDialog)
-                },
-                taskState = taskDbState
-            )
-        }
-        if (uiState.isDatePickDialogOpen) {
-            DatePickDialog(
-                repeatDbState = repeatDbState,
-
-                onDismiss = { onUiEvent(UiEvent.CloseDatePickDialog) },
-                onDateSelected = {
-                    when (uiState.datePickDialogOpenedFrom) {
-                        1 -> onRepeatDbEvent(RepeatDbEvent.SetStartDate(it))
-                        2 -> onRepeatDbEvent(RepeatDbEvent.SetEndDate(it))
-                    }
-
-                    onUiEvent(UiEvent.CloseDatePickDialog)
-                }
-            )
         }
 
         if (uiState.isItemWithSimilarNameWarningDialogOpen) {

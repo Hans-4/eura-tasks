@@ -268,6 +268,9 @@ fun AppNavHost(
                 onUiEvent = onUiEvent,
                 onClose = {navController.popBackStack()},
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
+
+                onRepeatDbEvent = onRepeatDbEvent,
+                repeatDbState = repeatDbState
             )
         }
 
@@ -307,6 +310,11 @@ fun AppNavHost(
                     parentScreen = parentScreen,
                     onTagDbEvent = onTagDbEvent,
                     tagDbState = tagDbState,
+
+                    taskDbState = taskDbState,
+
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState,
 
                     onTagManagement = { navController.navigate("tagManagement/${taskId}") }
                 )

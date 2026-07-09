@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
+package com.eura.tasks.ui.globalComponents.reminderComponents
 
 import android.os.Build
 import androidx.compose.foundation.BorderStroke
@@ -51,9 +51,13 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.toLocalDateTime
+import com.eura.tasks.ui.globalComponents.reminderComponents.repeatsDialog.AddRepeatsDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+        /**
+         * Dialog to select a date and links to [TimePickDialog] and [AddRepeatsDialog].
+         */
 fun AddReminderDialog(
     onDismiss: () -> Unit,
     onDateSelected: (Long?) -> Unit,
@@ -113,7 +117,7 @@ fun AddReminderDialog(
                 )
 
                 Button(
-                    onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
+                    onClick = { onUiEvent(UiEvent.OpenTimePickDialog(1)) },
                     shape = RoundedCornerShape(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -136,7 +140,7 @@ fun AddReminderDialog(
                             val minute = if (taskDbState.taskTimeMinute < 10) "0${taskDbState.taskTimeMinute}" else taskDbState.taskTimeMinute
 
                             Button(
-                                onClick = { onUiEvent(UiEvent.OpenTimePickDialog) },
+                                onClick = { onUiEvent(UiEvent.OpenTimePickDialog(1)) },
                                 shape = MaterialTheme.shapes.small,
                                 border = BorderStroke(
                                     width = 1.dp,
@@ -233,7 +237,7 @@ fun AddReminderDialog(
 
                 if (!uiState.isExactAlarmPermissionGranted && uiState.isNotificationPermissionGranted) {
                     Text(
-                        "Reminders will not work without exact alarm permission",
+                        "Reminders may come too late, or not at all",
                         fontSize = 14.sp,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )

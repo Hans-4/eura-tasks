@@ -63,6 +63,8 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
@@ -92,6 +94,9 @@ fun TaskScreen(
     listDbState: ListDbState,
     pageName: String,
     darkTheme: Boolean = isSystemInDarkTheme(),
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
 
@@ -442,6 +447,9 @@ fun TaskScreen(
                     currentTab = pageName,
                     firstUserTaskList = taskLists.first().title,
                     taskLists = taskLists,
+
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState
                 )
             }
         }

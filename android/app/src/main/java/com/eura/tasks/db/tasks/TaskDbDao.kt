@@ -58,8 +58,8 @@ interface TaskDbDao {
     @Query("UPDATE tasks SET isCompleted = 1 WHERE id = :id")
     suspend fun markAsCompleteById(id: Int)
     @Query("UPDATE tasks SET dueDateTime = :newDateTime WHERE id = :id")
-    suspend fun updateTaskDateTime(id: Int, newDateTime: Instant)
-    
+    suspend fun updateTaskDateTime(id: Int, newDateTime: Instant?)
+
     @Transaction
     @Query("SELECT * FROM tasks WHERE taskList = :taskList")
     suspend fun getTaskWithTags(taskList: String): TaskWithTags?

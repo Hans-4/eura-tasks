@@ -27,6 +27,7 @@ data class UiState(
     val isAddReminderDialogOpen: Boolean = false,
 
     val isPickingTime: Boolean = false,
+    val timePickerParentScreen: Int = 0, //1: AddReminderDialog, 2: AddRepeatsDialog
 
     val isDatePickDialogOpen: Boolean = false,
     val datePickDialogOpenedFrom: Int = 1, //1 = Start date, 2 = End date

@@ -42,7 +42,7 @@ sealed interface UiEvent {
     object OpenAddReminderDialog: UiEvent
     object CloseAddReminderDialog: UiEvent
 
-    object OpenTimePickDialog: UiEvent
+    data class OpenTimePickDialog(val parentScreen: Int): UiEvent //1: AddReminderDialog, 2: AddRepeatsDialog
     object CloseTimePickDialog: UiEvent
 
     object OpenAddRepeatsDialog: UiEvent

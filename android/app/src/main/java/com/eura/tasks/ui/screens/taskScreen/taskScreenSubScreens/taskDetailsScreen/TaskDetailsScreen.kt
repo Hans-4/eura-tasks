@@ -2,7 +2,6 @@ package com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScr
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import com.eura.tasks.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.List
+import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
 import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material.icons.rounded.Sell
@@ -50,30 +51,46 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.eura.tasks.R
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tags.TagsEntity
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import com.eura.tasks.db.tasks.TaskDbEvent
+import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.TaskEntity
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
+import com.eura.tasks.ui.globalComponents.reminderComponents.ReminderDialogs
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.components.DeleteTaskAlertDialog
+import com.eura.tasks.ui.viewModels.TypeConverter
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskDetailsScreen(
     parentScreen: String,
+
     task: TaskEntity,
     onClose: () -> Unit,
+
     onTaskDbEvent: (TaskDbEvent) -> Unit,
+
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState,
     onTaskList: (String) -> Unit,
+
     onTagDbEvent: (TagDbEvent) -> Unit,
     tagDbState: TagDbState,
+
+    taskDbState: TaskDbState,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState,
+
 
     onTagManagement: () -> Unit
 ) {
@@ -191,6 +208,18 @@ fun TaskDetailsScreen(
                             modifier = Modifier.padding(horizontal = 16.dp)
                         )
 
+                        TimeCard(
+                            onReminderManagement = { onUiEvent(UiEvent.OpenAddReminderDialog) },
+                            onRemoveDateTime = { onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.id, null))},
+                            task = task
+                        )
+
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+
                         TagButton(
                             taskTags = taskTags,
                             onTagManagement = onTagManagement
@@ -211,6 +240,21 @@ fun TaskDetailsScreen(
             }
         }
     }
+
+    ReminderDialogs(
+        onUiEvent = onUiEvent,
+        uiState = uiState,
+        onTaskDbEvent = onTaskDbEvent,
+        taskDbState = taskDbState,
+        onRepeatDbEvent = onRepeatDbEvent,
+        repeatDbState = repeatDbState,
+
+        onDateSelected = { date ->
+            onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.id, date))
+            onUiEvent(UiEvent.CloseAddReminderDialog)
+        },
+    )
+
     if (uiState.isConfirmingDeletion) {
         DeleteTaskAlertDialog(
             onConfirm = {
@@ -382,8 +426,57 @@ fun TagButton(
 
 @Composable
 fun TimeCard(
+    onReminderManagement: () -> Unit,
+    onRemoveDateTime: () -> Unit,
 
+    task: TaskEntity
 ) {
+    val converter = TypeConverter()
+    val dueDateTimeString = if (task.dueDateTime != null) converter.formatInstant(task.dueDateTime) else "No reminder"
+
+    Button(
+        onClick = { onReminderManagement() },
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        ),
+        contentPadding = PaddingValues(16.dp, 8.dp, 0.dp, 8.dp),
+        shape = RoundedCornerShape(0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Alarm,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+
+                Text(
+                    text = dueDateTimeString,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            IconButton(
+                onClick = { onRemoveDateTime() }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Close,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable

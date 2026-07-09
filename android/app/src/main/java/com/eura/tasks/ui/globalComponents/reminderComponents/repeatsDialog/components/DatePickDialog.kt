@@ -1,4 +1,4 @@
-package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.repeatsDialog.components
+package com.eura.tasks.ui.globalComponents.reminderComponents.repeatsDialog.components
 
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog

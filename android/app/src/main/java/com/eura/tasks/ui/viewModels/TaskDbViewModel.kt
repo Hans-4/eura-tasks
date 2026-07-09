@@ -20,6 +20,7 @@ import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent.*
 import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import com.eura.tasks.notifications.AlarmScheduler
@@ -138,7 +139,7 @@ class TaskDbViewModel(
                     }
 
                     if (repeatDbState.toSave) {
-                        onRepeatDbEvent(RepeatDbEvent.SaveRepeat(generatedTaskId, task.uuid))
+                        onRepeatDbEvent(SaveRepeat(generatedTaskId, task.uuid))
                     }
 
                     cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
@@ -365,6 +366,46 @@ class TaskDbViewModel(
                         taskTimeHour = event.hour,
                         taskTimeMinute = event.minute
                     )
+                }
+            }
+
+            is TaskDbEvent.UpdateTaskDateTime -> {
+                /**
+                 * Updates the dueDateTime of a task to the selected date and time.
+                 * - If there is no selected it uses the previews time. If the previews time was null it uses the default time which is 9:00
+                 * - If there is no selected date it updates dueDateTime to null
+                 */
+                viewModelScope.launch {
+                    val previewsDateTime = taskDao.getDueDateTimeById(event.taskId)?.toLocalDateTime(TimeZone.currentSystemDefault())
+
+                    val hour = if (_state.value.taskTimeHour != null) {
+                        _state.value.taskTimeHour!!
+                    } else previewsDateTime?.hour ?: 9
+
+                    val minute = if (_state.value.taskTimeMinute != null) {
+                        _state.value.taskTimeMinute!!
+                    } else previewsDateTime?.minute ?: 0
+
+
+                    val dueDateTime: Instant? = event.date?.let { timestamp ->
+                        val date = Instant.fromEpochMilliseconds(timestamp)
+                            .toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        LocalDateTime(
+                            date.year,
+                            date.month,
+                            date.dayOfMonth,
+
+                            hour,
+                            minute
+                        ).toInstant(TimeZone.currentSystemDefault())
+                    }
+                    taskDao.updateTaskDateTime(event.taskId, dueDateTime)
+                    _state.update {
+                        it.copy(
+                            taskTimeHour = null,
+                            taskTimeMinute = null
+                        )
+                    }
                 }
             }
         }

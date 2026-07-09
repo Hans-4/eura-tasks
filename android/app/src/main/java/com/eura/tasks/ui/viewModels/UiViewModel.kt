@@ -305,10 +305,11 @@ class UiViewModel: ViewModel() {
                 }
             }
 
-            UiEvent.OpenTimePickDialog -> {
+            is UiEvent.OpenTimePickDialog -> {
                 _state.update {
                     it.copy(
-                        isPickingTime = true
+                        isPickingTime = true,
+                        timePickerParentScreen = event.parentScreen
                     )
                 }
             }
@@ -317,7 +318,7 @@ class UiViewModel: ViewModel() {
                 _state.update {
                     it.copy(
                         isAddingRepeats = false,
-                        isAddingTask = true
+                        timePickerParentScreen = 0
                     )
                 }
             }
@@ -325,7 +326,6 @@ class UiViewModel: ViewModel() {
             UiEvent.OpenAddRepeatsDialog -> {
                 _state.update {
                     it.copy(
-                        isAddingTask = false,
                         isAddingRepeats = true
                     )
                 }
