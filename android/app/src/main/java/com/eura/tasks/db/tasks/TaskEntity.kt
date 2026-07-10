@@ -3,9 +3,9 @@ package com.eura.tasks.db.tasks
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import java.time.LocalDateTime
+import kotlinx.datetime.Instant
 import java.util.UUID
-import kotlin.time.Instant
+
 
 @Entity(
     tableName = "tasks",
@@ -13,11 +13,12 @@ import kotlin.time.Instant
 )
 data class TaskEntity(
     val title: String,
-    val description: String,
+    val description: String, //TODO: Refactor to nullable
     val isFavorite: Boolean,
     val isCompleted: Boolean,
     val hasTags: Boolean,
-    val dueDateTime: LocalDateTime?,
+    val repeatType: Int? = null, //0: Day, 1: Week, 2: Month, 3: Year
+    val dueDateTime: Instant?,
     val taskList: String,
     val creationTime: Instant,
     val uuid: String = UUID.randomUUID().toString(),

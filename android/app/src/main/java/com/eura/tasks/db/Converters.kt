@@ -5,13 +5,13 @@ import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.time.Instant
+import kotlinx.datetime.Instant
 
 class Converters {
     @TypeConverter
     fun timestampToDate(value: Long?): Instant? {
         return value?.let {
-            Instant.Companion.fromEpochMilliseconds(it)
+            Instant.fromEpochMilliseconds(it)
         }
     }
     @TypeConverter

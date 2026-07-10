@@ -7,37 +7,33 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.room.Room
-import com.eura.tasks.db.Database
+import com.eura.tasks.db.AppDatabase
+import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.AppNavHost
 import com.eura.tasks.ui.theme.EuraTasksTheme
-import com.eura.tasks.ui.viewModels.UiViewModel
-import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
+import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
-import kotlin.getValue
+import com.eura.tasks.ui.viewModels.TaskDbViewModel
+import com.eura.tasks.ui.viewModels.UiViewModel
 
 class MainActivity : ComponentActivity() {
 
     private val db by lazy {
-        Room.databaseBuilder(
-            applicationContext,
-            Database::class.java,
-            "database.db"
-        )
-            .fallbackToDestructiveMigration()
-            .build()
+        AppDatabase.getDatabase(applicationContext)
     }
 
     private val taskDbViewModel by viewModels<TaskDbViewModel>(
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TaskDbViewModel(db.taskDao, db.tagDao) as T
+                    return TaskDbViewModel(db.taskDao, db.tagDao,
+                        AlarmScheduler(applicationContext)) as T
                 }
             }
         }
@@ -58,6 +54,16 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return TagDbViewModel(tagDao = db.tagDao) as T
+                }
+            }
+        }
+    )
+
+    private val repeatDbViewModel by viewModels<RepeatDbViewModel>(
+        factoryProducer = {
+            object : ViewModelProvider.Factory {
+                override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                    return RepeatDbViewModel(repeatDao = db.repeatDao) as T
                 }
             }
         }
@@ -98,32 +104,52 @@ class MainActivity : ComponentActivity() {
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+        installSplashScreen()
+
         super.onCreate(savedInstanceState)
 
         enableEdgeToEdge()
+
         setContent {
             EuraTasksTheme {
                 val taskState by taskDbViewModel.state.collectAsState()
                 val listState by listDbViewModel.state.collectAsState()
                 val tagState by tagDbViewModel.state.collectAsState()
+                val repeatState by repeatDbViewModel.state.collectAsState()
+
                 val searchState by searchViewModel.state.collectAsState()
+
                 val uiState by uiViewModel.state.collectAsState()
+
                 AppNavHost(
+                    onTaskDbEvent = { event ->
+                        taskDbViewModel.onEvent(
+                            event,
+                            repeatDbViewModel::onEvent,
+                            repeatState
+                        ) },
                     taskDbState = taskState,
+
                     listDbState = listState,
                     tagDbState = tagState,
+
+                    onRepeatDbEvent = repeatDbViewModel::onEvent,
+                    repeatDbState = repeatState,
+
                     searchState = searchState,
                     uiState = uiState,
-                    onTaskDbEvent = taskDbViewModel::onEvent,
+
                     onListDbEvent = { event -> listDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onTagDbEvent = { event -> tagDbViewModel.onEvent(event, uiViewModel::onEvent) },
                     onSearchEvent = searchViewModel::onEvent,
                     onUiEvent = uiViewModel::onEvent,
                     taskDbViewModel = taskDbViewModel,
                     listDbViewModel = listDbViewModel,
-                    googleDriveViewModel = googleDriveViewModel
+                    googleDriveViewModel = googleDriveViewModel,
                 )
             }
         }
     }
+
 }

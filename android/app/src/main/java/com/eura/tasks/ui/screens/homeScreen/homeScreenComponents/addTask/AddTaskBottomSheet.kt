@@ -21,6 +21,8 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents.AddTaskScreen
@@ -37,7 +39,10 @@ fun AddTaskBottomSheet(
     uiState: UiState,
     currentTab: String,
     firstUserTaskList: String,
-    taskLists: List<UserListEntity>
+    taskLists: List<UserListEntity>,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState
 ) {
     ModalBottomSheet(
         modifier = Modifier
@@ -82,7 +87,7 @@ fun AddTaskBottomSheet(
                     }
                 ) {
                     AddTaskScreen(
-                        onDbEvent = onDbEvent,
+                        onTaskDbEvent = onDbEvent,
                         onTagDbEvent = onTagDbEvent,
                         onUiEvent = onUiEvent,
                         taskDbState = taskDbState,
@@ -91,7 +96,10 @@ fun AddTaskBottomSheet(
                         currentTab = currentTab,
                         firstUserTaskList = firstUserTaskList,
                         onNavigateToSelectTaskListScreen = { sheetNavController.navigate("selectTaskListScreen") },
-                        taskLists = taskLists
+                        taskLists = taskLists,
+
+                        onRepeatDbEvent = onRepeatDbEvent,
+                        repeatDbState = repeatDbState
                     )
                 }
 

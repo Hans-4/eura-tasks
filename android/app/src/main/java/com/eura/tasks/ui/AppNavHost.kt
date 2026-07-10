@@ -1,19 +1,24 @@
 package com.eura.tasks.ui
 
 import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.End
-import androidx.compose.animation.AnimatedContentTransitionScope.SlideDirection.Companion.Start
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.eura.tasks.db.SearchEvent
 import com.eura.tasks.db.SearchState
 import com.eura.tasks.db.lists.ListDbEvent
@@ -22,35 +27,44 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
+import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.homeScreen.HomeScreen
 import com.eura.tasks.ui.screens.searchScreen.SearchScreen
 import com.eura.tasks.ui.screens.settingsScreen.SettingsScreen
-import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
-import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.LinkGoogleAccountScreen
-import com.eura.tasks.ui.globalComponents.ListConflictWarningDialog
 import com.eura.tasks.ui.screens.tagScreen.TagScreen
+import com.eura.tasks.ui.screens.taskScreen.TaskScreen
+import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
-import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
+import com.eura.tasks.ui.viewModels.TaskDbViewModel
 
 
 @Composable
 fun AppNavHost(
-    taskDbState: TaskDbState,
-    listDbState: ListDbState,
-    tagDbState: TagDbState,
-    searchState: SearchState,
-    uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
+    taskDbState: TaskDbState,
+
     onListDbEvent: (ListDbEvent) -> Unit,
+    listDbState: ListDbState,
+
     onTagDbEvent: (TagDbEvent) -> Unit,
+    tagDbState: TagDbState,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState,
+
     onSearchEvent: (SearchEvent) -> Unit,
+    searchState: SearchState,
+
     onUiEvent: (UiEvent) -> Unit,
+    uiState: UiState,
     taskDbViewModel: TaskDbViewModel,
     listDbViewModel: ListDbViewModel,
-    googleDriveViewModel: GoogleDriveViewModel
+    googleDriveViewModel: GoogleDriveViewModel,
 ) {
     val navController = rememberNavController()
 
@@ -68,36 +82,38 @@ fun AppNavHost(
         )
     }
 
+    val animDuration = 300
+
     NavHost(
         navController = navController,
         startDestination = "home",
     ) {
         val defaultEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-            slideIntoContainer(
-                towards = Start,
-                animationSpec = tween(300)
-            )
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(animDuration)
+            ) + fadeIn(animationSpec = tween(animDuration))
         }
 
         val defaultExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-            slideOutOfContainer(
-                towards = Start,
-                animationSpec = tween(300)
-            )
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(animDuration)
+            ) + fadeOut(animationSpec = tween(animDuration))
         }
 
         val defaultPopEnterTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> EnterTransition = {
-            slideIntoContainer(
-                towards = End,
-                animationSpec = tween(300)
-            )
+            slideInHorizontally(
+                initialOffsetX = { fullWidth -> -fullWidth / 3 },
+                animationSpec = tween(animDuration)
+            ) + fadeIn(animationSpec = tween(animDuration))
         }
 
         val defaultPopExitTransition: AnimatedContentTransitionScope<NavBackStackEntry>.() -> ExitTransition = {
-            slideOutOfContainer(
-                towards = End,
-                animationSpec = tween(300)
-            )
+            slideOutHorizontally(
+                targetOffsetX = { fullWidth -> fullWidth },
+                animationSpec = tween(animDuration)
+            ) + fadeOut(animationSpec = tween(animDuration))
         }
 
         composable(
@@ -125,10 +141,14 @@ fun AppNavHost(
                 onListDbEvent = onListDbEvent,
                 onUiEvent = onUiEvent,
 
+                onRepeatDbEvent = onRepeatDbEvent,
+                repeatDbState = repeatDbState,
+
+
                 onTaskList = { listName -> navController.navigate("taskLists/$listName")},
                 onTagList = { tagId -> navController.navigate("tagList/$tagId")},
                 onSettings = { navController.navigate("settings")},
-                onSearch = { navController.navigate("search") }
+                onSearch = { navController.navigate("search") },
             )
         }
 
@@ -152,7 +172,7 @@ fun AppNavHost(
                 onLinkGoogleAccount = { navController.navigate("linkGoogleAccount")},
                 listDbViewModel = listDbViewModel,
                 taskDbViewModel = taskDbViewModel,
-                googleDriveViewModel = googleDriveViewModel
+                googleDriveViewModel = googleDriveViewModel,
             )
         }
 
@@ -248,11 +268,21 @@ fun AppNavHost(
                 onUiEvent = onUiEvent,
                 onClose = {navController.popBackStack()},
                 onTaskDetails = { taskId, parentScreen -> navController.navigate("taskDetails/$taskId/$parentScreen") },
+
+                onRepeatDbEvent = onRepeatDbEvent,
+                repeatDbState = repeatDbState
             )
         }
 
         composable(
             route = "taskDetails/{taskId}/{parentScreen}",
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "euratasks://taskdetails/{taskId}/{parentScreen}" }
+            ),
+            arguments = listOf(
+                navArgument("taskId") { type = NavType.StringType },
+                navArgument("parentScreen") { defaultValue = "notification" }
+            ),
             enterTransition = {
                 defaultEnterTransition()
             },
@@ -280,6 +310,11 @@ fun AppNavHost(
                     parentScreen = parentScreen,
                     onTagDbEvent = onTagDbEvent,
                     tagDbState = tagDbState,
+
+                    taskDbState = taskDbState,
+
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState,
 
                     onTagManagement = { navController.navigate("tagManagement/${taskId}") }
                 )

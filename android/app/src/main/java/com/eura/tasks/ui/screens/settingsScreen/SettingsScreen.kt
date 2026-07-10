@@ -43,15 +43,18 @@ import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.delay
 import com.eura.tasks.R
+import com.eura.tasks.openExactAlarmSettings
+import com.eura.tasks.openNotificationSettings
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.SyncUiState
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
+import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,8 +66,12 @@ fun SettingsScreen(
     taskDbViewModel: TaskDbViewModel,
     googleDriveViewModel: GoogleDriveViewModel,
 ) {
-    val isDriveReady by googleDriveViewModel.isDriveServiceReady.collectAsState()
+    var alarmButtonEnabled by remember { mutableStateOf(true) }
+
     val context = LocalContext.current
+
+    val isDriveReady by googleDriveViewModel.isDriveServiceReady.collectAsState()
+    val currentContext = LocalContext.current
 
     var isShowingSyncDetails by remember { mutableStateOf(false) }
 
@@ -78,7 +85,7 @@ fun SettingsScreen(
     val syncMessage by googleDriveViewModel.syncMessage.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
-        googleDriveViewModel.checkExistingLogin(context)
+        googleDriveViewModel.checkExistingLogin(currentContext)
     }
 
     LaunchedEffect(syncState) {
@@ -201,7 +208,42 @@ fun SettingsScreen(
                     shape = MaterialTheme.shapes.medium,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Synchronisation")
+                    Text(
+                        "Synchronisation",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = {
+                        openNotificationSettings(context)
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Notifications",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            item {
+                Button(
+                    onClick = { openExactAlarmSettings(context) },
+                    enabled = alarmButtonEnabled,
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        "Alarms & Reminders",
+                        textAlign = TextAlign.Start,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
         }

@@ -1,22 +1,24 @@
 package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ShortText
+import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
-import androidx.compose.material.icons.rounded.Tag
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -39,14 +41,17 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.SYSTEM_LISTS
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
+import com.eura.tasks.ui.globalComponents.reminderComponents.ReminderDialogs
 
 @Composable
 fun AddTaskScreen(
-    onDbEvent: (TaskDbEvent) -> Unit,
+    onTaskDbEvent: (TaskDbEvent) -> Unit,
     onTagDbEvent: (TagDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     taskDbState: TaskDbState,
@@ -56,7 +61,9 @@ fun AddTaskScreen(
     firstUserTaskList: String,
     onNavigateToSelectTaskListScreen: () -> Unit,
     taskLists: List<UserListEntity>,
-    darkTheme: Boolean = isSystemInDarkTheme()
+    darkTheme: Boolean = isSystemInDarkTheme(),
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState
 ) {
     val focusRequester = remember { FocusRequester() }
     LaunchedEffect(Unit) {
@@ -79,7 +86,7 @@ fun AddTaskScreen(
 
     LaunchedEffect(currentTab) {
         if (isLockedAsFavorite) {
-            onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, task = null))
+            onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = true, task = null))
         }
     }
 
@@ -117,9 +124,9 @@ fun AddTaskScreen(
             modifier = Modifier
                 .focusRequester(focusRequester)
                 .fillMaxWidth(),
-            value = taskDbState.todoTitle,
+            value = taskDbState.taskTitle,
             onValueChange = {
-                onDbEvent(TaskDbEvent.SetTodoTitle(it))
+                onTaskDbEvent(TaskDbEvent.SetTaskTitle(it))
             },
             placeholder = {
                 Text(text = "Title")
@@ -138,7 +145,7 @@ fun AddTaskScreen(
                 modifier = Modifier.fillMaxWidth(),
                 value = taskDbState.todoDescription,
                 onValueChange = {
-                    onDbEvent(TaskDbEvent.SetTodoDescription(it))
+                    onTaskDbEvent(TaskDbEvent.SetTodoDescription(it))
                 },
                 placeholder = {
                     Text(text = "Description")
@@ -146,7 +153,9 @@ fun AddTaskScreen(
             )
         }
 
-        Row{
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             IconButton(
                 onClick = {
                     if (uiState.isAddingDescription) {
@@ -162,24 +171,31 @@ fun AddTaskScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
-
             IconButton(
                 onClick = {
                     onUiEvent(UiEvent.OpenAddTagsDialog)
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Rounded.Tag,
+                    imageVector = Icons.Rounded.Sell,
                     contentDescription = null,
                 )
             }
 
-            Spacer(modifier = Modifier.width(4.dp))
+            IconButton(
+                onClick = {
+                    onUiEvent(UiEvent.OpenAddReminderDialog)
+                }
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Alarm,
+                    contentDescription = null,
+                )
+            }
 
             IconButton(
                 onClick = {
-                    onDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, task = null))
+                    onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(isFavorite = !isFavorite, task = null))
                 },
                 enabled = !isLockedAsFavorite
             ) {
@@ -193,8 +209,9 @@ fun AddTaskScreen(
 
             TextButton(
                 onClick = {
-                    onDbEvent(TaskDbEvent.SetParentList(parentList))
-                    onDbEvent(TaskDbEvent.SaveTask)
+                    Log.d("Time test", "Hour: ${taskDbState.taskTimeHour} Minute: ${taskDbState.taskTimeMinute} Date: ${taskDbState.taskDate}")
+                    onTaskDbEvent(TaskDbEvent.SetParentList(parentList))
+                    onTaskDbEvent(TaskDbEvent.SaveTask)
                     onUiEvent(UiEvent.CloseAddTaskSheet)
                 }
             ) {
@@ -210,9 +227,23 @@ fun AddTaskScreen(
             onClose = { onUiEvent(UiEvent.CloseAddTagsDialog) },
             onTagDbEvent = onTagDbEvent,
             tagDbState = tagDbState,
-            onTaskDbEvent = onDbEvent,
+            onTaskDbEvent = onTaskDbEvent,
             onUiEvent = onUiEvent,
             uiState = uiState
         )
     }
+
+    ReminderDialogs(
+        onUiEvent = onUiEvent,
+        uiState = uiState,
+        onTaskDbEvent = onTaskDbEvent,
+        taskDbState = taskDbState,
+        onRepeatDbEvent = onRepeatDbEvent,
+        repeatDbState = repeatDbState,
+
+        onDateSelected = { date ->
+            onTaskDbEvent(TaskDbEvent.SetTaskDate(date))
+            onUiEvent(UiEvent.CloseAddReminderDialog)
+        },
+    )
 }

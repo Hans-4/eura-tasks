@@ -19,8 +19,8 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlin.time.Clock
-import kotlin.time.Instant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
 
 class TagDbViewModel(
     private val tagDao: TagDbDao

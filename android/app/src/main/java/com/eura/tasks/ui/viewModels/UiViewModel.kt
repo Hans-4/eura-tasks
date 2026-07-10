@@ -13,7 +13,7 @@ class UiViewModel: ViewModel() {
     val state = _state
 
     fun onEvent(event: UiEvent) {
-        when(event) {
+        when (event) {
             UiEvent.OpenSortItemSheet -> {
                 _state.update {
                     it.copy(
@@ -21,6 +21,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseSortItemSheet -> {
                 _state.update {
                     it.copy(
@@ -28,6 +29,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseAddTaskListDialog -> {
                 _state.update {
                     it.copy(
@@ -35,6 +37,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenAddTaskListDialog -> {
                 _state.update {
                     it.copy(
@@ -42,6 +45,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseSelectTaskListSheet -> {
                 _state.update {
                     it.copy(
@@ -51,6 +55,7 @@ class UiViewModel: ViewModel() {
                 }
 
             }
+
             UiEvent.OpenSelectTaskListSheet -> {
                 _state.update {
                     it.copy(
@@ -59,6 +64,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.CloseAddTaskSheet -> {
                 _state.update {
                     it.copy(
@@ -66,6 +72,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenAddTaskSheet -> {
                 _state.update {
                     it.copy(
@@ -81,6 +88,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenAddTaskDescriptionTextField -> {
                 _state.update {
                     it.copy(
@@ -96,6 +104,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenConfirmDeletionDialog -> {
                 _state.update {
                     it.copy(
@@ -111,6 +120,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenHomeFABMenu -> {
                 _state.update {
                     it.copy(
@@ -126,6 +136,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenManageListSheet -> {
                 _state.update {
                     it.copy(
@@ -141,6 +152,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenItemWithSimilarNameWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -148,6 +160,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             is UiEvent.SetReason -> {
                 _state.update {
                     it.copy(
@@ -163,6 +176,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenDeleteAllTasksWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -178,6 +192,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenListConflictWarningAlertOpen -> {
                 _state.update {
                     it.copy(
@@ -193,6 +208,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenDeleteAllCloudDataWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -208,6 +224,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenAddTagsDialog -> {
                 _state.update {
                     it.copy(
@@ -223,6 +240,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenAddTagTextField -> {
                 _state.update {
                     it.copy(
@@ -238,6 +256,7 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenSetSearchFilterBottomSheet -> {
                 _state.update {
                     it.copy(
@@ -253,10 +272,110 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
+
             UiEvent.OpenManageTagSheet -> {
                 _state.update {
                     it.copy(
                         isManageTagSheetOpen = true
+                    )
+                }
+            }
+
+            UiEvent.CloseAddReminderDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddReminderDialogOpen = false
+                    )
+                }
+            }
+
+            UiEvent.OpenAddReminderDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddReminderDialogOpen = true
+                    )
+                }
+            }
+
+            UiEvent.CloseTimePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isPickingTime = false
+                    )
+                }
+            }
+
+            is UiEvent.OpenTimePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isPickingTime = true,
+                        timePickerParentScreen = event.parentScreen
+                    )
+                }
+            }
+
+            UiEvent.CloseAddRepeatsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingRepeats = false,
+                        timePickerParentScreen = 0
+                    )
+                }
+            }
+
+            UiEvent.OpenAddRepeatsDialog -> {
+                _state.update {
+                    it.copy(
+                        isAddingRepeats = true
+                    )
+                }
+            }
+
+            UiEvent.CloseDatePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isDatePickDialogOpen = false
+                    )
+                }
+            }
+
+            is UiEvent.OpenDatePickDialog -> {
+                _state.update {
+                    it.copy(
+                        isDatePickDialogOpen = true,
+                        datePickDialogOpenedFrom = event.openedFrom
+                    )
+                }
+            }
+
+            UiEvent.CloseNotificationPermissionScreen -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionScreenOpen = false
+                    )
+                }
+            }
+
+            UiEvent.OpenNotificationPermissionScreen -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionScreenOpen = true
+                    )
+                }
+            }
+
+            is UiEvent.SetNotificationPermissionState -> {
+                _state.update {
+                    it.copy(
+                        isNotificationPermissionGranted = event.state
+                    )
+                }
+            }
+
+            is UiEvent.SetAlarmPermissionState -> {
+                _state.update {
+                    it.copy(
+                        isExactAlarmPermissionGranted = event.state
                     )
                 }
             }

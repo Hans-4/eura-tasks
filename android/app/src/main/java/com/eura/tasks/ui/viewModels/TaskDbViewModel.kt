@@ -19,15 +19,24 @@ import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent.*
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
+import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.UiState
-import kotlin.time.Clock
-import kotlin.time.Instant
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class TaskDbViewModel(
     private val taskDao: TaskDbDao,
-    private val tagDao: TagDbDao
+    private val tagDao: TagDbDao,
+    private val alarmScheduler: AlarmScheduler,
 ): ViewModel() {
 
     private val _sortType = MutableStateFlow(SortType.ID)
@@ -43,6 +52,7 @@ class TaskDbViewModel(
 
     private val _uiState = MutableStateFlow(UiState())
     private val _state = MutableStateFlow(TaskDbState())
+
     val state = combine(_state, _sortType, _tasks) { state, sortType, tasks ->
         state.copy(
             tasks = tasks,
@@ -50,13 +60,38 @@ class TaskDbViewModel(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), TaskDbState())
 
-    fun onEvent(event: TaskDbEvent) {
+    fun onEvent(
+        event: TaskDbEvent,
+        onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+        repeatDbState: RepeatDbState
+    ) {
         when(event) {
             TaskDbEvent.SaveTask -> {
-                val title = state.value.todoTitle
+                val title = state.value.taskTitle
                 val description = state.value.todoDescription
                 val favorite = state.value.todoIsFavorite
                 val parentList = state.value.taskParentList
+                val repeatType = if (repeatDbState.toSave) repeatDbState.selectedRepeatType else null
+
+
+                val dueDateTime: Instant? = _state.value.taskDate?.let { timestamp ->
+                    val date = Instant.fromEpochMilliseconds(timestamp).toLocalDateTime(TimeZone.currentSystemDefault()).date
+
+                    val taskHour = _state.value.taskTimeHour
+                    val taskMinute = _state.value.taskTimeMinute
+
+                    val hour = taskHour ?: 9
+                    val minute = taskMinute ?: 0
+
+                    LocalDateTime(
+                        date.year,
+                        date.month,
+                        date.dayOfMonth,
+
+                        hour,
+                        minute
+                    ).toInstant(TimeZone.currentSystemDefault())
+                }
 
                 val currentDateTime: Instant = Clock.System.now()
 
@@ -70,26 +105,27 @@ class TaskDbViewModel(
                     isFavorite = favorite,
                     isCompleted = false,
                     hasTags = state.value.tagIds.isNotEmpty(),
-                    dueDateTime = null,
+                    repeatType = repeatType,
+                    dueDateTime = dueDateTime,
                     taskList = parentList,
                     creationTime = currentDateTime,
                 )
 
-                if (_state.value.tagIds.isEmpty() && _state.value.tagUuids.isEmpty()) {
-                    viewModelScope.launch {
-                        taskDao.upsertTask(task)
-                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
-                    }
-                } else {
-                    viewModelScope.launch {
-                        // Capture the generated ID returned by the database
-                        val generatedTaskId = taskDao.upsertTask(task).toInt()
+                var generatedTaskId: Int
 
-                        Log.d("Values", "${_state.value.tagIds.size} ${_state.value.tagUuids.size}")
+                viewModelScope.launch {
+                    if (_state.value.tagIds.isEmpty() && _state.value.tagUuids.isEmpty()) {
+                        generatedTaskId = taskDao.upsertTask(task).toInt()
+
+                    } else {
+                        generatedTaskId = taskDao.upsertTask(task).toInt()
+
+                        Log.d(
+                            "Values",
+                            "${_state.value.tagIds.size} ${_state.value.tagUuids.size}"
+                        )
                         if (_state.value.tagIds.size == _state.value.tagUuids.size) {
                             for ((tagId, tagUuid) in _state.value.tagIds.zip(_state.value.tagUuids)) {
-                                Log.d("Values", "$tagId $tagUuid")
-                                // Use generatedTaskId instead of task.id
                                 tagDao.insertTaskTag(
                                     TaskTagsEntity(
                                         generatedTaskId,
@@ -100,16 +136,36 @@ class TaskDbViewModel(
                                 )
                             }
                         }
-                        cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
                     }
+
+                    if (repeatDbState.toSave) {
+                        onRepeatDbEvent(SaveRepeat(generatedTaskId, task.uuid))
+                    }
+
+                    cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
+
+                    // Inside TaskDbViewModel's SaveTask event, after upsertTask:
+                    if (dueDateTime != null) {
+                        alarmScheduler.scheduleAlarm(
+                            id = generatedTaskId,
+                            title = title,
+                            description = description,
+                            triggerAtMillis = dueDateTime.toEpochMilliseconds()
+                        )
+                    }
+
                 }
 
                 Log.d("Test", "Saved")
                 _state.update {
                     it.copy(
-                        todoTitle = "",
+                        taskTitle = "",
                         todoDescription = "",
                         todoIsFavorite = false,
+
+                        taskDate = null,
+                        taskTimeHour = 9,
+                        taskTimeMinute = 0,
                     )
                 }
                 _uiState.update {
@@ -119,7 +175,7 @@ class TaskDbViewModel(
                 }
             }
 
-            is TaskDbEvent.SetDueDateTime -> {
+            is TaskDbEvent.SetDate -> {
                 _state.update {
                     it.copy(
                         dueDateTime = event.date
@@ -159,10 +215,10 @@ class TaskDbViewModel(
                     }
                 }
             }
-            is TaskDbEvent.SetTodoTitle -> {
+            is TaskDbEvent.SetTaskTitle -> {
                 _state.update {
                     it.copy(
-                        todoTitle = event.title
+                        taskTitle = event.title
                     )
                 }
             }
@@ -191,6 +247,8 @@ class TaskDbViewModel(
                     )
                     taskDao.upsertDeletedTask(deletedTask)
                     taskDao.deleteTodoById(event.id)
+
+                    alarmScheduler.cancelAlarm(event.id)
                 }
             }
             is TaskDbEvent.SetParentList -> {
@@ -217,9 +275,15 @@ class TaskDbViewModel(
                 }
             }
 
+
             is TaskDbEvent.UpdateTaskTitleById -> {
                 viewModelScope.launch {
                     taskDao.updateTaskTitle(event.id, event.newTitle)
+                    _state.update {
+                        it.copy(
+                            taskTitle = ""
+                        )
+                    }
                 }
             }
 
@@ -262,7 +326,7 @@ class TaskDbViewModel(
 
             is TaskDbEvent.RemoveFromTagByTaskId -> {
                 viewModelScope.launch {
-                    taskDao.removeByTaskId(event.taskId)
+                    taskDao.removeTagByTaskId(event.taskId)
                     _state.update { it ->
                         it.copy(
                             taskTags = it.taskTags.filter { it.taskId != event.taskId }
@@ -294,8 +358,65 @@ class TaskDbViewModel(
 
                 }
             }
+
+            is TaskDbEvent.SetTaskDate -> {
+                _state.update {
+                    it.copy(
+                        taskDate = event.date
+                    )
+                }
+            }
+            is TaskDbEvent.SetTaskTime -> {
+                _state.update {
+                    it.copy(
+                        taskTimeHour = event.hour,
+                        taskTimeMinute = event.minute
+                    )
+                }
+            }
+
+            is TaskDbEvent.UpdateTaskDateTime -> {
+                /**
+                 * Updates the dueDateTime of a task to the selected date and time.
+                 * - If there is no selected it uses the previews time. If the previews time was null it uses the default time which is 9:00
+                 * - If there is no selected date it updates dueDateTime to null
+                 */
+                viewModelScope.launch {
+                    val previewsDateTime = taskDao.getDueDateTimeById(event.taskId)?.toLocalDateTime(TimeZone.currentSystemDefault())
+
+                    val hour = if (_state.value.taskTimeHour != null) {
+                        _state.value.taskTimeHour!!
+                    } else previewsDateTime?.hour ?: 9
+
+                    val minute = if (_state.value.taskTimeMinute != null) {
+                        _state.value.taskTimeMinute!!
+                    } else previewsDateTime?.minute ?: 0
+
+
+                    val dueDateTime: Instant? = event.date?.let { timestamp ->
+                        val date = Instant.fromEpochMilliseconds(timestamp)
+                            .toLocalDateTime(TimeZone.currentSystemDefault()).date
+                        LocalDateTime(
+                            date.year,
+                            date.month,
+                            date.dayOfMonth,
+
+                            hour,
+                            minute
+                        ).toInstant(TimeZone.currentSystemDefault())
+                    }
+                    taskDao.updateTaskDateTime(event.taskId, dueDateTime)
+                    _state.update {
+                        it.copy(
+                            taskTimeHour = null,
+                            taskTimeMinute = null
+                        )
+                    }
+                }
+            }
         }
     }
+
 
     /**
      * Helper for the Cloud Sync: Insert a task downloaded from Drive

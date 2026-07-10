@@ -1,5 +1,6 @@
 package com.eura.tasks.ui.screens.homeScreen
 
+import android.os.Build
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -70,7 +71,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight.Companion.Bold
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import com.eura.tasks.R
 import com.eura.tasks.db.lists.ListDbEvent
 import com.eura.tasks.db.lists.ListDbState
@@ -79,17 +79,25 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
+import com.eura.tasks.permissionLauncher
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewTaskListDialog
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.FabMenuItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SystemTaskLists
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewTaskListDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
+import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.tagListColumn.TagListColumnItem
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.UserListColumnItem
-import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.addListComponents.ItemWithSimilarNameWarningDialog
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.components.AddTagDialog
+import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -101,6 +109,10 @@ fun HomeScreen(
     listDbState: ListDbState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState,
+
 
     onTaskList: (String) -> Unit,
     onTagList: (Int) -> Unit,
@@ -148,6 +160,19 @@ fun HomeScreen(
         }
     }
 
+    val permissionLauncher = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        permissionLauncher(onUiEvent = onUiEvent)
+    } else {
+        null
+    }
+
+    LaunchedEffect(Unit) {
+        //Ask for notification permission on first launch
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !uiState.isNotificationPermissionGranted) {
+            permissionLauncher?.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
 
     Scaffold(
         modifier = Modifier
@@ -168,7 +193,9 @@ fun HomeScreen(
                         },
                         actions = {
                             IconButton(
-                                modifier = Modifier.size(32.dp),
+                                modifier = Modifier
+                                    .size(32.dp)
+                                ,
                                 onClick = { onSettings() },
                                 colors = IconButtonDefaults.iconButtonColors(
                                     containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
@@ -293,69 +320,87 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             item {
-                Column(modifier = Modifier
-                    .padding(vertical = 8.dp, horizontal = 8.dp)) {
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 8.dp, horizontal = 8.dp)
+                ) {
                     systemTaskList
                         .take(6)
                         .chunked(2)
                         .forEach { list ->
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            for (item in list) {
-                                val icon = Converter.systemTypeConverter(item.type)
-                                val color = Converter.colorStringConverter(
-                                    systemThemeIndex = systemThemeIndex,
-                                    colorString = item.colorString
-                                )
-                                val title = Converter.pageNameConverter(pageName = item.title)
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                list.forEach { item ->
+                                    val icon = Converter.systemTypeConverter(item.type)
+                                    val color = Converter.colorStringConverter(
+                                        systemThemeIndex = systemThemeIndex,
+                                        colorString = item.colorString
+                                    )
+                                    val title = Converter.pageNameConverter(pageName = item.title)
 
-                                val (completedTaskCount, totalTaskCount) = when (item.title) {
-                                    "SYSTEM_ALL" -> Pair(
-                                        taskDbState.tasks.filter { it.isCompleted }.size,
-                                        taskDbState.tasks.size
-                                    )
-                                    "SYSTEM_FAVORITES" -> Pair(
-                                        taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
-                                        taskDbState.tasks.filter { it.isFavorite }.size
-                                    )
-                                    "SYSTEM_WITH_TAGS" -> Pair(
-                                        taskDbState.tasks.filter { it.hasTags && it.isCompleted }.size,
-                                        taskDbState.tasks.filter { it.hasTags }.size
-                                    )
-                                    else -> Pair(0, 0)
-                                }
+                                    val currentDate = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
-                                val progress: Float = if (totalTaskCount == 0) {
-                                    0f
-                                } else {
-                                    (completedTaskCount.toFloat() / totalTaskCount.toFloat())
-                                }
+                                    val (completedTaskCount, totalTaskCount) = when (item.title) {
+                                        "SYSTEM_TODAY" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size,
+                                            taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size
+                                        )
 
-                                Box(modifier = Modifier.weight(1f)) {
-                                    SystemTaskLists(
-                                        count = totalTaskCount,
-                                        icon = icon,
-                                        title = title,
-                                        progress = progress,
-                                        color = color,
-                                        onTask = { onTaskList(item.title)}
-                                    )
+                                        "SYSTEM_SCHEDULE" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime != null }.size,
+                                            taskDbState.tasks.filter { it.dueDateTime != null }.size
+                                        )
+
+
+                                        "SYSTEM_ALL" -> Pair(
+                                            taskDbState.tasks.filter { it.isCompleted }.size,
+                                            taskDbState.tasks.size
+                                        )
+
+                                        "SYSTEM_FAVORITES" -> Pair(
+                                            taskDbState.tasks.filter { it.isFavorite && it.isCompleted }.size,
+                                            taskDbState.tasks.filter { it.isFavorite }.size
+                                        )
+
+                                        "SYSTEM_WITH_TAGS" -> Pair(
+                                            taskDbState.tasks.filter { it.hasTags && it.isCompleted }.size,
+                                            taskDbState.tasks.filter { it.hasTags }.size
+                                        )
+
+                                        else -> Pair(0, 0)
+                                    }
+
+                                    val progress: Float = if (totalTaskCount == 0) {
+                                        0f
+                                    } else {
+                                        (completedTaskCount.toFloat() / totalTaskCount.toFloat())
+                                    }
+
+                                    Box(modifier = Modifier.weight(1f)) {
+                                        SystemTaskLists(
+                                            count = totalTaskCount,
+                                            icon = icon,
+                                            title = title,
+                                            progress = progress,
+                                            color = color,
+                                            onTask = { onTaskList(item.title) }
+                                        )
+                                    }
                                 }
-                            }
-                            if (list.size < 2) {
-                                Spacer(modifier = Modifier.weight(1f))
+                                if (list.size < 2) {
+                                    Spacer(modifier = Modifier.weight(1f))
+                                }
                             }
                         }
-                    }
                 }
             }
 
             //TODO: Change to stickyHeader
-            item{
+            item {
                 SecondaryTabRow(
                     selectedTabIndex = pagerState.currentPage,
                     modifier = Modifier
@@ -366,7 +411,7 @@ fun HomeScreen(
                             selected = pagerState.currentPage == index,
                             onClick = {
                                 coroutineScope.launch { pagerState.animateScrollToPage(index) }
-                                      },
+                            },
                             text = { Text(title) }
                         )
                     }
@@ -387,6 +432,7 @@ fun HomeScreen(
                             taskDbState = taskDbState,
                             onTaskList = onTaskList
                         )
+
                         1 -> TagListColumnItem(
                             noTags = noTags,
                             tagList = tagList,
@@ -438,7 +484,9 @@ fun HomeScreen(
                     uiState = uiState,
                     currentTab = "HOME_SCREEN",
                     firstUserTaskList = taskLists.first().title,
-                    taskLists = taskLists
+                    taskLists = taskLists,
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState
                 )
             }
         }

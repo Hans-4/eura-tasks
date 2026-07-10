@@ -1,6 +1,5 @@
 package com.eura.tasks.ui.screens.taskScreen
 
-import android.util.Log
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
@@ -12,14 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.ArrowBackIosNew
-import androidx.compose.material.icons.rounded.IosShare
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -66,6 +63,8 @@ import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
 import com.eura.tasks.db.tasks.TaskDbState
+import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
@@ -74,6 +73,11 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTask
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SortItemsSheet
 import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.DeleteAllTasksInListAlert
 import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.ManageListSheet
+import kotlinx.datetime.Clock
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.todayIn
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,7 +93,10 @@ fun TaskScreen(
     taskDbState: TaskDbState,
     listDbState: ListDbState,
     pageName: String,
-    darkTheme: Boolean = isSystemInDarkTheme()
+    darkTheme: Boolean = isSystemInDarkTheme(),
+
+    onRepeatDbEvent: (RepeatDbEvent) -> Unit,
+    repeatDbState: RepeatDbState
 ) {
     val systemThemeIndex = if (darkTheme) 1 else 0
 
@@ -109,6 +116,8 @@ fun TaskScreen(
     )
 
     val tasksToShow = when (pageName) {
+        "SYSTEM_TODAY" -> taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+        "SYSTEM_SCHEDULE" -> taskDbState.tasks.filter { it.dueDateTime != null }
         "SYSTEM_ALL" -> taskDbState.tasks
         "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
         "SYSTEM_WITH_TAGS" -> taskDbState.tasks.filter { it.hasTags }
@@ -437,7 +446,10 @@ fun TaskScreen(
                     uiState = uiState,
                     currentTab = pageName,
                     firstUserTaskList = taskLists.first().title,
-                    taskLists = taskLists
+                    taskLists = taskLists,
+
+                    onRepeatDbEvent = onRepeatDbEvent,
+                    repeatDbState = repeatDbState
                 )
             }
         }
@@ -458,7 +470,7 @@ fun TaskScreen(
                         scope.launch {
                             onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)
                             onUiEvent(UiEvent.CloseManageListSheet)
-                            delay(300)
+                            delay(300.milliseconds)
                             onClose()
                         }
                     }

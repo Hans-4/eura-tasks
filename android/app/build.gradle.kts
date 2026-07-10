@@ -58,6 +58,7 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.material)
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -70,7 +71,7 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("androidx.compose.material:material-icons-extended:1.7.8")
+
     implementation("androidx.navigation:navigation-compose:2.9.8")
 
     implementation("androidx.room:room-runtime:${rootProject.extra["room_version"]}")
@@ -89,4 +90,10 @@ dependencies {
     // Helper Libraries
     implementation("com.google.api-client:google-api-client-android:2.9.0")
     implementation("com.google.http-client:google-http-client-gson:2.1.0")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.6.0")
+
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+    implementation("androidx.core:core-splashscreen:1.0.0")
 }

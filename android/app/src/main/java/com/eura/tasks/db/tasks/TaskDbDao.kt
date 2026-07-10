@@ -9,6 +9,7 @@ import androidx.room.Upsert
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
 import com.eura.tasks.db.tasks.tags.TaskWithTags
+import kotlinx.datetime.Instant
 
 @Dao
 interface TaskDbDao {
@@ -19,11 +20,16 @@ interface TaskDbDao {
     @Update
     suspend fun update(todo: TaskEntity)
     @Delete
-    suspend fun deleteTodo(todo: TaskEntity)
-    @Query("SELECT * FROM deleted_tasks")
-    suspend fun getAllDeletedTasks(): List<DeletedTasksEntity>
+    suspend fun deleteTask(todo: TaskEntity)
+    @Query("DELETE FROM tasks WHERE id = :id")
+    suspend fun deleteTaskById(id: Int)
+    @Query("DELETE FROM tasks WHERE taskList = :listName")
+    suspend fun deleteTasksByListName(listName: String)
     @Query("DELETE FROM deleted_tasks WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
+
+    @Query("SELECT * FROM deleted_tasks")
+    suspend fun getAllDeletedTasks(): List<DeletedTasksEntity>
     @Query("SELECT uuid FROM tasks WHERE id = :id")
     suspend fun getTaskUuid(id: Int): String
     @Query("SELECT id FROM tasks WHERE uuid = :uuid")
@@ -42,14 +48,18 @@ interface TaskDbDao {
     suspend fun taskExists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
-    @Query("DELETE FROM tasks WHERE taskList = :listName")
-    suspend fun deleteTasksByListName(listName: String)
     @Query("SELECT * FROM tasks WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTasks(query: String): List<TaskEntity>
+
     @Query("UPDATE tasks SET title = :newTitle WHERE id = :id")
     suspend fun updateTaskTitle(id: Int, newTitle: String)
     @Query("UPDATE tasks SET description = :newDescription WHERE id = :id")
     suspend fun updateTaskDescription(id: Int, newDescription: String)
+    @Query("UPDATE tasks SET isCompleted = 1 WHERE id = :id")
+    suspend fun markAsCompleteById(id: Int)
+    @Query("UPDATE tasks SET dueDateTime = :newDateTime WHERE id = :id")
+    suspend fun updateTaskDateTime(id: Int, newDateTime: Instant?)
+
     @Transaction
     @Query("SELECT * FROM tasks WHERE taskList = :taskList")
     suspend fun getTaskWithTags(taskList: String): TaskWithTags?
@@ -59,5 +69,11 @@ interface TaskDbDao {
     suspend fun getAllTasksFromTagById(tagId: Int): List<TaskTagsEntity>
 
     @Query("DELETE FROM task_tags WHERE taskId = :taskId")
-    suspend fun removeByTaskId(taskId: Int)
+    suspend fun removeTagByTaskId(taskId: Int)
+
+
+    @Query("SELECT dueDateTime FROM tasks WHERE id = :id")
+    suspend fun getDueDateTimeById(id: Int): Instant?
+    @Query("SELECT * FROM tasks WHERE isCompleted = 0 AND dueDateTime > :now")
+    suspend fun getAllActiveTasksWithAlarms(now: Instant): List<TaskEntity>
 }

@@ -5,7 +5,7 @@ import java.time.LocalDateTime
 
 data class TaskDbState(
     val tasks: List<TaskEntity> = emptyList(),
-    val todoTitle: String = "",
+    val taskTitle: String = "",
     val todoDescription: String = "",
     val todoIsFavorite: Boolean = false,
     val todoIsCompleted: Boolean = false,
@@ -20,5 +20,9 @@ data class TaskDbState(
     val searchQuery: String = "",
     val searchResults: List<TaskEntity> = emptyList(),
 
-    val taskTags: List<TaskTagsEntity> = emptyList()
+    val taskTags: List<TaskTagsEntity> = emptyList(),
+
+    val taskDate: Long? = null,
+    val taskTimeHour: Int? = null,
+    val taskTimeMinute: Int? = null,
 )

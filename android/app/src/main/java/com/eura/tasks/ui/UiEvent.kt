@@ -26,13 +26,34 @@ sealed interface UiEvent {
     object CloseListConflictWarningAlertOpen: UiEvent
     object OpenDeleteAllCloudDataWarningDialog: UiEvent
     object CloseDeleteAllCloudDataWarningDialog: UiEvent
+
     object OpenAddTagsDialog: UiEvent
     object CloseAddTagsDialog: UiEvent
+
     object OpenAddTagTextField: UiEvent
     object CloseAddTagTextField: UiEvent
 
     object OpenSetSearchFilterBottomSheet: UiEvent
     object CloseSetSearchFilterBottomSheet: UiEvent
+
     object OpenManageTagSheet: UiEvent
     object CloseManageTagSheet: UiEvent
+
+    object OpenAddReminderDialog: UiEvent
+    object CloseAddReminderDialog: UiEvent
+
+    data class OpenTimePickDialog(val parentScreen: Int): UiEvent //1: AddReminderDialog, 2: AddRepeatsDialog
+    object CloseTimePickDialog: UiEvent
+
+    object OpenAddRepeatsDialog: UiEvent
+    object CloseAddRepeatsDialog: UiEvent
+
+    data class OpenDatePickDialog(val openedFrom: Int): UiEvent //1 = Start date, 2 = End date
+    object CloseDatePickDialog: UiEvent
+
+    object OpenNotificationPermissionScreen: UiEvent
+    object CloseNotificationPermissionScreen: UiEvent
+
+    data class SetNotificationPermissionState(val state: Boolean): UiEvent
+    data class SetAlarmPermissionState(val state: Boolean): UiEvent
 }
