@@ -49,7 +49,12 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val tag = TagsEntity(title = title)
+                        val now = Clock.System.now()
+                        val tag = TagsEntity(
+                            title = title,
+                            creationTime = now,
+                            updateTime = now
+                        )
                         tagDao.upsertTag(tag)
 
                         _state.update {
@@ -73,7 +78,12 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val tag = TagsEntity(title = title)
+                        val now = Clock.System.now()
+                        val tag = TagsEntity(
+                            title = title,
+                            creationTime = now,
+                            updateTime = now
+                        )
                         tagDao.upsertTag(tag)
 
                         tagDao.insertTaskTag(
@@ -207,7 +217,14 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        tagDao.upsertTag(TagsEntity(title = title)).toInt()
+                        val now = Clock.System.now()
+                        tagDao.upsertTag(
+                            TagsEntity(
+                                title = title,
+                                creationTime = now,
+                                updateTime = now
+                            )
+                        )
 
                         _state.update {
                             it.copy(

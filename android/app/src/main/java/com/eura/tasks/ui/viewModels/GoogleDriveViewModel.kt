@@ -73,6 +73,8 @@ data class ListConflict(
 data class TagSyncModel(
     val uuid: String,
     val name: String,
+    val creationTime: Instant,
+    val updateTime: Instant
 )
 
 data class TaskTagsSyncModel(
@@ -390,14 +392,18 @@ class GoogleDriveViewModel(
                 transformToRemote = { entity ->
                     TagSyncModel(
                         uuid = entity.tagUuid,
-                        name = entity.title
+                        name = entity.title,
+                        creationTime = entity.creationTime,
+                        updateTime = entity.updateTime
                     )
                 },
                 downloadTypeToken = typeToken,
                 transformToLocal = { model ->
                     TagsEntity(
                         tagUuid = model.uuid,
-                        title = model.name
+                        title = model.name,
+                        creationTime = model.creationTime,
+                        updateTime = model.updateTime
                     )
                 },
                 onComplete = onComplete
@@ -834,7 +840,9 @@ class GoogleDriveViewModel(
                                                     finalLocalTags.map { entity ->
                                                         TagSyncModel(
                                                             uuid = entity.tagUuid,
-                                                            name = entity.title
+                                                            name = entity.title,
+                                                            creationTime = entity.creationTime,
+                                                            updateTime = entity.updateTime
                                                         )
                                                     }
                                                 val jsonContent = gson.toJson(syncTags)
