@@ -23,7 +23,7 @@ fun TagListColumnItem(
     noTags: Boolean,
     tagList: List<TagsEntity>,
 
-    onTagList: (Int) -> Unit,
+    onTagList: (String) -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -40,7 +40,7 @@ fun TagListColumnItem(
         if (!noTags) {
             tagList.forEach { item ->
                 Button(
-                    onClick = { onTagList(item.id) },
+                    onClick = { onTagList(item.tagUuid) },
                     shape = MaterialTheme.shapes.medium,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.surface,

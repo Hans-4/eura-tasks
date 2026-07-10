@@ -11,23 +11,16 @@ import kotlinx.datetime.Instant
     foreignKeys = [
         ForeignKey(
             entity = TaskEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["taskId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = TaskEntity::class,
-            parentColumns = ["uuid"],
+            parentColumns = ["taskUuid"],
             childColumns = ["taskUuid"],
             onDelete = ForeignKey.CASCADE
         )
     ]
 )
 data class EndRepeatsEntity(
-    val taskUuid: String,
     val endsNever: Boolean,
     val endDate: Instant?,
     val endAfterRepetitions: Int?,
     @PrimaryKey
-    val taskId: Int,
+    val taskUuid: String,
 )

@@ -31,7 +31,6 @@ class RepeatDbViewModel(
         when(event) {
             is RepeatDbEvent.SaveRepeat -> {
                 val taskUuid = event.taskUuid
-                val taskId = event.taskId
 
                 val instant = Instant.fromEpochMilliseconds(_state.value.startDate!!)
 
@@ -49,7 +48,6 @@ class RepeatDbViewModel(
                                 startDate = instant,
                                 repeatEveryDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
-                                taskId = taskId
                             )
                         )
 
@@ -60,7 +58,6 @@ class RepeatDbViewModel(
                                 repeatEveryWeek = repeatEvery,
                                 repeatDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
-                                taskId = taskId
                             )
                         )
 
@@ -71,7 +68,6 @@ class RepeatDbViewModel(
                                 repeatEveryMonth = repeatEvery,
                                 repeatDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
-                                taskId = taskId
                             )
                         )
 
@@ -81,7 +77,6 @@ class RepeatDbViewModel(
                                 startDate = instant,
                                 repeatEveryYear = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
-                                taskId = taskId
                             )
                         )
                     }
@@ -95,7 +90,6 @@ class RepeatDbViewModel(
                                 endsNever = true,
                                 endDate = null,
                                 endAfterRepetitions = null,
-                                taskId = taskId
                             )
                         )
 
@@ -105,7 +99,6 @@ class RepeatDbViewModel(
                                 endsNever = false,
                                 endDate = endDateInstant,
                                 endAfterRepetitions = null,
-                                taskId = taskId
                             )
                         )
 
@@ -115,7 +108,6 @@ class RepeatDbViewModel(
                                 endsNever = false,
                                 endDate = null,
                                 endAfterRepetitions = endAfterRepeats.toInt(),
-                                taskId = taskId
                             )
                         )
                     }

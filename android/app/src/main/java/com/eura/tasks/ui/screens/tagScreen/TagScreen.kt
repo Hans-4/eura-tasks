@@ -47,7 +47,7 @@ import kotlinx.coroutines.launch
 fun TagScreen(
     tagEntity: TagsEntity,
     onClose: () -> Unit,
-    onTaskDetails: (Int, String) -> Unit,
+    onTaskDetails: (String, String) -> Unit,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onUiEvent: (UiEvent) -> Unit,
     uiState: UiState,
@@ -68,8 +68,8 @@ fun TagScreen(
     val scope = rememberCoroutineScope()
 
     val (checked, unchecked) = remember(tasks, taskTags) {
-        val checkedIds = taskTags.map { it.taskId }.toSet()
-        tasks.sortedBy { it.title }.partition { it.id in checkedIds }
+        val checkedIds = taskTags.map { it.taskUuid }.toSet()
+        tasks.sortedBy { it.title }.partition { it.taskUuid in checkedIds }
     }
 
     // 2. Sync tab selection with scroll position when scrolling stops
@@ -79,8 +79,8 @@ fun TagScreen(
         }
     }
 
-    LaunchedEffect(tagEntity.id) {
-        onTaskDbEvent(TaskDbEvent.GetAllTasksByTagId(tagEntity.id))
+    LaunchedEffect(tagEntity.tagUuid) {
+        onTaskDbEvent(TaskDbEvent.GetAllTasksByTagUuid(tagEntity.tagUuid))
     }
 
     Scaffold(

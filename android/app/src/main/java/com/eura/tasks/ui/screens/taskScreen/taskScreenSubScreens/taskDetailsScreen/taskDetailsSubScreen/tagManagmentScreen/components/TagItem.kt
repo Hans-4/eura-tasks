@@ -22,17 +22,17 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Composable
 fun TagItem(
-    onTagList: (Int) -> Unit,
+    onTagList: (String) -> Unit,
 
     tag: TagsEntity,
     taskTag: List<TaskTagsEntity>,
     task: TaskEntity,
     onTagDbEvent: (TagDbEvent) -> Unit
 ) {
-    val checked = taskTag.any { it.tagId == tag.id }
+    val checked = taskTag.any { it.tagUuid == tag.tagUuid }
 
     Button(
-        onClick = { onTagList(tag.id) },
+        onClick = { onTagList(tag.tagUuid) },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -48,14 +48,12 @@ fun TagItem(
             Checkbox(
                 onCheckedChange = {
                     if (checked) {
-                        onTagDbEvent(TagDbEvent.RemoveFromTaskByTagId(tag.id))
+                        onTagDbEvent(TagDbEvent.RemoveFromTaskByTagId(tag.tagUuid))
                     } else {
                         onTagDbEvent(
                             TagDbEvent.InsertNewTaskTag(
-                            task.id,
-                            task.uuid,
-                            tag.id,
-                            tag.uuid
+                            task.taskUuid,
+                            tag.tagUuid
                             )
                         )
                     }

@@ -17,10 +17,10 @@ import com.eura.tasks.db.tags.TagsEntity
 @Composable
 fun TagItem(
     item: TagsEntity,
-    onTagDetails: (Int) -> Unit,
+    onTagDetails: (String) -> Unit,
 ) {
     Button(
-        onClick = { onTagDetails(item.id) },
+        onClick = { onTagDetails(item.tagUuid) },
         modifier = Modifier
             .fillMaxWidth()
             .heightIn(min = 48.dp),

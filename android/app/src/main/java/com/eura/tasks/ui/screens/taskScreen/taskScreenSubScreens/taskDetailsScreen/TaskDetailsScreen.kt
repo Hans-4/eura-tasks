@@ -105,7 +105,7 @@ fun TaskDetailsScreen(
     )
 
     LaunchedEffect(taskTags) {
-        onTagDbEvent(TagDbEvent.GetAllTagsByUuid(task.uuid))
+        onTagDbEvent(TagDbEvent.GetAllTagsByUuid(task.taskUuid))
     }
 
     LaunchedEffect(Unit) {
@@ -122,7 +122,7 @@ fun TaskDetailsScreen(
                             // Saves the current title when exiting the screen to improve performance and prevent blank title
                             val taskTitle = taskDbState.taskTitle
                             if (taskTitle.isNotBlank()) {
-                                onTaskDbEvent(TaskDbEvent.UpdateTaskTitleById(task.id, taskTitle))
+                                onTaskDbEvent(TaskDbEvent.UpdateTaskTitleByUuid(task.taskUuid, taskTitle))
                             }
                             onClose()
                         }
@@ -159,8 +159,8 @@ fun TaskDetailsScreen(
                 ) {
                     Button(
                         onClick = {
-                            if (task.taskList != parentScreen) {
-                                onTaskList(task.taskList)
+                            if (task.parentListId != parentScreen) {
+                                onTaskList(task.parentListId)
                             } else {
                                 onClose()
                             }
@@ -176,7 +176,7 @@ fun TaskDetailsScreen(
                             imageVector = Icons.AutoMirrored.Rounded.List,
                             contentDescription = null
                         )
-                        Text("${stringResource(R.string.open)} '${task.taskList}'")
+                        Text("${stringResource(R.string.open)} '${task.parentListId}'")
                     }
 
                     IconButton(
@@ -226,7 +226,7 @@ fun TaskDetailsScreen(
 
                         TimeCard(
                             onReminderManagement = { onUiEvent(UiEvent.OpenAddReminderDialog) },
-                            onRemoveDateTime = { onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.id, null))},
+                            onRemoveDateTime = { onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.taskUuid, null))},
                             task = task
                         )
 
@@ -266,7 +266,7 @@ fun TaskDetailsScreen(
         repeatDbState = repeatDbState,
 
         onDateSelected = { date ->
-            onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.id, date))
+            onTaskDbEvent(TaskDbEvent.UpdateTaskDateTime(task.taskUuid, date))
             onUiEvent(UiEvent.CloseAddReminderDialog)
         },
     )
@@ -275,7 +275,7 @@ fun TaskDetailsScreen(
         DeleteTaskAlertDialog(
             onConfirm = {
                 task.let {
-                    onTaskDbEvent(TaskDbEvent.DeleteTodoById(task.id))
+                    onTaskDbEvent(TaskDbEvent.DeleteTaskByUuid(task.taskUuid))
                     scope.launch {
                         onUiEvent(UiEvent.CloseConfirmDeletionDialog)
                         delay(300.milliseconds)
@@ -447,7 +447,7 @@ fun TimeCard(
     task: TaskEntity
 ) {
     val converter = TypeConverter()
-    val dueDateTimeString = if (task.dueDateTime != null) converter.formatInstant(task.dueDateTime) else "No reminder"
+    val dueDateTimeString = if (task.notificationTime != null) converter.formatInstant(task.notificationTime) else "No reminder"
 
     Button(
         onClick = { onReminderManagement() },
@@ -500,11 +500,11 @@ fun DescriptionCard(
     onTaskDbEvent: (TaskDbEvent) -> Unit
 ) {
     BasicTextField(
-        value = task.description,
+        value = task.description?: "",
         onValueChange = {
             onTaskDbEvent(
-                TaskDbEvent.UpdateDescriptionById(
-                    id = task.id,
+                TaskDbEvent.UpdateDescriptionByUuid(
+                    uuid = task.taskUuid,
                     newDescription = it
                 )
             )
@@ -519,7 +519,7 @@ fun DescriptionCard(
                 contentAlignment = Alignment.TopStart,
             ) {
                 Text(
-                    text = if (task.description.isEmpty()) stringResource(R.string.add_description) else "",
+                    text = if (task.description?.isEmpty() ?: true) stringResource(R.string.add_description) else "",
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(
                         alpha = 0.6f
                     ),

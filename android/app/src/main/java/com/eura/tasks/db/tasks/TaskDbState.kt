@@ -12,7 +12,7 @@ data class TaskDbState(
     val taskHasTags: Boolean = false,
     val dueDateTime: LocalDateTime? = null,
     val taskParentList: String = "",
-    val tagIds: List<Int> = emptyList(),
+    val taskParentListId: String = "",
     val tagUuids: List<String> = emptyList(),
     val sortType: SortType = SortType.TITLE,
     val tasksFromCurrentTag: List<TaskEntity> = emptyList(),

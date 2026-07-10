@@ -16,12 +16,13 @@ class AlarmService (
 
     fun showNotification(
         id: Int,
+        uuid: String,
         taskTitle: String,
         taskDescription: String
     ) {
         val activityIntent = Intent(
             Intent.ACTION_VIEW,
-            "euratasks://taskdetails/$id/Notification".toUri(),
+            "euratasks://taskdetails/$uuid/Notification".toUri(),
             context,
             MainActivity::class.java
         )
@@ -39,8 +40,9 @@ class AlarmService (
             Intent(context, AlarmReceiver::class.java).apply {
                 action = ACTION_MARK_AS_COMPLETE
                 putExtra("id", id)
+                putExtra("uuid", uuid)
             },
-            PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val rescheduleIntent = PendingIntent.getBroadcast(
@@ -49,6 +51,7 @@ class AlarmService (
             Intent(context, AlarmReceiver::class.java).apply {
                 action = ACTION_RESCHEDULE_TOMORROW
                 putExtra("id", id)
+                putExtra("uuid", uuid)
                 putExtra("title", taskTitle)
                 putExtra("description", taskDescription)
             },

@@ -69,13 +69,13 @@ fun SearchScreen(
     tagDbState: TagDbState,
     uiState: UiState,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
-    onTaskDetails: (Int, String) -> Unit,
+    onTaskDetails: (String, String) -> Unit,
     onSearchEvent: (SearchEvent) -> Unit,
     searchState: SearchState,
     onUiEvent: (UiEvent) -> Unit,
 
     onTaskList: (String) -> Unit,
-    onTagDetails: (Int) -> Unit,
+    onTagDetails: (String) -> Unit,
 ) {
     var textValue by remember { mutableStateOf(taskDbState.searchQuery) }
 
@@ -95,7 +95,7 @@ fun SearchScreen(
             SearchFilter.TASK -> taskDbState.tasks.filter {
                 searchState.searchQuery.isBlank() ||
                         it.title.contains(searchState.searchQuery, ignoreCase = true) ||
-                        it.description.contains(searchState.searchQuery, ignoreCase = true)
+                        it.description?.contains(searchState.searchQuery, ignoreCase = true) == true
             }
             SearchFilter.LIST -> listDbState.userLists.filter {
                 searchState.searchQuery.isBlank() ||
@@ -234,9 +234,9 @@ fun SearchScreen(
         ) {
             items(filteredItems, key = { item ->
                 when (item) {
-                    is TaskEntity -> "task_${item.id}"
-                    is UserListEntity -> "list_${item.id}"
-                    is TagsEntity -> "tag_${item.id}"
+                    is TaskEntity -> "task_${item.taskUuid}"
+                    is UserListEntity -> "list_${item.listId}"
+                    is TagsEntity -> "tag_${item.tagUuid}"
                     else -> item.hashCode()
                 }
             }) { item ->

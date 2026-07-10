@@ -9,7 +9,7 @@ data class UserListEntity(
     override val title: String,
     override val type: String,
     override val colorString: String,
-    val uuid: String = UUID.randomUUID().toString(),
-    @PrimaryKey(autoGenerate = true)
-    val id: Int = 0,
+
+    @PrimaryKey
+    override val listId: String = UUID.randomUUID().toString(),
 ) : TaskList

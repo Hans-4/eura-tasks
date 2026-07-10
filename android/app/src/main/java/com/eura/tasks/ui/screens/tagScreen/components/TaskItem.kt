@@ -23,17 +23,17 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 @Composable
 fun TaskItem(
     item: TaskEntity,
-    onTaskDetails: (Int, String) -> Unit,
+    onTaskDetails: (String, String) -> Unit,
     parentScreen: String,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
 
     tagEntity: TagsEntity,
     taskTags: List<TaskTagsEntity>
 ) {
-    val checked = taskTags.any { it.taskId == item.id }
+    val checked = taskTags.any { it.taskUuid == item.taskUuid }
 
     Button(
-        onClick = { onTaskDetails(item.id, parentScreen) },
+        onClick = { onTaskDetails(item.taskUuid, parentScreen) },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -49,14 +49,12 @@ fun TaskItem(
             Checkbox(
                 onCheckedChange = {
                     if (checked) {
-                        onTaskDbEvent(TaskDbEvent.RemoveFromTagByTaskId(item.id))
+                        onTaskDbEvent(TaskDbEvent.RemoveFromTagByTaskId(item.taskUuid))
                     } else {
                         onTaskDbEvent(
                             TaskDbEvent.InsertNewTaskTag(
-                                item.id,
-                                item.uuid,
-                                tagEntity.id,
-                                tagEntity.uuid
+                                item.taskUuid,
+                                tagEntity.tagUuid
                             )
                         )
                     }
@@ -66,7 +64,7 @@ fun TaskItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.title, fontSize = 18.sp)
                 Text(
-                    text = item.taskList,
+                    text = item.parentListId,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

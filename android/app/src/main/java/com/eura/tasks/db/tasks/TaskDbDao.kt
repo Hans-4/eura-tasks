@@ -21,59 +21,60 @@ interface TaskDbDao {
     suspend fun update(todo: TaskEntity)
     @Delete
     suspend fun deleteTask(todo: TaskEntity)
-    @Query("DELETE FROM tasks WHERE id = :id")
-    suspend fun deleteTaskById(id: Int)
-    @Query("DELETE FROM tasks WHERE taskList = :listName")
+    @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
+    suspend fun deleteTaskByUuid(uuid: String)
+    @Query("DELETE FROM tasks WHERE parentListId = :listName")
     suspend fun deleteTasksByListName(listName: String)
     @Query("DELETE FROM deleted_tasks WHERE deletionDate < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 
     @Query("SELECT * FROM deleted_tasks")
     suspend fun getAllDeletedTasks(): List<DeletedTasksEntity>
-    @Query("SELECT uuid FROM tasks WHERE id = :id")
-    suspend fun getTaskUuid(id: Int): String
-    @Query("SELECT id FROM tasks WHERE uuid = :uuid")
-    suspend fun getTaskIdByUuid(uuid: String): Int
-    @Query("DELETE FROM tasks WHERE id = :id")
-    suspend fun deleteTodoById(id: Int)
-    @Query("SELECT * FROM tasks ORDER BY id ASC")
-    fun getAllTasksByIdAsc(): Flow<List<TaskEntity>>
-    @Query("SELECT * FROM tasks ORDER BY id DESC")
-    fun getAllTasksByIdDesc(): Flow<List<TaskEntity>>
+    @Query("SELECT * FROM tasks WHERE taskUuid = :id")
+    suspend fun getTaskById(id: List<String>): List<TaskEntity>
+    @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
+    suspend fun deleteTodoByUuid(uuid: String)
+    @Query("SELECT * FROM tasks ORDER BY taskUuid ASC")
+    fun getAllTasksByUuidAsc(): Flow<List<TaskEntity>>
+    @Query("SELECT * FROM tasks ORDER BY taskUuid DESC")
+    fun getAllTasksByUuidDesc(): Flow<List<TaskEntity>>
     @Query("SELECT * FROM tasks ORDER BY title ASC")
     fun getAllTodosByTitleAsc(): Flow<List<TaskEntity>>
-    @Query("SELECT * FROM tasks ORDER BY dueDateTime ASC")
+    @Query("SELECT * FROM tasks ORDER BY notificationTime ASC")
     fun getAllTasksByDateAsc(): Flow<List<TaskEntity>>
-    @Query("SELECT EXISTS(SELECT 1 FROM tasks WHERE uuid = :uuid)")
+    @Query("SELECT EXISTS(SELECT 1 FROM tasks WHERE taskUuid = :uuid)")
     suspend fun taskExists(uuid: String): Boolean
     @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
     suspend fun deleted(uuid: String): Boolean
     @Query("SELECT * FROM tasks WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTasks(query: String): List<TaskEntity>
 
-    @Query("UPDATE tasks SET title = :newTitle WHERE id = :id")
-    suspend fun updateTaskTitle(id: Int, newTitle: String)
-    @Query("UPDATE tasks SET description = :newDescription WHERE id = :id")
-    suspend fun updateTaskDescription(id: Int, newDescription: String)
-    @Query("UPDATE tasks SET isCompleted = 1 WHERE id = :id")
-    suspend fun markAsCompleteById(id: Int)
-    @Query("UPDATE tasks SET dueDateTime = :newDateTime WHERE id = :id")
-    suspend fun updateTaskDateTime(id: Int, newDateTime: Instant?)
+    @Query("UPDATE tasks SET title = :newTitle WHERE taskUuid = :uuid")
+    suspend fun updateTaskTitle(uuid: String, newTitle: String)
+    @Query("UPDATE tasks SET description = :newDescription WHERE taskUuid = :uuid")
+    suspend fun updateTaskDescription(uuid: String, newDescription: String)
+    @Query("UPDATE tasks SET isCompleted = 1 WHERE taskUuid = :uuid")
+    suspend fun markAsCompleteByUuid(uuid: String)
+    @Query("UPDATE tasks SET notificationTime = :newDateTime WHERE taskUuid = :uuid")
+    suspend fun updateTaskDateTime(uuid: String, newDateTime: Instant?)
 
     @Transaction
-    @Query("SELECT * FROM tasks WHERE taskList = :taskList")
+    @Query("SELECT * FROM tasks WHERE parentListId = :taskList")
     suspend fun getTaskWithTags(taskList: String): TaskWithTags?
-    @Query("SELECT * FROM tasks WHERE id IN (:ids)")
-    suspend fun getTasksByIds(ids: List<Int>): List<TaskEntity>
-    @Query("SELECT * FROM task_tags WHERE tagId = :tagId")
-    suspend fun getAllTasksFromTagById(tagId: Int): List<TaskTagsEntity>
+    @Query("SELECT * FROM tasks WHERE taskUuid IN (:uuids)")
+    suspend fun getTasksByUuids(uuids: List<String>): List<TaskEntity>
+    @Query("SELECT * FROM task_tags WHERE tagUuid = :tagUuid")
+    suspend fun getAllTasksFromTagByUuid(tagUuid: String): List<TaskTagsEntity>
 
-    @Query("DELETE FROM task_tags WHERE taskId = :taskId")
-    suspend fun removeTagByTaskId(taskId: Int)
+    @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
+    suspend fun removeTagByTaskUuid(taskUuid: String)
 
 
-    @Query("SELECT dueDateTime FROM tasks WHERE id = :id")
-    suspend fun getDueDateTimeById(id: Int): Instant?
-    @Query("SELECT * FROM tasks WHERE isCompleted = 0 AND dueDateTime > :now")
+    @Query("SELECT notificationTime FROM tasks WHERE taskUuid = :uuid")
+    suspend fun getNotificationTimeByUuid(uuid: String): Instant?
+    @Query("SELECT * FROM tasks WHERE isCompleted = 0 AND notificationTime > :now")
     suspend fun getAllActiveTasksWithAlarms(now: Instant): List<TaskEntity>
+
+    @Query("SELECT listId FROM user_lists WHERE title = :title")
+    suspend fun getParentListId(title: String): String
 }

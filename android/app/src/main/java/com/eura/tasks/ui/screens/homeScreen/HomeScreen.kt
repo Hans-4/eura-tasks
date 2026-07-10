@@ -114,8 +114,8 @@ fun HomeScreen(
     repeatDbState: RepeatDbState,
 
 
-    onTaskList: (String) -> Unit,
-    onTagList: (Int) -> Unit,
+    onTaskList: (String, String) -> Unit,
+    onTagList: (String) -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
     uiState: UiState,
@@ -346,13 +346,13 @@ fun HomeScreen(
 
                                     val (completedTaskCount, totalTaskCount) = when (item.title) {
                                         "SYSTEM_TODAY" -> Pair(
-                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size,
-                                            taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size
+                                            taskDbState.tasks.filter { it.isCompleted && it.notificationTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size,
+                                            taskDbState.tasks.filter { it.notificationTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == currentDate }.size
                                         )
 
                                         "SYSTEM_SCHEDULE" -> Pair(
-                                            taskDbState.tasks.filter { it.isCompleted && it.dueDateTime != null }.size,
-                                            taskDbState.tasks.filter { it.dueDateTime != null }.size
+                                            taskDbState.tasks.filter { it.isCompleted && it.notificationTime != null }.size,
+                                            taskDbState.tasks.filter { it.notificationTime != null }.size
                                         )
 
 
@@ -387,7 +387,7 @@ fun HomeScreen(
                                             title = title,
                                             progress = progress,
                                             color = color,
-                                            onTask = { onTaskList(item.title) }
+                                            onTask = { onTaskList(item.listId, item.title) }
                                         )
                                     }
                                 }
