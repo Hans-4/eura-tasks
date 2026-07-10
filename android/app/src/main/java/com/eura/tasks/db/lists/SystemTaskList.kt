@@ -1,9 +1,12 @@
 package com.eura.tasks.db.lists
 
+import java.util.UUID
+
 data class SystemListItem(
     override val title: String,
     override val type: String,
     override val colorString: String,
+    override val listId: String = UUID.randomUUID().toString(),
 ) : TaskList
 
 val systemTaskList = listOf(

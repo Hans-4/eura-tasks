@@ -1,11 +1,9 @@
 package com.eura.tasks.ui.screens.searchScreen.components
 
-import android.widget.RadioButton
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Star
@@ -28,12 +26,12 @@ import com.eura.tasks.db.tasks.TaskEntity
 @Composable
 fun TaskItem(
     item: TaskEntity,
-    onTaskDetails: (Int, String) -> Unit,
+    onTaskDetails: (String, String) -> Unit,
     parentScreen: String,
     onTaskDbEvent: (TaskDbEvent) -> Unit,
 ) {
     Button(
-        onClick = { onTaskDetails(item.id, parentScreen) },
+        onClick = { onTaskDetails(item.taskUuid, parentScreen) },
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant,
             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -55,7 +53,7 @@ fun TaskItem(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = item.title, fontSize = 18.sp)
                 Text(
-                    text = item.taskList,
+                    text = item.parentListId,
                     fontSize = 14.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

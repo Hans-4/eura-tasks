@@ -48,13 +48,11 @@ class TagDbViewModel(
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
                         val tag = TagsEntity(title = title)
-                        val generatedId = tagDao.upsertTag(tag).toInt()
 
                         _state.update {
                             it.copy(
                                 tagTitle = "",
-                                selectedTagUuids = it.selectedTagUuids + tag.uuid,
-                                selectedTagIds = it.selectedTagIds + generatedId
+                                selectedTagUuids = it.selectedTagUuids + tag.tagUuid,
                             )
                         }
                         cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
@@ -74,23 +72,17 @@ class TagDbViewModel(
                     } else {
                         val tag = TagsEntity(title = title)
 
-                        val tagId = tagDao.upsertTag(tag).toInt()
-
                         tagDao.insertTaskTag(
                             TaskTagsEntity(
-                                taskId = event.taskId,
-                                taskUuid = event.taskUuid,
-                                tagId = tagId,
-                                tagUuid = tag.uuid
+                                taskUuid = event.taskId,
+                                tagUuid = tag.tagUuid
                             )
                         )
                         _state.update {
                             it.copy(
                                 taskTags = it.taskTags + TaskTagsEntity(
-                                    taskId = event.taskId,
-                                    taskUuid = event.taskUuid,
-                                    tagId = tagId,
-                                    tagUuid = tag.uuid
+                                    taskUuid = event.taskId,
+                                    tagUuid = tag.tagUuid
                                 )
                             )
                         }
@@ -112,8 +104,7 @@ class TagDbViewModel(
             is TagDbEvent.SelectTag -> {
                 _state.update {
                     it.copy(
-                        selectedTagIds = it.selectedTagIds + event.id,
-                        selectedTagUuids = it.selectedTagUuids + event.uuid
+                        selectedTagUuids = it.selectedTagUuids + event.id
                     )
                 }
             }
@@ -121,7 +112,6 @@ class TagDbViewModel(
             is TagDbEvent.UnselectTag -> {
                 _state.update {
                     it.copy(
-                        selectedTagIds = it.selectedTagIds - event.id,
                         selectedTagUuids = it.selectedTagUuids - event.uuid
                     )
                 }
@@ -131,7 +121,6 @@ class TagDbViewModel(
                 _state.update {
                     it.copy(
                         selectedTagUuids = emptyList(),
-                        selectedTagIds = emptyList()
                     )
                 }
             }
@@ -166,7 +155,7 @@ class TagDbViewModel(
 
                 viewModelScope.launch {
                     val deletedTag = DeletedTagsEntity(
-                        deletedUuid = tagDao.getTagUuidById(event.tag.id),
+                        deletedUuid = tagDao.getTagUuidById(event.tag.tagUuid),
                         deletionDate = currentDateTime
                     )
                     tagDao.upsertDeletedTag(deletedTag)
@@ -178,18 +167,14 @@ class TagDbViewModel(
                 viewModelScope.launch {
                     tagDao.insertTaskTag(
                         TaskTagsEntity(
-                            taskId = event.taskId,
                             taskUuid = event.taskUuid,
-                            tagId = event.tagId,
                             tagUuid = event.tagUuid
                         )
                     )
                     _state.update {
                         it.copy(
                             taskTags = it.taskTags + TaskTagsEntity(
-                                taskId = event.taskId,
                                 taskUuid = event.taskUuid,
-                                tagId = event.tagId,
                                 tagUuid = event.tagUuid
                             )
                         )
@@ -202,7 +187,7 @@ class TagDbViewModel(
                     tagDao.removeByTagId(event.tagId)
                     _state.update { it ->
                         it.copy(
-                            taskTags = it.taskTags.filter { it.tagId != event.tagId }
+                            taskTags = it.taskTags.filter { it.tagUuid != event.tagId }
                         )
                     }
                 }

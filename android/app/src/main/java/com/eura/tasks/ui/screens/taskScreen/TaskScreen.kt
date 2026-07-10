@@ -88,11 +88,13 @@ fun TaskScreen(
     onTaskDbEvent: (TaskDbEvent) -> Unit,
     onListDbEvent: (ListDbEvent) -> Unit,
     onClose: () -> Unit,
-    onTaskDetails: (Int, String) -> Unit,
+    onTaskDetails: (String, String) -> Unit,
     uiState: UiState,
     taskDbState: TaskDbState,
     listDbState: ListDbState,
-    pageName: String,
+
+    pageData: Pair<String, String>, //first = listId, second = listName
+
     darkTheme: Boolean = isSystemInDarkTheme(),
 
     onRepeatDbEvent: (RepeatDbEvent) -> Unit,
@@ -102,12 +104,13 @@ fun TaskScreen(
 
     val scope = rememberCoroutineScope()
 
-    val pageTitle = Converter.pageNameConverter(pageName = pageName)
+    val pageId = pageData.first
+    val pageTitle = Converter.pageNameConverter(pageName = pageData.second)
 
     val taskLists = listDbState.userLists
 
-    val pageList = remember(pageName, taskLists) {
-        taskLists.find { it.title == pageName } ?: systemTaskList.find { it.title == pageName }
+    val pageList = remember(pageData.second, taskLists) {
+        taskLists.find { it.title == pageData.second } ?: systemTaskList.find { it.title == pageData.second }
     }
 
     val pageColor = Converter.colorStringConverter(
@@ -115,13 +118,13 @@ fun TaskScreen(
         colorString = pageList?.colorString
     )
 
-    val tasksToShow = when (pageName) {
-        "SYSTEM_TODAY" -> taskDbState.tasks.filter { it.dueDateTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == Clock.System.todayIn(TimeZone.currentSystemDefault()) }
-        "SYSTEM_SCHEDULE" -> taskDbState.tasks.filter { it.dueDateTime != null }
+    val tasksToShow = when (pageData.second) {
+        "SYSTEM_TODAY" -> taskDbState.tasks.filter { it.notificationTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == Clock.System.todayIn(TimeZone.currentSystemDefault()) }
+        "SYSTEM_SCHEDULE" -> taskDbState.tasks.filter { it.notificationTime != null }
         "SYSTEM_ALL" -> taskDbState.tasks
         "SYSTEM_FAVORITES" ->  taskDbState.tasks.filter { it.isFavorite }
         "SYSTEM_WITH_TAGS" -> taskDbState.tasks.filter { it.hasTags }
-        else -> taskDbState.tasks.filter { it.taskList == pageName }
+        else -> taskDbState.tasks.filter { it.parentListId == pageId }
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -287,7 +290,7 @@ fun TaskScreen(
 
                             tasksToShow.filter { !it.isCompleted }.forEach { task ->
                                 Button(
-                                    onClick = { onTaskDetails(task.id, pageTitle) },
+                                    onClick = { onTaskDetails(task.taskUuid, pageTitle) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -308,7 +311,7 @@ fun TaskScreen(
                                         )
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(text = task.title, fontSize = 18.sp)
-                                            if (task.description.isNotBlank()) {
+                                            if (task.description?.isNotBlank() ?: false) {
                                                 Text(
                                                     text = task.description,
                                                     fontSize = 14.sp,
@@ -372,7 +375,7 @@ fun TaskScreen(
 
                             tasksToShow.filter { it.isCompleted }.forEach { task ->
                                 Button(
-                                    onClick = { onTaskDetails(task.id, pageTitle) },
+                                    onClick = { onTaskDetails(task.taskUuid, pageTitle) },
                                     colors = ButtonDefaults.buttonColors(
                                         containerColor = MaterialTheme.colorScheme.surfaceVariant,
                                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
@@ -393,7 +396,7 @@ fun TaskScreen(
                                         )
                                         Column(modifier = Modifier.weight(1f)) {
                                             Text(text = task.title, fontSize = 18.sp)
-                                            if (task.description.isNotBlank()) {
+                                            if (task.description?.isNotBlank() ?: false) {
                                                 Text(
                                                     text = task.description,
                                                     fontSize = 14.sp,
@@ -444,7 +447,7 @@ fun TaskScreen(
                     onUiEvent = onUiEvent,
                     taskDbState = taskDbState,
                     uiState = uiState,
-                    currentTab = pageName,
+                    currentTab = pageData.second,
                     firstUserTaskList = taskLists.first().title,
                     taskLists = taskLists,
 
@@ -455,7 +458,7 @@ fun TaskScreen(
         }
         if (uiState.isManageListSheetOpen) {
             ManageListSheet(
-                pageName = pageName,
+                pageName = pageData.second,
                 onConfirm = {
                     onUiEvent(UiEvent.OpenDeleteAllTasksWarningDialog)
                 },
@@ -466,7 +469,7 @@ fun TaskScreen(
             DeleteAllTasksInListAlert(
                 onConfirm = {
                     pageList?.let {
-                        onListDbEvent(ListDbEvent.DeleteListByName(pageName))
+                        onListDbEvent(ListDbEvent.DeleteListByName(pageData.second))
                         scope.launch {
                             onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)
                             onUiEvent(UiEvent.CloseManageListSheet)

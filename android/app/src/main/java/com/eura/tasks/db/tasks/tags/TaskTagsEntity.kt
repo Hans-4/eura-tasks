@@ -7,37 +7,24 @@ import com.eura.tasks.db.tasks.TaskEntity
 
 @Entity(
     tableName = "task_tags",
-    primaryKeys = ["taskId", "tagId"],
+    primaryKeys = ["taskUuid", "tagUuid"],
     foreignKeys = [
         ForeignKey(
             entity = TagsEntity::class,
-            parentColumns = ["uuid"],
+            parentColumns = ["tagUuid"],
             childColumns = ["tagUuid"],
             onDelete = ForeignKey.CASCADE
         ),
-        ForeignKey(
-            entity = TagsEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["tagId"],
-            onDelete = ForeignKey.CASCADE
-        ),
+
         ForeignKey(
             entity = TaskEntity::class,
-            parentColumns = ["uuid"],
+            parentColumns = ["taskUuid"],
             childColumns = ["taskUuid"],
             onDelete = ForeignKey.CASCADE
         ),
-        ForeignKey(
-            entity = TaskEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["taskId"],
-            onDelete = ForeignKey.CASCADE
-        )
     ]
 )
 data class TaskTagsEntity(
-    val taskId: Int,
     val taskUuid: String,
-    val tagId: Int,
     val tagUuid: String,
 )

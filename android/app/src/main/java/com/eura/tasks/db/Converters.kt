@@ -8,16 +8,6 @@ import java.time.format.DateTimeFormatter
 import kotlinx.datetime.Instant
 
 class Converters {
-    @TypeConverter
-    fun timestampToDate(value: Long?): Instant? {
-        return value?.let {
-            Instant.fromEpochMilliseconds(it)
-        }
-    }
-    @TypeConverter
-    fun dateToTimestamp(date: Instant?): Long? {
-        return date?.toEpochMilliseconds()
-    }
     private val formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     @TypeConverter
     fun fromLocalDateTime(value: LocalDateTime?): String? {
@@ -35,5 +25,14 @@ class Converters {
     @TypeConverter
     fun toStringList(json: String?): List<String>? {
         return Gson().fromJson(json, object : TypeToken<List<String>>() {}.type)
+    }
+
+    @TypeConverter
+    fun instantToISO(instant: Instant?): String? {
+        return instant?.let { instant.toString() }
+    }
+    @TypeConverter
+    fun isoToInstant(isoString: String?): Instant? {
+        return isoString?.let { Instant.parse(it) }
     }
 }

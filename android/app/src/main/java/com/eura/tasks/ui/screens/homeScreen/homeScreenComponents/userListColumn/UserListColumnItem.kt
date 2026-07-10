@@ -26,7 +26,7 @@ fun UserListColumnItem(
     taskLists: List<TaskList>,
     systemThemeIndex: Int,
     taskDbState: TaskDbState,
-    onTaskList: (String) -> Unit
+    onTaskList: (String, String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -56,7 +56,7 @@ fun UserListColumnItem(
                         colorString = item.colorString
                     )
                     val itemName = Converter.pageNameConverter(item.title)
-                    val taskListCount = taskDbState.tasks.filter { it.taskList == item.title }.size
+                    val taskListCount = taskDbState.tasks.filter { it.parentListId == item.listId }.size
 
                     UserTaskLists(
                         index = index,
@@ -64,7 +64,7 @@ fun UserListColumnItem(
                         icon = icon,
                         count = taskListCount,
                         color = colorItem,
-                        onClick = { onTaskList(item.title) }
+                        onClick = { onTaskList(item.listId, item.title) }
                     )
                 }
             }

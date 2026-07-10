@@ -4,4 +4,5 @@ interface TaskList {
     val title: String
     val type: String
     val colorString: String
+    val listId: String
 }

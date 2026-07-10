@@ -11,24 +11,17 @@ import kotlinx.datetime.Instant
     foreignKeys = [
         ForeignKey(
             entity = TaskEntity::class,
-            parentColumns = ["id"],
-            childColumns = ["taskId"],
-            onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = TaskEntity::class,
-            parentColumns = ["uuid"],
+            parentColumns = ["taskUuid"],
             childColumns = ["taskUuid"],
             onDelete = ForeignKey.CASCADE,
         ),
     ],
 )
 data class RepeatEveryMonthEntity(
-    val taskUuid: String,
     val startDate: Instant,
     val repeatEveryMonth: Int,
     val repeatDay: Int,
     val minutesSinceMidnight: Int?,
     @PrimaryKey
-    val taskId: Int,
+    val taskUuid: String,
 )

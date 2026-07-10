@@ -22,11 +22,12 @@ class BootReceiver : BroadcastReceiver() {
 
                     val pendingTasks = db.taskDao.getAllActiveTasksWithAlarms(now)
                     pendingTasks.forEach { task ->
-                        val triggerTime = task.dueDateTime?.toEpochMilliseconds() ?: 0
+                        val triggerTime = task.notificationTime?.toEpochMilliseconds() ?: 0
                         scheduler.scheduleAlarm(
-                            id = task.id,
+                            id = task.taskUuid.hashCode(),
+                            uuid = task.taskUuid,
                             title = task.title,
-                            description = task.description,
+                            description = task.description ?: "",
                             triggerAtMillis = triggerTime
                         )
                     }

@@ -119,7 +119,7 @@ class ListDbViewModel(
                 title = name,
                 type = type,
                 colorString = color,
-                uuid = uuid
+                listId = uuid
             )
             listDao.upsertList(list)
         }
@@ -138,7 +138,7 @@ class ListDbViewModel(
             title = name,
             type = type,
             colorString = color,
-            uuid = uuid
+            listId = uuid
         )
         listDao.upsertList(list)
     }

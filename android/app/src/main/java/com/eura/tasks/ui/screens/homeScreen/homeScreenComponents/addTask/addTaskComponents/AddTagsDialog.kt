@@ -74,7 +74,7 @@ fun AddTagsDialog(
             TextButton(
                 onClick = {
                     onClose()
-                    onTaskDbEvent(TaskDbEvent.SetTaskTags(tagDbState.selectedTagUuids, tagDbState.selectedTagIds))
+                    onTaskDbEvent(TaskDbEvent.SetTaskTags(tagDbState.selectedTagUuids))
                     onTagDbEvent(TagDbEvent.UncheckAllTags)
                 }
             ) {
@@ -120,13 +120,13 @@ fun AddTagsDialog(
                         item {
                             if (!isEmpty) {
                                 tagList.forEach { item ->
-                                    val isChecked = tagDbState.selectedTagIds.contains(item.id)
+                                    val isChecked = tagDbState.selectedTagUuids.contains(item.tagUuid)
                                     Button(
                                         onClick = {
                                             if (isChecked) {
-                                                onTagDbEvent(TagDbEvent.UnselectTag(item.id, item.uuid))
+                                                onTagDbEvent(TagDbEvent.UnselectTag(item.tagUuid))
                                             } else {
-                                                onTagDbEvent(TagDbEvent.SelectTag(item.id, item.uuid))
+                                                onTagDbEvent(TagDbEvent.SelectTag(item.tagUuid))
                                             }
                                         },
                                         shape = RoundedCornerShape(0.dp),
@@ -144,9 +144,9 @@ fun AddTagsDialog(
                                                 checked = isChecked,
                                                 onCheckedChange = {
                                                     if (isChecked) {
-                                                        onTagDbEvent(TagDbEvent.UnselectTag(item.id, item.uuid))
+                                                        onTagDbEvent(TagDbEvent.UnselectTag(item.tagUuid))
                                                     } else {
-                                                        onTagDbEvent(TagDbEvent.SelectTag(item.id, item.uuid))
+                                                        onTagDbEvent(TagDbEvent.SelectTag(item.tagUuid))
                                                     }
                                                 }
                                             )

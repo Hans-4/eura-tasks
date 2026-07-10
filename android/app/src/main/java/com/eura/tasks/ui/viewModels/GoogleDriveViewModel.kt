@@ -39,13 +39,14 @@ import java.util.Collections
 data class TaskSyncModel(
     val uuid: String,
     val title: String,
-    val description: String,
+    val description: String?,
     val isFavorite: Boolean,
     val isCompleted: Boolean,
     val hasTags: Boolean,
-    val taskList: String,
+    val parentListId: String,
     val dueDateTime: Instant?,
     val creationTime: Instant,
+    val updateTime: Instant
 )
 
 data class ListSyncModel(
@@ -373,7 +374,7 @@ class GoogleDriveViewModel(
                 localData = localLists,
                 transformToRemote = { entity ->
                     ListSyncModel(
-                        uuid = entity.uuid,
+                        uuid = entity.listId,
                         title = entity.title,
                         color = entity.colorString,
                         type = entity.type
@@ -382,7 +383,7 @@ class GoogleDriveViewModel(
                 downloadTypeToken = typeToken,
                 transformToLocal = { model ->
                     UserListEntity(
-                        uuid = model.uuid,
+                        listId = model.uuid,
                         title = model.title,
                         colorString = model.color,
                         type = model.type
@@ -410,14 +411,14 @@ class GoogleDriveViewModel(
                 localData = localTags,
                 transformToRemote = { entity ->
                     TagSyncModel(
-                        uuid = entity.uuid,
+                        uuid = entity.tagUuid,
                         name = entity.title
                     )
                 },
                 downloadTypeToken = typeToken,
                 transformToLocal = { model ->
                     TagsEntity(
-                        uuid = model.uuid,
+                        tagUuid = model.uuid,
                         title = model.name
                     )
                 },
@@ -481,13 +482,9 @@ class GoogleDriveViewModel(
                 },
                 downloadTypeToken = typeToken,
                 transformToLocal = { model ->
-                    val tagId = tagDao.getTagIdByUuid(model.tagUUid)
-                    val taskId = taskDao.getTaskIdByUuid(model.taskUuid)
 
                     TaskTagsEntity(
-                        taskId = taskId,
                         taskUuid = model.taskUuid,
-                        tagId = tagId,
                         tagUuid = model.tagUUid
                     )
                 },
@@ -592,15 +589,16 @@ class GoogleDriveViewModel(
 
                     downloadedTasks.add(
                         TaskEntity(
-                            uuid = syncModel.uuid,
+                            taskUuid = syncModel.uuid,
                             title = syncModel.title,
                             description = syncModel.description,
                             isFavorite = syncModel.isFavorite,
                             isCompleted = syncModel.isCompleted,
                             hasTags = syncModel.hasTags,
-                            dueDateTime = syncModel.dueDateTime,
+                            notificationTime = syncModel.dueDateTime,
                             creationTime = syncModel.creationTime,
-                            taskList = syncModel.taskList,
+                            updateTime = syncModel.updateTime,
+                            parentListId = syncModel.parentListId,
                         )
                     )
                 } catch (e: Exception) {
@@ -697,16 +695,16 @@ class GoogleDriveViewModel(
 
                                             val localActiveLists = listDao.getAllLists().first()
                                             val localActiveListUuids =
-                                                localActiveLists.map { it.uuid }.toSet()
+                                                localActiveLists.map { it.listId }.toSet()
 
                                             val cleanActiveLists = cloudActiveLists.filter { list ->
-                                                list.uuid !in allDeletedListUuids
+                                                list.listId !in allDeletedListUuids
                                             }
 
                                             var needsReupload = false
 
                                             for (cloudList in cleanActiveLists) {
-                                                if (cloudList.uuid !in localActiveListUuids) {
+                                                if (cloudList.listId !in localActiveListUuids) {
                                                     val conflict =
                                                         localActiveLists.find { it.title == cloudList.title }
                                                     if (conflict != null) {
@@ -724,7 +722,7 @@ class GoogleDriveViewModel(
                                                         if (winner === cloudList) {
                                                             listDao.upsertList(
                                                                 conflict.copy(
-                                                                    uuid = cloudList.uuid,
+                                                                    listId = cloudList.listId,
                                                                     colorString = cloudList.colorString,
                                                                     type = cloudList.type
                                                                 )
@@ -749,7 +747,7 @@ class GoogleDriveViewModel(
                                                             name = cloudList.title,
                                                             color = cloudList.colorString,
                                                             type = cloudList.type,
-                                                            uuid = cloudList.uuid
+                                                            uuid = cloudList.listId
                                                         )
                                                         Log.d(
                                                             "eura-tasks",
@@ -790,7 +788,7 @@ class GoogleDriveViewModel(
                                                         val syncLists =
                                                             finalLocalLists.map { entity ->
                                                                 ListSyncModel(
-                                                                    uuid = entity.uuid,
+                                                                    uuid = entity.listId,
                                                                     title = entity.title,
                                                                     color = entity.colorString,
                                                                     type = entity.type
@@ -855,14 +853,14 @@ class GoogleDriveViewModel(
 
                                             val localActiveTags = tagDao.getAllTags().first()
                                             val localActiveTagUuids =
-                                                localActiveTags.map { it.uuid }.toSet()
+                                                localActiveTags.map { it.tagUuid }.toSet()
 
                                             val cleanActiveTags = cloudActiveTags.filter { tag ->
-                                                tag.uuid !in allDeletedTagUuids
+                                                tag.tagUuid !in allDeletedTagUuids
                                             }
 
                                             cleanActiveTags.forEach { cloudTag ->
-                                                if (cloudTag.uuid !in localActiveTagUuids) {
+                                                if (cloudTag.tagUuid !in localActiveTagUuids) {
                                                     tagDao.upsertTag(cloudTag)
                                                     Log.d(
                                                         "eura-tasks",
@@ -885,7 +883,7 @@ class GoogleDriveViewModel(
                                                         val syncTags =
                                                             finalLocalTags.map { entity ->
                                                                 TagSyncModel(
-                                                                    uuid = entity.uuid,
+                                                                    uuid = entity.tagUuid,
                                                                     name = entity.title
                                                                 )
                                                             }
@@ -931,20 +929,21 @@ class GoogleDriveViewModel(
                                                     ?: return@launch
                                             ) ?: return@launch
 
-                                            val localTasks = taskDao.getAllTasksByIdAsc().first()
+                                            val localTasks = taskDao.getAllTasksByUuidAsc().first()
                                             localTasks.forEach { entity ->
                                                 try {
-                                                    val fileName = "task_${entity.uuid}.json"
+                                                    val fileName = "task_${entity.taskUuid}.json"
                                                     val syncModel = TaskSyncModel(
-                                                        uuid = entity.uuid,
+                                                        uuid = entity.taskUuid,
                                                         title = entity.title,
                                                         description = entity.description,
                                                         isFavorite = entity.isFavorite,
                                                         isCompleted = entity.isCompleted,
                                                         hasTags = entity.hasTags,
-                                                        dueDateTime = entity.dueDateTime,
+                                                        dueDateTime = entity.notificationTime,
                                                         creationTime = entity.creationTime,
-                                                        taskList = entity.taskList
+                                                        updateTime = entity.updateTime,
+                                                        parentListId = entity.parentListId
                                                     )
                                                     val jsonContent = gson.toJson(syncModel)
                                                     val contentStream =
@@ -982,10 +981,10 @@ class GoogleDriveViewModel(
                                                 } catch (e: Exception) {
                                                     Log.e(
                                                         "eura-tasks",
-                                                        "Upload failed for task ${entity.uuid}: ${e.message}"
+                                                        "Upload failed for task ${entity.taskUuid}: ${e.message}"
                                                     )
                                                     _syncUiState.value =
-                                                        SyncUiState.Error("Upload failed for task ${entity.uuid}: ${e.message}")
+                                                        SyncUiState.Error("Upload failed for task ${entity.taskUuid}: ${e.message}")
                                                 }
                                             }
 
@@ -1006,7 +1005,7 @@ class GoogleDriveViewModel(
                                             }
 
                                             val localActiveTaskUuids =
-                                                taskDao.getAllTasksByIdAsc().first().map { it.uuid }
+                                                taskDao.getAllTasksByUuidAsc().first().map { it.taskUuid }
                                                     .toSet()
 
                                             // Get names of lists that are currently available locally
@@ -1015,34 +1014,34 @@ class GoogleDriveViewModel(
                                                     .toMutableSet()
 
                                             cloudTasks.forEach { task ->
-                                                if (task.uuid in allDeletedTaskUuids) {
-                                                    deleteTaskFile(task.uuid)
+                                                if (task.taskUuid in allDeletedTaskUuids) {
+                                                    deleteTaskFile(task.taskUuid)
                                                     Log.d(
                                                         "eura-tasks",
-                                                        "Cloud task file ${task.uuid} matched a tombstone. Purging from Drive."
+                                                        "Cloud task file ${task.taskUuid} matched a tombstone. Purging from Drive."
                                                     )
                                                     _syncMessage.value =
-                                                        "Cloud task file ${task.uuid} matched a tombstone. Purging from Drive."
+                                                        "Cloud task file ${task.taskUuid} matched a tombstone. Purging from Drive."
 
-                                                } else if (task.uuid !in localActiveTaskUuids) {
+                                                } else if (task.taskUuid !in localActiveTaskUuids) {
 
                                                     // CHECK: Does the target list exist locally?
-                                                    if (task.taskList !in localActiveListNames) {
+                                                    if (task.parentListId !in localActiveListNames) {
                                                         Log.w(
                                                             "eura-tasks",
-                                                            "List '${task.taskList}' missing for downloaded task. Auto-creating list."
+                                                            "List '${task.parentListId}' missing for downloaded task. Auto-creating list."
                                                         )
                                                         _syncUiState.value =
-                                                            SyncUiState.Success("List '${task.taskList}' missing for downloaded task. Auto-creating list.")
+                                                            SyncUiState.Success("List '${task.parentListId}' missing for downloaded task. Auto-creating list.")
 
                                                         // Synchronously insert the missing list into Room first
                                                         listDbViewModel.insertListSynchronously(
-                                                            name = task.taskList,
+                                                            name = task.parentListId,
                                                             type = "OTHER",
                                                             color = "PURPLE"
                                                         )
                                                         // Track it locally so we don't accidentally re-create it on subsequent tasks
-                                                        localActiveListNames.add(task.taskList)
+                                                        localActiveListNames.add(task.parentListId)
                                                     }
 
                                                     taskDbViewModel.insertTask(task)
@@ -1080,25 +1079,7 @@ class GoogleDriveViewModel(
 
                                             cleanRemoteActiveTaskTags.forEach { cloudTaskTag ->
                                                 if (localActiveTaskTags.none { it.taskUuid == cloudTaskTag.taskUuid && it.tagUuid == cloudTaskTag.tagUuid }) {
-                                                    val taskId =
-                                                        taskDao.getTaskIdByUuid(cloudTaskTag.taskUuid)
-                                                    val tagId =
-                                                        tagDao.getTagIdByUuid(cloudTaskTag.tagUuid)
 
-                                                    if (taskId != 0 && tagId != 0) {
-                                                        tagDao.insertTaskTag(
-                                                            cloudTaskTag.copy(
-                                                                taskId = taskId,
-                                                                tagId = tagId
-                                                            )
-                                                        )
-                                                        Log.d(
-                                                            "eura-tasks",
-                                                            "Restored task-tag association: ${cloudTaskTag.taskUuid} <-> ${cloudTaskTag.tagUuid}"
-                                                        )
-                                                        _syncMessage.value =
-                                                            "Restored task-tag association: ${cloudTaskTag.taskUuid} <-> ${cloudTaskTag.tagUuid}"
-                                                    }
                                                 }
                                             }
 

@@ -19,8 +19,8 @@ interface TagDbDao {
     @Upsert
     suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
 
-    @Query("SELECT uuid FROM tags WHERE id = :id")
-    suspend fun getTagUuidById(id: Int): String
+    @Query("SELECT tagUuid FROM tags WHERE tagUuid = :uuid")
+    suspend fun getTagUuidById(uuid: String): String
 
     @Query("SELECT * FROM tags")
     fun getAllTags(): Flow<List<TagsEntity>>
@@ -37,15 +37,14 @@ interface TagDbDao {
     suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
-
-    //TODO: Switch to remove by id
+    
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun deleteByTaskUuid(taskUuid: String)
     @Query("DELETE FROM task_tags WHERE tagUuid = :tagUuid")
     suspend fun deleteByTagUuid(tagUuid: String)
 
-    @Query("DELETE FROM task_tags WHERE tagId = :tagId")
-    suspend fun removeByTagId(tagId: Int)
+    @Query("DELETE FROM task_tags WHERE tagUuid = :tagId")
+    suspend fun removeByTagId(tagId: String)
 
     @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(title) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean
@@ -53,14 +52,12 @@ interface TagDbDao {
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT * FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun getAllTagsFromTask(taskUuid: String): List<TaskTagsEntity>
-    @Query("SELECT * FROM task_tags WHERE taskId = :taskId")
-    suspend fun getAllTagsFromTaskById(taskId: Int): List<TaskTagsEntity>
-    @Query("SELECT * FROM tags WHERE uuid IN (:uuids)")
+    @Query("SELECT * FROM task_tags WHERE taskUuid = :taskUuid")
+    suspend fun getAllTagsFromTaskById(taskUuid: String): List<TaskTagsEntity>
+    @Query("SELECT * FROM tags WHERE tagUuid IN (:uuids)")
     suspend fun getTagsByUuids(uuids: List<String>): List<TagsEntity>
-    @Query("SELECT id FROM tags WHERE uuid = :uuid")
-    suspend fun getTagIdByUuid(uuid: String): Int
-    @Query("SELECT taskId FROM task_tags WHERE tagId = :tagId")
-    suspend fun getTasksByTagId(tagId: Int): List<Int>
+    @Query("SELECT taskUuid FROM task_tags WHERE tagUuid = :tagUuid")
+    suspend fun getTasksByTagUuid(tagUuid: String): List<String>
     @Query("SELECT * FROM tags WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTags(query: String): List<TagsEntity>
 }

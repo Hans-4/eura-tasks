@@ -42,7 +42,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TagManagementScreen(
-    onTagList: (Int) -> Unit,
+    onTagList: (String) -> Unit,
     onClose: () -> Unit,
     task: TaskEntity,
 
@@ -63,8 +63,8 @@ fun TagManagementScreen(
     val tags = tagDbState.tags
 
     val (checked, unchecked) = remember(tags, taskTags) {
-        val checkedIds = taskTags.map { it.tagId }.toSet()
-        tags.sortedBy { it.title }.partition { it.id in checkedIds }
+        val checkedIds = taskTags.map { it.tagUuid }.toSet()
+        tags.sortedBy { it.title }.partition { it.tagUuid in checkedIds }
     }
 
     // 2. Sync tab selection with scroll position when scrolling stops
@@ -76,8 +76,8 @@ fun TagManagementScreen(
 
     BackHandler(enabled = true, onBack = { onClose() })
 
-    LaunchedEffect(task.id) {
-        onTagDbEvent(TagDbEvent.GetAllTagsByTaskId(task.id))
+    LaunchedEffect(task.taskUuid) {
+        onTagDbEvent(TagDbEvent.GetAllTagsByTaskId(task.taskUuid))
     }
 
     Scaffold(
@@ -138,7 +138,7 @@ fun TagManagementScreen(
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(checked, key = { it.id }) { item ->
+            items(checked, key = { it.tagUuid }) { item ->
                 TagItem(
                     onTagList = onTagList,
 
@@ -148,7 +148,7 @@ fun TagManagementScreen(
                     onTagDbEvent = onTagDbEvent
                 )
             }
-            items(unchecked, key = { it.id }) { item ->
+            items(unchecked, key = { it.tagUuid }) { item ->
                 TagItem(
                     onTagList = onTagList,
 
@@ -163,7 +163,7 @@ fun TagManagementScreen(
 
     if (uiState.isAddTagsDialogOpen) {
         AddTagDialog(
-            onConfirm = { onTagDbEvent(TagDbEvent.SaveTagInTask(task.id, task.uuid)) },
+            onConfirm = { onTagDbEvent(TagDbEvent.SaveTagInTask(task.taskUuid)) },
             onDismiss = { onUiEvent(UiEvent.CloseAddTagsDialog) },
 
             tagDbState = tagDbState,

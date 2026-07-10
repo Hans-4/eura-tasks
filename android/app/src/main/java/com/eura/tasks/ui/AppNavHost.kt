@@ -145,7 +145,7 @@ fun AppNavHost(
                 repeatDbState = repeatDbState,
 
 
-                onTaskList = { listName -> navController.navigate("taskLists/$listName")},
+                onTaskList = { listId, listName -> navController.navigate("taskLists/$listId/$listName")},
                 onTagList = { tagId -> navController.navigate("tagList/$tagId")},
                 onSettings = { navController.navigate("settings")},
                 onSearch = { navController.navigate("search") },
@@ -241,7 +241,7 @@ fun AppNavHost(
         }
 
         composable(
-            route = "taskLists/{listName}",
+            route = "taskLists/{listId}/{listName}",
             enterTransition = {
                 defaultEnterTransition()
             },
@@ -255,11 +255,12 @@ fun AppNavHost(
                 defaultPopExitTransition()
             }
         ) { backStackEntry ->
-            val listName = backStackEntry.arguments?.getString("listName").toString()
+            val listName = backStackEntry.arguments?.getString("listName")
+            val listId = backStackEntry.arguments?.getString("listId")
             TaskScreen(
                 tagDbState = tagDbState,
                 onTagDbEvent = onTagDbEvent,
-                pageName = listName,
+                pageData = Pair(listId ?: "", listName ?: "Error"),
                 taskDbState = taskDbState,
                 listDbState = listDbState,
                 uiState = uiState,
@@ -296,8 +297,8 @@ fun AppNavHost(
                 defaultPopExitTransition()
             }
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
-            val task = taskDbState.tasks.find { it.id == taskId }
+            val taskId = backStackEntry.arguments?.getString("taskId")
+            val task = taskDbState.tasks.find { it.taskUuid == taskId }
             val parentScreen = backStackEntry.arguments?.getString("parentScreen").toString()
             if (task != null) {
                 TaskDetailsScreen(
@@ -336,8 +337,8 @@ fun AppNavHost(
                 defaultPopExitTransition()
             }
         ) { backStackEntry ->
-            val taskId = backStackEntry.arguments?.getString("taskId")?.toIntOrNull()
-            val task = taskDbState.tasks.find { it.id == taskId }
+            val taskId = backStackEntry.arguments?.getString("taskId")
+            val task = taskDbState.tasks.find { it.taskUuid == taskId }
             if (task != null) {
                 TagManagementScreen(
                     onClose = { navController.popBackStack() },
@@ -369,8 +370,8 @@ fun AppNavHost(
                 defaultPopExitTransition()
             }
         ) { backStackEntry ->
-            val tagId = backStackEntry.arguments?.getString("tagId")?.toIntOrNull()
-            val tagEntity = tagDbState.tags.find { it.id == tagId }
+            val tagId = backStackEntry.arguments?.getString("tagId")
+            val tagEntity = tagDbState.tags.find { it.tagUuid == tagId }
             onTaskDbEvent(TaskDbEvent.GetTaskById(tagId!!))
             if (tagEntity != null) {
                 TagScreen(

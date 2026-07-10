@@ -115,10 +115,12 @@ fun AddTaskScreen(
             }
         }
 
-        val parentList = when {
-            currentTab in SYSTEM_LISTS -> taskDbState.taskParentList.ifBlank { firstUserTaskList }
-            else -> currentTab
+        val parentList = if (currentTab in SYSTEM_LISTS) {
+            listTitle
+        } else {
+            currentTab
         }
+
 
         TextField(
             modifier = Modifier
@@ -209,7 +211,6 @@ fun AddTaskScreen(
 
             TextButton(
                 onClick = {
-                    Log.d("Time test", "Hour: ${taskDbState.taskTimeHour} Minute: ${taskDbState.taskTimeMinute} Date: ${taskDbState.taskDate}")
                     onTaskDbEvent(TaskDbEvent.SetParentList(parentList))
                     onTaskDbEvent(TaskDbEvent.SaveTask)
                     onUiEvent(UiEvent.CloseAddTaskSheet)

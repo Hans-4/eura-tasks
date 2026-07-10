@@ -9,9 +9,10 @@ import android.os.Build
 class AlarmScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun scheduleAlarm(id: Int, title: String, description: String, triggerAtMillis: Long) {
+    fun scheduleAlarm(id: Int, uuid: String, title: String, description: String, triggerAtMillis: Long) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("id", id)
+            putExtra("uuid", uuid)
             putExtra("title", title)
             putExtra("description", description)
         }
@@ -35,7 +36,8 @@ class AlarmScheduler(private val context: Context) {
         }
     }
 
-    fun cancelAlarm(id: Int) {
+    fun cancelAlarm(uuid: String) {
+        val id = uuid.hashCode()
         val intent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
