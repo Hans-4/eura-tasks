@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import com.eura.tasks.db.cleanUpOldLogs
-import com.eura.tasks.db.lists.DeletedUserListEntity
+import com.eura.tasks.db.deletedItems.DeletedItemsDao
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.lists.ListDbDao
 import com.eura.tasks.db.lists.ListDbEvent
 import com.eura.tasks.db.lists.ListDbState
@@ -26,7 +27,8 @@ import java.util.UUID
 
 class ListDbViewModel(
     private val listDao: ListDbDao,
-    private val taskDao: TaskDbDao
+    private val taskDao: TaskDbDao,
+    private val deletedItemsDao: DeletedItemsDao
 ): ViewModel() {
     private val _state = MutableStateFlow(ListDbState())
     val state = combine(_state, listDao.getAllLists()) { state, userLists ->
@@ -51,10 +53,14 @@ class ListDbViewModel(
                         onUiEvent(UiEvent.SetReason(1))
                         onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
                     } else {
+                        val now = Clock.System.now()
+
                         val list = UserListEntity(
                             title = title,
                             type = type,
-                            colorString = color
+                            colorString = color,
+                            creationTime = now,
+                            updateTime = now,
                         )
                         listDao.upsertList(list)
                         _state.update {
@@ -64,7 +70,7 @@ class ListDbViewModel(
                                 listColor = "RED"
                             )
                         }
-                        cleanUpOldLogs { cutoff -> listDao.deleteLogsOlderThan(cutoff) }
+                        cleanUpOldLogs { cutoff -> deletedItemsDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(UiEvent.CloseAddTaskListDialog)
                     }
                 }
@@ -93,13 +99,16 @@ class ListDbViewModel(
             is ListDbEvent.DeleteListByName -> {
                 val currentDateTime: Instant = Clock.System.now()
                 viewModelScope.launch {
-                    val deletedList = DeletedUserListEntity(
-                        deletedUuid = listDao.getListUuidByName(event.name),
-                        deletionDate = currentDateTime
+                    val list = listDao.getListUuidByName(event.name)
+
+                    val deletedList = DeletedItemsEntity(
+                        deletedUuid = list.listId,
+                        deletionTime = currentDateTime,
+                        type = 1
                     )
                     taskDao.deleteTasksByListName(event.name)
-                    listDao.upsertDeletedList(deletedList)
-                    listDao.deleteListByName(event.name)
+                    deletedItemsDao.upsertDeletedItem(deletedList)
+                    listDao.deleteList(list)
                 }
             }
         }
@@ -112,13 +121,17 @@ class ListDbViewModel(
         name: String,
         type: String,
         color: String,
-        uuid: String
+        uuid: String,
+        creationTime: Instant,
+        updateTime: Instant
     ) {
         viewModelScope.launch {
             val list = UserListEntity(
                 title = name,
                 type = type,
                 colorString = color,
+                creationTime = creationTime,
+                updateTime = updateTime,
                 listId = uuid
             )
             listDao.upsertList(list)
@@ -132,12 +145,16 @@ class ListDbViewModel(
         name: String,
         type: String,
         color: String,
+        creationTime: Instant,
+        updateTime: Instant,
         uuid: String = UUID.randomUUID().toString()
     ) = withContext(Dispatchers.IO) {
         val list = UserListEntity(
             title = name,
             type = type,
             colorString = color,
+            creationTime = creationTime,
+            updateTime = updateTime,
             listId = uuid
         )
         listDao.upsertList(list)

@@ -6,6 +6,7 @@ import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
 import androidx.room.Upsert
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
 import com.eura.tasks.db.tasks.tags.TaskWithTags
@@ -15,8 +16,7 @@ import kotlinx.datetime.Instant
 interface TaskDbDao {
     @Upsert
     suspend fun upsertTask(todo: TaskEntity): Long
-    @Upsert
-    suspend fun upsertDeletedTask(deletedTask: DeletedTasksEntity)
+
     @Update
     suspend fun update(todo: TaskEntity)
     @Delete
@@ -25,11 +25,9 @@ interface TaskDbDao {
     suspend fun deleteTaskByUuid(uuid: String)
     @Query("DELETE FROM tasks WHERE parentListId = :listName")
     suspend fun deleteTasksByListName(listName: String)
-    @Query("DELETE FROM deleted_tasks WHERE deletionDate < :cutoffTimestamp")
-    suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 
-    @Query("SELECT * FROM deleted_tasks")
-    suspend fun getAllDeletedTasks(): List<DeletedTasksEntity>
+    @Query("SELECT * FROM deleted_items WHERE type = 1")
+    suspend fun getAllDeletedTasks(): List<DeletedItemsEntity>
     @Query("SELECT * FROM tasks WHERE taskUuid = :id")
     suspend fun getTaskById(id: List<String>): List<TaskEntity>
     @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
@@ -42,10 +40,7 @@ interface TaskDbDao {
     fun getAllTodosByTitleAsc(): Flow<List<TaskEntity>>
     @Query("SELECT * FROM tasks ORDER BY notificationTime ASC")
     fun getAllTasksByDateAsc(): Flow<List<TaskEntity>>
-    @Query("SELECT EXISTS(SELECT 1 FROM tasks WHERE taskUuid = :uuid)")
-    suspend fun taskExists(uuid: String): Boolean
-    @Query("SELECT EXISTS(SELECT 1 FROM deleted_tasks WHERE deletedUuid = :uuid)")
-    suspend fun deleted(uuid: String): Boolean
+
     @Query("SELECT * FROM tasks WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTasks(query: String): List<TaskEntity>
 
@@ -76,5 +71,5 @@ interface TaskDbDao {
     suspend fun getAllActiveTasksWithAlarms(now: Instant): List<TaskEntity>
 
     @Query("SELECT listId FROM user_lists WHERE title = :title")
-    suspend fun getParentListId(title: String): String
+    suspend fun getParentListId(title: String): String?
 }

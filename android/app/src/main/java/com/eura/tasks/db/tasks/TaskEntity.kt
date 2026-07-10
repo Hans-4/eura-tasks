@@ -35,19 +35,19 @@ import com.eura.tasks.db.Converters
     ]
 )
 data class TaskEntity(
-    val title: String,
-    val description: String? = null,
-    val isFavorite: Boolean,
-    val isCompleted: Boolean,
-    val hasTags: Boolean,
-    val repeatType: Int? = null,
-    val notificationTime: Instant?,
+    override val title: String,
+    override val description: String? = null,
+    override val isFavorite: Boolean,
+    override val isCompleted: Boolean,
+    override val hasTags: Boolean,
+    override val repeatType: Int? = null,
+    override val notificationTime: Instant?,
 
-    val parentListId: String,
+    override val parentListId: String,
 
-    val creationTime: Instant,
-    val updateTime: Instant,
+    override val creationTime: Instant,
+    override val updateTime: Instant,
 
     @PrimaryKey
-    val taskUuid: String = UUID.randomUUID().toString(),
-)
+    override val taskUuid: String = UUID.randomUUID().toString(),
+): TaskInterface

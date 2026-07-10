@@ -14,7 +14,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.eura.tasks.db.lists.TaskList
+import com.eura.tasks.db.lists.TaskListInterface
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.R
 import com.eura.tasks.ui.Converter
@@ -23,7 +23,7 @@ import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.userListColumn.
 @Composable
 fun UserListColumnItem(
     noUserList: Boolean,
-    taskLists: List<TaskList>,
+    taskLists: List<TaskListInterface>,
     systemThemeIndex: Int,
     taskDbState: TaskDbState,
     onTaskList: (String, String) -> Unit

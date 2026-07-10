@@ -7,7 +7,7 @@ data class SystemListItem(
     override val type: String,
     override val colorString: String,
     override val listId: String = UUID.randomUUID().toString(),
-) : TaskList
+) : TaskListInterface
 
 val systemTaskList = listOf(
     SystemListItem(
