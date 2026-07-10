@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -342,7 +343,8 @@ fun TitleCard(
             },
             textStyle = LocalTextStyle.current.copy(
                 fontSize = 16.sp,
-            )
+            ),
+            modifier = Modifier.widthIn(min = 128.dp)
         )
 
         Spacer(modifier = Modifier.weight(1f))
