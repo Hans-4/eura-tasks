@@ -3,13 +3,12 @@ package com.eura.tasks.db
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.eura.tasks.db.lists.DeletedUserListEntity
+import com.eura.tasks.db.deletedItems.DeletedItemsDao
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.lists.ListDbDao
 import com.eura.tasks.db.lists.UserListEntity
-import com.eura.tasks.db.tags.DeletedTagsEntity
 import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagsEntity
-import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.repeats.EndRepeatsEntity
@@ -24,11 +23,8 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 @Database(
     entities = [
         TaskEntity::class,
-        DeletedTasksEntity::class,
         UserListEntity::class,
-        DeletedUserListEntity::class,
         TagsEntity::class,
-        DeletedTagsEntity::class,
         TaskTagsEntity::class,
         DeletedTaskTagsEntity::class,
 
@@ -37,6 +33,8 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
         RepeatEveryMonthEntity::class,
         RepeatEveryYearEntity::class,
         EndRepeatsEntity::class,
+
+        DeletedItemsEntity::class,
     ],
     version = 1
 )
@@ -48,6 +46,8 @@ abstract class AppDatabase: RoomDatabase() {
     abstract val listDao: ListDbDao
     abstract val tagDao: TagDbDao
     abstract val repeatDao: RepeatDbDao
+    abstract val deletedItemsDao: DeletedItemsDao
+
 
     companion object {
         @Volatile

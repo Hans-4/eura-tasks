@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
+import com.eura.tasks.db.deletedItems.DeletedItemsDao
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tags.TagDbDao
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,7 +18,6 @@ import kotlinx.coroutines.launch
 import com.eura.tasks.db.tasks.SortType
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskDbEvent
-import com.eura.tasks.db.tasks.DeletedTasksEntity
 import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.db.tasks.TaskDbState
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
@@ -37,6 +38,7 @@ class TaskDbViewModel(
     private val taskDao: TaskDbDao,
     private val tagDao: TagDbDao,
     private val alarmScheduler: AlarmScheduler,
+    private val deletedItemsDao: DeletedItemsDao
 ): ViewModel() {
 
     private val _sortType = MutableStateFlow(SortType.ID)
@@ -75,7 +77,7 @@ class TaskDbViewModel(
                     var parentListId = currentState.taskParentListId
 
                     if (parentListId.isBlank() && currentState.taskParentList.isNotBlank()) {
-                        parentListId = taskDao.getParentListId(currentState.taskParentList)
+                        parentListId = taskDao.getParentListId(currentState.taskParentList) ?: ""
                     }
 
                     if (title.isBlank() || parentListId.isBlank()) {
@@ -134,7 +136,7 @@ class TaskDbViewModel(
                         onRepeatDbEvent(SaveRepeat(generatedTaskId, task.taskUuid))
                     }
 
-                    cleanUpOldLogs { cutoff -> taskDao.deleteLogsOlderThan(cutoff) }
+                    cleanUpOldLogs { cutoff -> deletedItemsDao.deleteLogsOlderThan(cutoff) }
 
                     if (dueDateTime != null) {
                         alarmScheduler.scheduleAlarm(
@@ -234,7 +236,7 @@ class TaskDbViewModel(
                 viewModelScope.launch {
                     val listId = taskDao.getParentListId(event.listType)
                     _state.update {
-                        it.copy(taskParentListId = listId)
+                        it.copy(taskParentListId = listId ?: "")
                     }
                 }
             }
@@ -242,11 +244,12 @@ class TaskDbViewModel(
                 val currentDateTime: Instant = Clock.System.now()
 
                 viewModelScope.launch {
-                    val deletedTask = DeletedTasksEntity(
+                    val deletedTask = DeletedItemsEntity(
                         deletedUuid = event.uuid,
-                        deletionDate = currentDateTime
+                        deletionTime = currentDateTime,
+                        type = 1
                     )
-                    taskDao.upsertDeletedTask(deletedTask)
+                    deletedItemsDao.upsertDeletedItem(deletedTask)
                     taskDao.deleteTaskByUuid(event.uuid)
 
                     alarmScheduler.cancelAlarm(event.uuid)
@@ -258,7 +261,7 @@ class TaskDbViewModel(
                     val listId = taskDao.getParentListId(event.parentList)
                     _state.update {
                         it.copy(
-                            taskParentListId = listId
+                            taskParentListId = listId ?: ""
                         )
                     }
                 }

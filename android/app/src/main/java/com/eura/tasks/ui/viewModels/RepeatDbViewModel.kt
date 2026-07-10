@@ -32,9 +32,10 @@ class RepeatDbViewModel(
             is RepeatDbEvent.SaveRepeat -> {
                 val taskUuid = event.taskUuid
 
-                val instant = Instant.fromEpochMilliseconds(_state.value.startDate!!)
+                val startDate = _state.value.startDate ?: return
+                val instant = Instant.fromEpochMilliseconds(startDate)
 
-                val repeatEvery = _state.value.repeatEvery.toInt()
+                val repeatEvery = _state.value.repeatEvery.toIntOrNull() ?: 1
                 val minutesSinceMidnight = (_state.value.repeatTimeHour ?: 0) * 60 + (_state.value.repeatTimeMinute ?: 0)
 
                 val endDate = _state.value.endDate
@@ -81,8 +82,6 @@ class RepeatDbViewModel(
                         )
                     }
 
-                    val endDateInstant = Instant.fromEpochMilliseconds(endDate!!)
-
                     when (_state.value.selectedRadioButton) {
                         0 -> repeatDao.upsertEndRepeat(
                             EndRepeatsEntity(
@@ -93,14 +92,17 @@ class RepeatDbViewModel(
                             )
                         )
 
-                        1 -> repeatDao.upsertEndRepeat(
-                            EndRepeatsEntity(
-                                taskUuid = taskUuid,
-                                endsNever = false,
-                                endDate = endDateInstant,
-                                endAfterRepetitions = null,
+                        1 -> {
+                            val endDateInstant = endDate?.let { Instant.fromEpochMilliseconds(it) }
+                            repeatDao.upsertEndRepeat(
+                                EndRepeatsEntity(
+                                    taskUuid = taskUuid,
+                                    endsNever = false,
+                                    endDate = endDateInstant,
+                                    endAfterRepetitions = null,
+                                )
                             )
-                        )
+                        }
 
                         2 -> repeatDao.upsertEndRepeat(
                             EndRepeatsEntity(

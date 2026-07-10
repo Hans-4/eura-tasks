@@ -3,7 +3,8 @@ package com.eura.tasks.ui.viewModels
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.db.cleanUpOldLogs
-import com.eura.tasks.db.tags.DeletedTagsEntity
+import com.eura.tasks.db.deletedItems.DeletedItemsDao
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
@@ -23,7 +24,8 @@ import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 class TagDbViewModel(
-    private val tagDao: TagDbDao
+    private val tagDao: TagDbDao,
+    private val deletedItemsDao: DeletedItemsDao
 ): ViewModel()  {
     private val _state = MutableStateFlow(TagDbState())
 
@@ -47,7 +49,13 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val tag = TagsEntity(title = title)
+                        val now = Clock.System.now()
+                        val tag = TagsEntity(
+                            title = title,
+                            creationTime = now,
+                            updateTime = now
+                        )
+                        tagDao.upsertTag(tag)
 
                         _state.update {
                             it.copy(
@@ -55,7 +63,7 @@ class TagDbViewModel(
                                 selectedTagUuids = it.selectedTagUuids + tag.tagUuid,
                             )
                         }
-                        cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
+                        cleanUpOldLogs { cutoff -> deletedItemsDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(CloseAddTagTextField)
                     }
                 }
@@ -70,7 +78,13 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val tag = TagsEntity(title = title)
+                        val now = Clock.System.now()
+                        val tag = TagsEntity(
+                            title = title,
+                            creationTime = now,
+                            updateTime = now
+                        )
+                        tagDao.upsertTag(tag)
 
                         tagDao.insertTaskTag(
                             TaskTagsEntity(
@@ -87,7 +101,7 @@ class TagDbViewModel(
                             )
                         }
 
-                        cleanUpOldLogs { cutoff -> tagDao.deleteLogsOlderThan(cutoff) }
+                        cleanUpOldLogs { cutoff -> deletedItemsDao.deleteLogsOlderThan(cutoff) }
                         onUiEvent(CloseAddTagsDialog)
                     }
                 }
@@ -154,11 +168,12 @@ class TagDbViewModel(
                 val currentDateTime: Instant = Clock.System.now()
 
                 viewModelScope.launch {
-                    val deletedTag = DeletedTagsEntity(
+                    val deletedTag = DeletedItemsEntity(
                         deletedUuid = tagDao.getTagUuidById(event.tag.tagUuid),
-                        deletionDate = currentDateTime
+                        deletionTime = currentDateTime,
+                        type = 3
                     )
-                    tagDao.upsertDeletedTag(deletedTag)
+                    deletedItemsDao.upsertDeletedItem(deletedTag)
                     tagDao.deleteTag(event.tag)
                 }
             }
@@ -202,7 +217,14 @@ class TagDbViewModel(
                         onUiEvent(SetReason(2))
                         onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        tagDao.upsertTag(TagsEntity(title = title)).toInt()
+                        val now = Clock.System.now()
+                        tagDao.upsertTag(
+                            TagsEntity(
+                                title = title,
+                                creationTime = now,
+                                updateTime = now
+                            )
+                        )
 
                         _state.update {
                             it.copy(

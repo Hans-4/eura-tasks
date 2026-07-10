@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
+import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
@@ -16,8 +17,6 @@ interface TagDbDao {
     suspend fun upsertTag(tag: TagsEntity): Long
     @Delete
     suspend fun deleteTag(tag: TagsEntity)
-    @Upsert
-    suspend fun upsertDeletedTag(deletedTag: DeletedTagsEntity)
 
     @Query("SELECT tagUuid FROM tags WHERE tagUuid = :uuid")
     suspend fun getTagUuidById(uuid: String): String
@@ -30,8 +29,8 @@ interface TagDbDao {
     @Query("SELECT * FROM deleted_task_tags")
     fun getAllDeletedTaskTags(): Flow<List<DeletedTaskTagsEntity>>
     
-    @Query("SELECT * FROM deleted_tags")
-    fun getAllDeletedTags(): Flow<List<DeletedTagsEntity>>
+    @Query("SELECT * FROM deleted_items WHERE type = 3")
+    fun getAllDeletedTags(): Flow<List<DeletedItemsEntity>>
 
     @Upsert
     suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
@@ -48,8 +47,6 @@ interface TagDbDao {
 
     @Query("SELECT EXISTS(SELECT 1 FROM tags WHERE LOWER(title) = LOWER(:title))")
     suspend fun searchForExistingTitle(title: String): Boolean
-    @Query("DELETE FROM deleted_tags WHERE deletionDate < :cutoffTimestamp")
-    suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
     @Query("SELECT * FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun getAllTagsFromTask(taskUuid: String): List<TaskTagsEntity>
     @Query("SELECT * FROM task_tags WHERE taskUuid = :taskUuid")

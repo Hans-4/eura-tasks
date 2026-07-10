@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return TaskDbViewModel(db.taskDao, db.tagDao,
-                        AlarmScheduler(applicationContext)) as T
+                        AlarmScheduler(applicationContext), db.deletedItemsDao) as T
                 }
             }
         }
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return ListDbViewModel(taskDao = db.taskDao, listDao = db.listDao) as T
+                    return ListDbViewModel(taskDao = db.taskDao, listDao = db.listDao, deletedItemsDao = db.deletedItemsDao) as T
                 }
             }
         }
@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TagDbViewModel(tagDao = db.tagDao) as T
+                    return TagDbViewModel(tagDao = db.tagDao, deletedItemsDao = db.deletedItemsDao) as T
                 }
             }
         }
@@ -97,7 +97,12 @@ class MainActivity : ComponentActivity() {
         factoryProducer = {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return GoogleDriveViewModel(taskDao = db.taskDao, listDao = db.listDao, tagDao = db.tagDao) as T
+                    return GoogleDriveViewModel(
+                        taskDao = db.taskDao,
+                        listDao = db.listDao,
+                        tagDao = db.tagDao,
+                        deletedItemsDao = db.deletedItemsDao
+                    ) as T
                 }
             }
         }
