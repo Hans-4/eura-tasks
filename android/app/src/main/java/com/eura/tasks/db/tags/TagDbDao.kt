@@ -10,11 +10,16 @@ import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
 
 @Dao
 interface TagDbDao {
     @Upsert
     suspend fun upsertTag(tag: TagsEntity): Long
+
+    @Upsert
+    suspend fun upsertTaskTag(taskTag: TaskTagsEntity)
+
     @Delete
     suspend fun deleteTag(tag: TagsEntity)
 
@@ -36,6 +41,9 @@ interface TagDbDao {
     suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
+
+    @Query("UPDATE task_tags SET isActive = :isActive AND updateTime = :updateTime WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid")
+    suspend fun updateTaskTagActive(taskUuid: String, tagUuid: String, isActive: Boolean, updateTime: Instant)
     
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun deleteByTaskUuid(taskUuid: String)
@@ -57,4 +65,7 @@ interface TagDbDao {
     suspend fun getTasksByTagUuid(tagUuid: String): List<String>
     @Query("SELECT * FROM tags WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForTags(query: String): List<TagsEntity>
+
+    @Query("SELECT EXISTS(SELECT 1 FROM task_tags WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid)")
+    suspend fun searchForExistingEnty(taskUuid: String, tagUuid: String): Boolean
 }

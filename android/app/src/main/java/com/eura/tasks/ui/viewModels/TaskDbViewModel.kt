@@ -126,7 +126,9 @@ class TaskDbViewModel(
                             tagDao.insertTaskTag(
                                 TaskTagsEntity(
                                     task.taskUuid,
-                                    tagUuid
+                                    tagUuid,
+                                    true,
+                                    currentDateTime
                                 )
                             )
                         }
@@ -331,34 +333,14 @@ class TaskDbViewModel(
                 }
             }
 
-            is TaskDbEvent.RemoveFromTagByTaskId -> {
+            is TaskDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    taskDao.removeTagByTaskUuid(event.taskId)
-                    _state.update { it ->
-                        it.copy(
-                            taskTags = it.taskTags.filter { it.taskUuid != event.taskId }
-                        )
-                    }
-                }
-            }
-
-            is TaskDbEvent.InsertNewTaskTag -> {
-                viewModelScope.launch {
-                    tagDao.insertTaskTag(
-                        TaskTagsEntity(
-                            taskUuid = event.taskId,
-                            tagUuid = event.tagId
-                        )
-                    )
+                    tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive, Clock.System.now())
                     _state.update {
                         it.copy(
-                            taskTags = it.taskTags + TaskTagsEntity(
-                                taskUuid = event.taskId,
-                                tagUuid = event.tagId
-                            )
+                            taskTags = taskDao.getAllTasksFromTagByUuid(event.tagId)
                         )
                     }
-
                 }
             }
 
