@@ -206,20 +206,7 @@ class TagDbViewModel(
 
             is TagDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    val entryExists = tagDao.searchForExistingEnty(event.taskUuid, event.tagId)
-                    if (!entryExists) {
-                        tagDao.upsertTaskTag(
-                            TaskTagsEntity(
-                                taskUuid = event.taskUuid,
-                                tagUuid = event.tagId,
-                                isActive = event.isActive,
-                                updateTime = Clock.System.now()
-                            )
-                        )
-                    } else {
-                        tagDao.updateTaskTagActive(event.taskUuid, event.tagId, event.isActive)
-                    }
-
+                    tagDao.updateTaskTagActive(event.taskUuid, event.tagId, event.isActive, Clock.System.now())
                     _state.update {
                         it.copy(
                             taskTags = tagDao.getAllTagsFromTaskById(event.taskUuid)

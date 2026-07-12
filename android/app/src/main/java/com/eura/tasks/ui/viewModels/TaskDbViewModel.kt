@@ -335,53 +335,10 @@ class TaskDbViewModel(
 
             is TaskDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    val entryExists = tagDao.searchForExistingEnty(event.taskId, event.tagId)
-                    Log.d("Test", "UpdateTaskTag: $entryExists")
-                    if (!entryExists) {
-                        tagDao.upsertTaskTag(
-                            TaskTagsEntity(
-                                taskUuid = event.taskId,
-                                tagUuid = event.tagId,
-                                isActive = event.isActive,
-                                updateTime = Clock.System.now()
-                            )
-                        )
-                        Log.d("Test", "UpdateTaskTag: Insert ${event.isActive}")
-                    } else {
-                        tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive)
-                    }
+                    tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive, Clock.System.now())
                     _state.update {
                         it.copy(
                             taskTags = taskDao.getAllTasksFromTagByUuid(event.tagId)
-                        )
-                    }
-                }
-            }
-
-            is TaskDbEvent.InsertNewTaskTag -> {
-                viewModelScope.launch {
-                    val entryExists = tagDao.searchForExistingEnty(event.taskId, event.tagId)
-
-                    if (!entryExists) {
-                        tagDao.insertTaskTag(
-                            TaskTagsEntity(
-                                taskUuid = event.taskId,
-                                tagUuid = event.tagId,
-                                isActive = event.isActive,
-                                updateTime = Clock.System.now()
-                            )
-                        )
-                    } else {
-                        tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive)
-                    }
-                    _state.update {
-                        it.copy(
-                            taskTags = it.taskTags + TaskTagsEntity(
-                                taskUuid = event.taskId,
-                                tagUuid = event.tagId,
-                                isActive = event.isActive,
-                                updateTime = Clock.System.now()
-                            )
                         )
                     }
                 }

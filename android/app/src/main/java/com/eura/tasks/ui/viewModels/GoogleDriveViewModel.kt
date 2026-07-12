@@ -30,7 +30,6 @@ import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskEntity
-import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
@@ -79,7 +78,7 @@ data class TagSyncModel(
 
 data class TaskTagsSyncModel(
     val taskUuid: String,
-    val tagUUid: String,
+    val tagUuid: String,
     val isActive: Boolean,
     val updateTime: Instant
 )
@@ -427,7 +426,7 @@ class GoogleDriveViewModel(
                     downloadedTaskTags.add(
                         TaskTagsEntity(
                             taskUuid = syncModel.taskUuid,
-                            tagUuid = syncModel.tagUUid,
+                            tagUuid = syncModel.tagUuid,
                             isActive = syncModel.isActive,
                             updateTime = syncModel.updateTime
                         )
@@ -823,7 +822,7 @@ class GoogleDriveViewModel(
                         val fileName = "task_tag_${entity.uuid}.json"
                         val syncModel = TaskTagsSyncModel(
                             taskUuid = entity.taskUuid,
-                            tagUUid = entity.tagUuid,
+                            tagUuid = entity.tagUuid,
                             isActive = entity.isActive,
                             updateTime = entity.updateTime
                         )

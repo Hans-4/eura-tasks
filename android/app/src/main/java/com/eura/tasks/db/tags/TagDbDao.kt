@@ -10,6 +10,7 @@ import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.Instant
 
 @Dao
 interface TagDbDao {
@@ -41,8 +42,8 @@ interface TagDbDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
 
-    @Query("UPDATE task_tags SET isActive = :isActive WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid")
-    suspend fun updateTaskTagActive(taskUuid: String, tagUuid: String, isActive: Boolean)
+    @Query("UPDATE task_tags SET isActive = :isActive AND updateTime = :updateTime WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid")
+    suspend fun updateTaskTagActive(taskUuid: String, tagUuid: String, isActive: Boolean, updateTime: Instant)
     
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
     suspend fun deleteByTaskUuid(taskUuid: String)

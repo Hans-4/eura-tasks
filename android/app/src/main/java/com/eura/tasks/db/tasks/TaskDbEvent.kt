@@ -21,7 +21,6 @@ sealed interface TaskDbEvent {
     data class UpdateDescriptionByUuid(val uuid: String, val newDescription: String): TaskDbEvent
     data class GetTaskById(val id: String): TaskDbEvent
     data class GetAllTasksByTagUuid(val uuid: String): TaskDbEvent
-    data class InsertNewTaskTag(val taskId: String, val tagId: String, val isActive: Boolean): TaskDbEvent
     data class UpdateTaskTag(val taskId: String, val tagId: String, val isActive: Boolean): TaskDbEvent
 
     data class SetTaskDate(val date: Long?): TaskDbEvent
