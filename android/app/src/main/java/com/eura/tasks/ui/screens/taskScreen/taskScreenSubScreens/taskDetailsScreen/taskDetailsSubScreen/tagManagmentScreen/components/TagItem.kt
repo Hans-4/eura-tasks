@@ -29,7 +29,7 @@ fun TagItem(
     task: TaskEntity,
     onTagDbEvent: (TagDbEvent) -> Unit
 ) {
-    val checked = taskTag.any { it.tagUuid == tag.tagUuid }
+    val checked = taskTag.any { it.tagUuid == tag.tagUuid && it.isActive }
 
     Button(
         onClick = { onTagList(tag.tagUuid) },
@@ -47,16 +47,7 @@ fun TagItem(
         ) {
             Checkbox(
                 onCheckedChange = {
-                    if (checked) {
-                        onTagDbEvent(TagDbEvent.RemoveFromTaskByTagId(tag.tagUuid))
-                    } else {
-                        onTagDbEvent(
-                            TagDbEvent.InsertNewTaskTag(
-                            task.taskUuid,
-                            tag.tagUuid
-                            )
-                        )
-                    }
+                    onTagDbEvent(TagDbEvent.UpdateTaskTag(task.taskUuid, tag.tagUuid, it))
                 },
                 checked = checked
             )

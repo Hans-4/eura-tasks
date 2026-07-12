@@ -61,9 +61,6 @@ interface TaskDbDao {
     @Query("SELECT * FROM task_tags WHERE tagUuid = :tagUuid")
     suspend fun getAllTasksFromTagByUuid(tagUuid: String): List<TaskTagsEntity>
 
-    @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
-    suspend fun removeTagByTaskUuid(taskUuid: String)
-
 
     @Query("SELECT notificationTime FROM tasks WHERE taskUuid = :uuid")
     suspend fun getNotificationTimeByUuid(uuid: String): Instant?

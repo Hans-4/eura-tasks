@@ -126,7 +126,9 @@ class TaskDbViewModel(
                             tagDao.insertTaskTag(
                                 TaskTagsEntity(
                                     task.taskUuid,
-                                    tagUuid
+                                    tagUuid,
+                                    true,
+                                    currentDateTime
                                 )
                             )
                         }
@@ -331,12 +333,26 @@ class TaskDbViewModel(
                 }
             }
 
-            is TaskDbEvent.RemoveFromTagByTaskId -> {
+            is TaskDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    taskDao.removeTagByTaskUuid(event.taskId)
-                    _state.update { it ->
+                    val entryExists = tagDao.searchForExistingEnty(event.taskId, event.tagId)
+                    Log.d("Test", "UpdateTaskTag: $entryExists")
+                    if (!entryExists) {
+                        tagDao.upsertTaskTag(
+                            TaskTagsEntity(
+                                taskUuid = event.taskId,
+                                tagUuid = event.tagId,
+                                isActive = event.isActive,
+                                updateTime = Clock.System.now()
+                            )
+                        )
+                        Log.d("Test", "UpdateTaskTag: Insert ${event.isActive}")
+                    } else {
+                        tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive)
+                    }
+                    _state.update {
                         it.copy(
-                            taskTags = it.taskTags.filter { it.taskUuid != event.taskId }
+                            taskTags = taskDao.getAllTasksFromTagByUuid(event.tagId)
                         )
                     }
                 }
@@ -344,21 +360,30 @@ class TaskDbViewModel(
 
             is TaskDbEvent.InsertNewTaskTag -> {
                 viewModelScope.launch {
-                    tagDao.insertTaskTag(
-                        TaskTagsEntity(
-                            taskUuid = event.taskId,
-                            tagUuid = event.tagId
+                    val entryExists = tagDao.searchForExistingEnty(event.taskId, event.tagId)
+
+                    if (!entryExists) {
+                        tagDao.insertTaskTag(
+                            TaskTagsEntity(
+                                taskUuid = event.taskId,
+                                tagUuid = event.tagId,
+                                isActive = event.isActive,
+                                updateTime = Clock.System.now()
+                            )
                         )
-                    )
+                    } else {
+                        tagDao.updateTaskTagActive(event.taskId, event.tagId, event.isActive)
+                    }
                     _state.update {
                         it.copy(
                             taskTags = it.taskTags + TaskTagsEntity(
                                 taskUuid = event.taskId,
-                                tagUuid = event.tagId
+                                tagUuid = event.tagId,
+                                isActive = event.isActive,
+                                updateTime = Clock.System.now()
                             )
                         )
                     }
-
                 }
             }
 

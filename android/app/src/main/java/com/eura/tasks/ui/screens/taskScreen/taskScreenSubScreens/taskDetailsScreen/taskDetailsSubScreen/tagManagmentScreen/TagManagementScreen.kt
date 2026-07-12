@@ -63,8 +63,8 @@ fun TagManagementScreen(
     val tags = tagDbState.tags
 
     val (checked, unchecked) = remember(tags, taskTags) {
-        val checkedIds = taskTags.map { it.tagUuid }.toSet()
-        tags.sortedBy { it.title }.partition { it.tagUuid in checkedIds }
+        val activeTagIds = taskTags.filter { it.isActive }.map { it.tagUuid }.toSet()
+        tags.sortedBy { it.title }.partition { it.tagUuid in activeTagIds }
     }
 
     // 2. Sync tab selection with scroll position when scrolling stops
@@ -141,7 +141,6 @@ fun TagManagementScreen(
             items(checked, key = { it.tagUuid }) { item ->
                 TagItem(
                     onTagList = onTagList,
-
                     tag = item,
                     taskTag = taskTags,
                     task = task,

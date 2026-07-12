@@ -68,7 +68,7 @@ fun TagScreen(
     val scope = rememberCoroutineScope()
 
     val (checked, unchecked) = remember(tasks, taskTags) {
-        val checkedIds = taskTags.map { it.taskUuid }.toSet()
+        val checkedIds = taskTags.filter { it.isActive }.map { it.taskUuid }.toSet()
         tasks.sortedBy { it.title }.partition { it.taskUuid in checkedIds }
     }
 

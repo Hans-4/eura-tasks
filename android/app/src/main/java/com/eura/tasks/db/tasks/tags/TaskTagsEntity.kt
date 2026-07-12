@@ -2,12 +2,13 @@ package com.eura.tasks.db.tasks.tags
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.PrimaryKey
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskEntity
+import kotlinx.datetime.Instant
 
 @Entity(
     tableName = "task_tags",
-    primaryKeys = ["taskUuid", "tagUuid"],
     foreignKeys = [
         ForeignKey(
             entity = TagsEntity::class,
@@ -27,4 +28,8 @@ import com.eura.tasks.db.tasks.TaskEntity
 data class TaskTagsEntity(
     val taskUuid: String,
     val tagUuid: String,
+    val isActive: Boolean = false,
+    val updateTime: Instant,
+    @PrimaryKey
+    val uuid: String = "$taskUuid$tagUuid"
 )

@@ -11,6 +11,6 @@ sealed interface TagDbEvent {
     data class GetAllTagsByUuid(val uuid: String): TagDbEvent
     data class GetAllTagsByTaskId(val taskId: String): TagDbEvent
     data class DeleteTag(val tag: TagsEntity): TagDbEvent
-    data class InsertNewTaskTag(val taskUuid: String, val tagUuid: String): TagDbEvent
-    data class RemoveFromTaskByTagId(val tagId: String): TagDbEvent
+    data class InsertNewTaskTag(val taskUuid: String, val tagUuid: String, val isActive: Boolean): TagDbEvent
+    data class UpdateTaskTag(val taskUuid: String, val tagId: String, val isActive: Boolean): TagDbEvent
 }

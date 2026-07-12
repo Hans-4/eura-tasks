@@ -89,14 +89,18 @@ class TagDbViewModel(
                         tagDao.insertTaskTag(
                             TaskTagsEntity(
                                 taskUuid = event.taskId,
-                                tagUuid = tag.tagUuid
+                                tagUuid = tag.tagUuid,
+                                isActive = true,
+                                updateTime = now
                             )
                         )
                         _state.update {
                             it.copy(
                                 taskTags = it.taskTags + TaskTagsEntity(
                                     taskUuid = event.taskId,
-                                    tagUuid = tag.tagUuid
+                                    tagUuid = tag.tagUuid,
+                                    isActive = true,
+                                    updateTime = now
                                 )
                             )
                         }
@@ -140,10 +144,9 @@ class TagDbViewModel(
             }
 
             is TagDbEvent.GetAllTagsByUuid -> {
-                //TODO: Improve this
                 viewModelScope.launch {
                     val taskTagsEntity = tagDao.getAllTagsFromTask(event.uuid)
-                    val tagsUuids = taskTagsEntity.map { it.tagUuid }
+                    val tagsUuids = taskTagsEntity.filter { it.isActive }.map { it.tagUuid }
                     val allTags = tagDao.getTagsByUuids(tagsUuids)
 
                     _state.update {
@@ -183,26 +186,43 @@ class TagDbViewModel(
                     tagDao.insertTaskTag(
                         TaskTagsEntity(
                             taskUuid = event.taskUuid,
-                            tagUuid = event.tagUuid
+                            tagUuid = event.tagUuid,
+                            isActive = event.isActive,
+                            updateTime = Clock.System.now()
                         )
                     )
                     _state.update {
                         it.copy(
                             taskTags = it.taskTags + TaskTagsEntity(
                                 taskUuid = event.taskUuid,
-                                tagUuid = event.tagUuid
+                                tagUuid = event.tagUuid,
+                                isActive = event.isActive,
+                                updateTime = Clock.System.now()
                             )
                         )
                     }
                 }
             }
 
-            is TagDbEvent.RemoveFromTaskByTagId -> {
+            is TagDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    tagDao.removeByTagId(event.tagId)
-                    _state.update { it ->
+                    val entryExists = tagDao.searchForExistingEnty(event.taskUuid, event.tagId)
+                    if (!entryExists) {
+                        tagDao.upsertTaskTag(
+                            TaskTagsEntity(
+                                taskUuid = event.taskUuid,
+                                tagUuid = event.tagId,
+                                isActive = event.isActive,
+                                updateTime = Clock.System.now()
+                            )
+                        )
+                    } else {
+                        tagDao.updateTaskTagActive(event.taskUuid, event.tagId, event.isActive)
+                    }
+
+                    _state.update {
                         it.copy(
-                            taskTags = it.taskTags.filter { it.tagUuid != event.tagId }
+                            taskTags = tagDao.getAllTagsFromTaskById(event.taskUuid)
                         )
                     }
                 }

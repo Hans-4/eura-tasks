@@ -79,7 +79,9 @@ data class TagSyncModel(
 
 data class TaskTagsSyncModel(
     val taskUuid: String,
-    val tagUUid: String
+    val tagUUid: String,
+    val isActive: Boolean,
+    val updateTime: Instant
 )
 
 data class DeletedTaskTagsSyncModel(
@@ -398,62 +400,46 @@ class GoogleDriveViewModel(
         )
     }
 
-    suspend fun syncTaskTags(): List<TaskTagsEntity> = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptyList()
-        val folderId = getOrCreateSubFolderId("task_tags", mainFolderId) ?: return@withContext emptyList()
+    suspend fun downloadTaskTags(): List<TaskTagsEntity> = withContext(Dispatchers.IO) {
+        val downloadedTaskTags = mutableListOf<TaskTagsEntity>()
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
 
-        val localTags = tagDao.getAllTaskTags().first()
-        val typeToken = object : TypeToken<List<TaskTagsSyncModel>>() {}.type
+        try {
+            val folderId = getOrCreateSubFolderId(
+                folderName = "task_tags",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+            ) ?: return@withContext emptyList()
 
-        return@withContext sync(
-            folderName = "task_tags",
-            folderId = folderId,
-            fileName = "task_tags.json",
-            localData = localTags,
-            transformToRemote = { entity ->
-                TaskTagsSyncModel(
-                    taskUuid = entity.taskUuid,
-                    tagUUid = entity.tagUuid
-                )
-            },
-            downloadTypeToken = typeToken,
-            transformToLocal = { model ->
-                TaskTagsEntity(
-                    taskUuid = model.taskUuid,
-                    tagUuid = model.tagUUid
-                )
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+
+            fileList.forEach { file ->
+                try {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
+
+                    val jsonString = outputStream.toString()
+                    val syncModel = gson.fromJson(jsonString, TaskTagsSyncModel::class.java)
+
+                    downloadedTaskTags.add(
+                        TaskTagsEntity(
+                            taskUuid = syncModel.taskUuid,
+                            tagUuid = syncModel.tagUUid,
+                            isActive = syncModel.isActive,
+                            updateTime = syncModel.updateTime
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to download/parse file ${file.name}: ${e.message}")
+                }
             }
-        )
-    }
-
-    suspend fun syncDeletedTaskTags(): List<DeletedTaskTagsEntity> = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptyList()
-        val folderId = getOrCreateSubFolderId("deleted_task_tags", mainFolderId) ?: return@withContext emptyList()
-
-        val localTags = tagDao.getAllDeletedTaskTags().first()
-        val typeToken = object : TypeToken<List<DeletedTaskTagsSyncModel>>() {}.type
-
-        return@withContext sync(
-            folderName = "deleted_task_tags",
-            folderId = folderId,
-            fileName = "deleted_task_tags.json",
-            localData = localTags,
-            transformToRemote = { entity ->
-                DeletedTaskTagsSyncModel(
-                    taskUuid = entity.deletedTaskUuid,
-                    tagUUid = entity.deletedTagUuid,
-                    deletionDate = entity.deletionDate
-                )
-            },
-            downloadTypeToken = typeToken,
-            transformToLocal = { model ->
-                DeletedTaskTagsEntity(
-                    deletedTaskUuid = model.taskUuid,
-                    deletedTagUuid = model.tagUUid,
-                    deletionDate = model.deletionDate,
-                )
-            }
-        )
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Download list failed: ${e.message}")
+        }
+        return@withContext downloadedTaskTags
     }
 
 
@@ -470,10 +456,8 @@ class GoogleDriveViewModel(
                 parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
             ) ?: return@withContext emptyList()
 
-            val query =
-                "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
-            val fileList =
-                driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
 
             fileList.forEach { file ->
                 try {
@@ -507,7 +491,12 @@ class GoogleDriveViewModel(
         return@withContext downloadedTasks
     }
 
-    fun deleteTaskFile(uuid: String, onResult: (Boolean) -> Unit = {}) {
+    fun deleteTaskFile(
+        type: String,
+        uuid: String,
+        onResult: (Boolean) -> Unit = {},
+        folderName: String,
+        ) {
         viewModelScope.launch(Dispatchers.IO) {
             if (driveService == null) {
                 Log.e("eura-tasks", "Drive Service not initialized")
@@ -516,7 +505,7 @@ class GoogleDriveViewModel(
             }
             try {
                 val folderId = getOrCreateSubFolderId(
-                    folderName = "tasks",
+                    folderName = folderName,
                     parentFolder = getOrCreateMainFolderId() ?: run {
                         withContext(Dispatchers.Main) { onResult(false) }
                         return@launch
@@ -526,7 +515,7 @@ class GoogleDriveViewModel(
                     return@launch
                 }
 
-                val fileName = "task_$uuid.json"
+                val fileName = "${type}_$uuid.json"
                 val query = "name = '$fileName' and '$folderId' in parents and trashed = false"
 
                 val existingFile =
@@ -608,8 +597,7 @@ class GoogleDriveViewModel(
                 val cloudDeletedItems = syncDeletedItems()
                 val cloudActiveLists = syncUserLists()
                 val cloudActiveTags = syncTags()
-                val remoteDeletedTaskTags = syncDeletedTaskTags()
-                val remoteActiveTaskTags = syncTaskTags()
+
 
                 // 2. Reconciliation Logic
                 val localDeletedItemUuids = deletedItemsDao.getAllDeletedItems()
@@ -801,7 +789,11 @@ class GoogleDriveViewModel(
 
                 cloudTasks.forEach { task ->
                     if (task.taskUuid in allDeletedItemUuids) {
-                        deleteTaskFile(task.taskUuid)
+                        deleteTaskFile(
+                            type = "task",
+                            uuid = task.taskUuid,
+                            folderName = "tasks"
+                        )
                         Log.d("eura-tasks", "Cloud task file ${task.taskUuid} matched a tombstone. Purging from Drive.")
                         _syncMessage.value = "Cloud task file ${task.taskUuid} matched a tombstone. Purging from Drive."
                     } else if (task.taskUuid !in localActiveTaskUuids) {
@@ -824,42 +816,55 @@ class GoogleDriveViewModel(
                     }
                 }
 
-                // 5. Reconcile Task Tags (Associations)
-                val localDeletedTaskTags = tagDao.getAllDeletedTaskTags().first()
-                val allDeletedTaskTags = localDeletedTaskTags + remoteDeletedTaskTags
-                remoteDeletedTaskTags.forEach { remoteDeletedTaskTag ->
-                    if (localDeletedTaskTags.none { it.deletedTaskUuid == remoteDeletedTaskTag.deletedTaskUuid && it.deletedTagUuid == remoteDeletedTaskTag.deletedTagUuid }) {
-                        tagDao.upsertDeletedTaskTag(remoteDeletedTaskTag)
-                    }
-                }
-
-                val cleanRemoteActiveTaskTags = remoteActiveTaskTags.filter { taskTag ->
-                    allDeletedTaskTags.none { deleted ->
-                        deleted.deletedTaskUuid == taskTag.taskUuid && deleted.deletedTagUuid == taskTag.tagUuid
-                    }
-                }
-
-                if (cleanRemoteActiveTaskTags.size < remoteActiveTaskTags.size) {
-                    val taskTagFolderId = getOrCreateSubFolderId("task_tags", getOrCreateMainFolderId())
-                    if (taskTagFolderId != null) {
-                        try {
-                            val finalLocalTaskTags = tagDao.getAllTaskTags().first()
-                            val syncTaskTags = finalLocalTaskTags.map { entity ->
-                                TaskTagsSyncModel(
-                                    taskUuid = entity.taskUuid,
-                                    tagUUid = entity.tagUuid
-                                )
+                val taskTagFolderId = getOrCreateSubFolderId(folderName = "task_tags", parentFolder = getOrCreateMainFolderId() ?: return@launch) ?: return@launch
+                val localTaskTags = tagDao.getAllTaskTags().first()
+                localTaskTags.forEach { entity ->
+                    try {
+                        val fileName = "task_tag_${entity.uuid}.json"
+                        val syncModel = TaskTagsSyncModel(
+                            taskUuid = entity.taskUuid,
+                            tagUUid = entity.tagUuid,
+                            isActive = entity.isActive,
+                            updateTime = entity.updateTime
+                        )
+                        val jsonContent = gson.toJson(syncModel)
+                        val contentStream =
+                            ByteArrayContent.fromString("application/json", jsonContent)
+                        val checkQuery =
+                            "name = '$fileName' and '$taskTagFolderId' in parents and trashed = false"
+                        val existingFile = driveService?.files()?.list()?.setQ(checkQuery)
+                            ?.execute()?.files?.firstOrNull()
+                        if (existingFile != null) {
+                            driveService?.files()?.update(existingFile.id, null, contentStream)
+                                ?.execute()
+                        } else {
+                            val metadata = com.google.api.services.drive.model.File().apply {
+                                name = fileName
+                                parents = listOf(taskTagFolderId)
                             }
-                            val jsonContent = gson.toJson(syncTaskTags)
-                            val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
-                            val query = "name = 'task_tags.json' and '$taskTagFolderId' in parents and trashed = false"
-                            val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
-                            if (existingFile != null) {
-                                driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
-                            }
-                        } catch (e: Exception) {
-                            Log.e("eura-tasks", "Failed to fix task_tags.json on cloud: ${e.message}")
+                            driveService?.files()?.create(metadata, contentStream)?.execute()
                         }
+                    } catch (e: Exception) {
+                        Log.e("eura-tasks", "Upload failed for task tag ${entity.uuid}: ${e.message}")
+                    }
+                }
+
+                val cloudTaskTags = downloadTaskTags()
+                val localActiveTaskTags = tagDao.getAllTaskTags().first()
+
+                cloudTaskTags.forEach { tag ->
+                    if (!tag.isActive) {
+                        deleteTaskFile(
+                            type = "task_tag",
+                            uuid = tag.uuid,
+                            folderName = "task_tags"
+                        )
+                        Log.d("eura-tasks", "Cloud task tag file ${tag.uuid} matched a tombstone. Purging from Drive.")
+                        _syncMessage.value = "Cloud task tag file ${tag.uuid} matched a tombstone. Purging from Drive."
+                    } else if (tag.uuid !in localActiveTaskTags.map { it.uuid }) {
+                        tagDao.upsertTaskTag(tag)
+                        Log.d("eura-tasks", "Downloaded new cloud task tag: ${tag.uuid}")
+                        _syncMessage.value = "Downloaded new cloud task tag: ${tag.uuid}"
                     }
                 }
 
