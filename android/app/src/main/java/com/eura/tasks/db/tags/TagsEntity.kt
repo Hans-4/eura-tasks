@@ -2,6 +2,7 @@ package com.eura.tasks.db.tags
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 import java.util.UUID
 
@@ -10,8 +11,8 @@ import java.util.UUID
 )
 data class TagsEntity(
     val title: String,
-    val creationTime: Instant,
-    val updateTime: Instant,
+    val creationTime: Instant = Clock.System.now(),
+    val updateTime: Instant = Clock.System.now(),
     @PrimaryKey
     val tagUuid: String = UUID.randomUUID().toString(),
 )

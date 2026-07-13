@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.eura.tasks.db.tasks.TaskEntity
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 @Entity(
@@ -22,6 +23,13 @@ data class RepeatEveryMonthEntity(
     val repeatEveryMonth: Int,
     val repeatDay: Int,
     val minutesSinceMidnight: Int?,
+    val lastRepeat: Instant? = null,
+
+    val endsNever: Boolean,
+    val endDate: Instant?,
+    val endAfterRepetitions: Int?,
+
+    val updateTime: Instant = Clock.System.now(),
     @PrimaryKey
     val taskUuid: String,
 )

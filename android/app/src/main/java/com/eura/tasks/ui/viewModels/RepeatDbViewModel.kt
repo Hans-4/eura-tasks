@@ -2,14 +2,12 @@ package com.eura.tasks.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.eura.tasks.db.tasks.repeats.EndRepeatsEntity
 import com.eura.tasks.db.tasks.repeats.RepeatDbDao
 import com.eura.tasks.db.tasks.repeats.RepeatDbEvent
 import com.eura.tasks.db.tasks.repeats.RepeatDbState
-import com.eura.tasks.db.tasks.repeats.RepeatEveryDayEntity
+import com.eura.tasks.db.tasks.repeats.RepeatEveryDayYearEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryMonthEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryWeekEntity
-import com.eura.tasks.db.tasks.repeats.RepeatEveryYearEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -42,13 +40,26 @@ class RepeatDbViewModel(
                 val endAfterRepeats = _state.value.endAfterRepeats
 
                 viewModelScope.launch {
+                    val endsRadiobutton = _state.value.selectedRadioButton
+                    val endsNever = if (endsRadiobutton == 0) true else false
+
+                    val endDateInstant = endDate?.let { Instant.fromEpochMilliseconds(it) }
+                    val endDate = if (endsRadiobutton == 1) endDateInstant else null
+
+                    val endAfterRepetitions = if (endsRadiobutton == 2) endAfterRepeats.toIntOrNull() else null
+
                     when (_state.value.selectedRepeatType) {
                         0 -> repeatDao.upsertRepeatDay(
-                            RepeatEveryDayEntity(
+                            RepeatEveryDayYearEntity(
                                 taskUuid = taskUuid,
                                 startDate = instant,
                                 repeatEveryDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
+                                period = _state.value.selectedRepeatType,
+
+                                endsNever = endsNever,
+                                endDate = endDate,
+                                endAfterRepetitions = endAfterRepetitions,
                             )
                         )
 
@@ -59,6 +70,10 @@ class RepeatDbViewModel(
                                 repeatEveryWeek = repeatEvery,
                                 repeatDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
+
+                                endsNever = endsNever,
+                                endDate = endDate,
+                                endAfterRepetitions = endAfterRepetitions,
                             )
                         )
 
@@ -69,49 +84,15 @@ class RepeatDbViewModel(
                                 repeatEveryMonth = repeatEvery,
                                 repeatDay = repeatEvery,
                                 minutesSinceMidnight = minutesSinceMidnight,
-                            )
-                        )
 
-                        3 -> repeatDao.upsertRepeatYear(
-                            RepeatEveryYearEntity(
-                                taskUuid = taskUuid,
-                                startDate = instant,
-                                repeatEveryYear = repeatEvery,
-                                minutesSinceMidnight = minutesSinceMidnight,
+                                endsNever = endsNever,
+                                endDate = endDate,
+                                endAfterRepetitions = endAfterRepetitions,
                             )
                         )
                     }
-
-                    when (_state.value.selectedRadioButton) {
-                        0 -> repeatDao.upsertEndRepeat(
-                            EndRepeatsEntity(
-                                taskUuid = taskUuid,
-                                endsNever = true,
-                                endDate = null,
-                                endAfterRepetitions = null,
-                            )
-                        )
-
-                        1 -> {
-                            val endDateInstant = endDate?.let { Instant.fromEpochMilliseconds(it) }
-                            repeatDao.upsertEndRepeat(
-                                EndRepeatsEntity(
-                                    taskUuid = taskUuid,
-                                    endsNever = false,
-                                    endDate = endDateInstant,
-                                    endAfterRepetitions = null,
-                                )
-                            )
-                        }
-
-                        2 -> repeatDao.upsertEndRepeat(
-                            EndRepeatsEntity(
-                                taskUuid = taskUuid,
-                                endsNever = false,
-                                endDate = null,
-                                endAfterRepetitions = endAfterRepeats.toInt(),
-                            )
-                        )
+                    _state.update {
+                        RepeatDbState()
                     }
                 }
             }
@@ -194,6 +175,25 @@ class RepeatDbViewModel(
                     it.copy(
                         toSave = true
                     )
+                }
+            }
+
+            is RepeatDbEvent.RemoveRepeat -> {
+                viewModelScope.launch {
+                    val existsDayYear = repeatDao.getRepeatDayYear(event.taskUuid)
+                    if (existsDayYear != null) {
+                        repeatDao.removeRepeatDay(existsDayYear)
+                    } else {
+                        val existsWeek = repeatDao.getRepeatWeek(event.taskUuid)
+                        if (existsWeek != null) {
+                            repeatDao.removeRepeatWeek(existsWeek)
+                        } else {
+                            val existsMonth = repeatDao.getRepeatMonth(event.taskUuid)
+                            if (existsMonth != null) {
+                                repeatDao.removeRepeatMonth(existsMonth)
+                            }
+                        }
+                    }
                 }
             }
         }

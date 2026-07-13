@@ -1,11 +1,9 @@
 package com.eura.tasks.db.tasks.repeats
 
 data class RepeatDbState(
-    val dayRepeats: List<RepeatEveryDayEntity> = emptyList(),
+    val dayRepeats: List<RepeatEveryDayYearEntity> = emptyList(),
     val weekRepeats: List<RepeatEveryWeekEntity> = emptyList(),
     val monthRepeats: List<RepeatEveryMonthEntity> = emptyList(),
-    val yearRepeats: List<RepeatEveryYearEntity> = emptyList(),
-    val endRepeats: List<EndRepeatsEntity> = emptyList(),
 
     val selectedRepeatType: Int = 1, //0: Day, 1: Week, 2: Month, 3: Year
     val repeatEvery: String = "1",

@@ -6,6 +6,7 @@ import kotlinx.datetime.Instant
 import java.util.UUID
 import com.eura.tasks.ui.Converter
 import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import kotlinx.datetime.Clock
 
 /**
  * Represents a single task item within the application database.
@@ -22,8 +23,8 @@ data class UserListEntity(
     override val type: String,
     override val colorString: String,
 
-    val creationTime: Instant,
-    val updateTime: Instant,
+    val creationTime: Instant = Clock.System.now(),
+    val updateTime: Instant = Clock.System.now(),
 
     @PrimaryKey
     override val listId: String = UUID.randomUUID().toString(),

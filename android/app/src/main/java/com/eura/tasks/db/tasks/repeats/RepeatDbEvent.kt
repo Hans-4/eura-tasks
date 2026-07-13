@@ -13,4 +13,6 @@ sealed interface RepeatDbEvent {
     data class SetRepeatEndType(val type: Int): RepeatDbEvent
 
     object SetToSave: RepeatDbEvent
+
+    data class RemoveRepeat(val taskUuid: String): RepeatDbEvent
 }

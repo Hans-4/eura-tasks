@@ -53,14 +53,11 @@ class ListDbViewModel(
                         onUiEvent(UiEvent.SetReason(1))
                         onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
                     } else {
-                        val now = Clock.System.now()
 
                         val list = UserListEntity(
                             title = title,
                             type = type,
                             colorString = color,
-                            creationTime = now,
-                            updateTime = now,
                         )
                         listDao.upsertList(list)
                         _state.update {

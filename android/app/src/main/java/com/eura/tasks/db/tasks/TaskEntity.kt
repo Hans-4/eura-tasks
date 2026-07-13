@@ -7,6 +7,7 @@ import com.eura.tasks.db.lists.UserListEntity
 import kotlinx.datetime.Instant
 import java.util.UUID
 import com.eura.tasks.db.Converters
+import kotlinx.datetime.Clock
 
 /**
  * Represents a single task item within the application database.
@@ -45,8 +46,8 @@ data class TaskEntity(
 
     override val parentListId: String,
 
-    override val creationTime: Instant,
-    override val updateTime: Instant,
+    override val creationTime: Instant = Clock.System.now(),
+    override val updateTime: Instant = Clock.System.now(),
 
     @PrimaryKey
     override val taskUuid: String = UUID.randomUUID().toString(),
