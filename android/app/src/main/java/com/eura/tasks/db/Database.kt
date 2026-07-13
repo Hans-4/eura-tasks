@@ -11,12 +11,10 @@ import com.eura.tasks.db.tags.TagDbDao
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.db.tasks.TaskEntity
-import com.eura.tasks.db.tasks.repeats.EndRepeatsEntity
 import com.eura.tasks.db.tasks.repeats.RepeatDbDao
-import com.eura.tasks.db.tasks.repeats.RepeatEveryDayEntity
+import com.eura.tasks.db.tasks.repeats.RepeatEveryDayYearEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryMonthEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryWeekEntity
-import com.eura.tasks.db.tasks.repeats.RepeatEveryYearEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Database(
@@ -26,11 +24,9 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
         TagsEntity::class,
         TaskTagsEntity::class,
 
-        RepeatEveryDayEntity::class,
+        RepeatEveryDayYearEntity::class,
         RepeatEveryWeekEntity::class,
         RepeatEveryMonthEntity::class,
-        RepeatEveryYearEntity::class,
-        EndRepeatsEntity::class,
 
         DeletedItemsEntity::class,
     ],
