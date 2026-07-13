@@ -17,7 +17,6 @@ import com.eura.tasks.db.tasks.repeats.RepeatEveryDayEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryMonthEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryWeekEntity
 import com.eura.tasks.db.tasks.repeats.RepeatEveryYearEntity
-import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 
 @Database(
@@ -26,7 +25,6 @@ import com.eura.tasks.db.tasks.tags.TaskTagsEntity
         UserListEntity::class,
         TagsEntity::class,
         TaskTagsEntity::class,
-        DeletedTaskTagsEntity::class,
 
         RepeatEveryDayEntity::class,
         RepeatEveryWeekEntity::class,

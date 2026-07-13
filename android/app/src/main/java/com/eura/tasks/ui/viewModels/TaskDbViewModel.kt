@@ -115,8 +115,6 @@ class TaskDbViewModel(
                         repeatType = repeatType,
                         notificationTime = dueDateTime,
                         parentListId = parentListId,
-                        creationTime = currentDateTime,
-                        updateTime = currentDateTime,
                     )
 
                     val generatedTaskId = taskDao.upsertTask(task).toInt()

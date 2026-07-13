@@ -2,6 +2,7 @@ package com.eura.tasks.db.deletedItems
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 /**
@@ -12,7 +13,7 @@ import kotlinx.datetime.Instant
  */
 @Entity(tableName = "deleted_items")
 data class DeletedItemsEntity(
-    val deletionTime: Instant,
+    val deletionTime: Instant = Clock.System.now(),
     val type: Int,
     @PrimaryKey
     val deletedUuid: String,

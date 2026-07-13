@@ -7,7 +7,6 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Upsert
 import com.eura.tasks.db.deletedItems.DeletedItemsEntity
-import com.eura.tasks.db.tasks.tags.DeletedTaskTagsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.datetime.Instant
@@ -31,14 +30,10 @@ interface TagDbDao {
 
     @Query("SELECT * FROM task_tags")
     fun getAllTaskTags(): Flow<List<TaskTagsEntity>>
-    @Query("SELECT * FROM deleted_task_tags")
-    fun getAllDeletedTaskTags(): Flow<List<DeletedTaskTagsEntity>>
     
     @Query("SELECT * FROM deleted_items WHERE type = 3")
     fun getAllDeletedTags(): Flow<List<DeletedItemsEntity>>
 
-    @Upsert
-    suspend fun upsertDeletedTaskTag(deletedTaskTag: DeletedTaskTagsEntity)
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
 

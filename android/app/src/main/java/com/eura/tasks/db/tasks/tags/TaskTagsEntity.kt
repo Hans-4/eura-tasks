@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.eura.tasks.db.tags.TagsEntity
 import com.eura.tasks.db.tasks.TaskEntity
+import kotlinx.datetime.Clock
 import kotlinx.datetime.Instant
 
 @Entity(
@@ -29,7 +30,7 @@ data class TaskTagsEntity(
     val taskUuid: String,
     val tagUuid: String,
     val isActive: Boolean = false,
-    val updateTime: Instant,
+    val updateTime: Instant = Clock.System.now(),
     @PrimaryKey
     val uuid: String = "$taskUuid$tagUuid"
 )
