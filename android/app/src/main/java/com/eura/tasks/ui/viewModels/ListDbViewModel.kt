@@ -101,7 +101,7 @@ class ListDbViewModel(
                     val deletedList = DeletedItemsEntity(
                         deletedUuid = list.listId,
                         deletionTime = currentDateTime,
-                        type = 1
+                        type = 2
                     )
                     taskDao.deleteTasksByListName(event.name)
                     deletedItemsDao.upsertDeletedItem(deletedList)

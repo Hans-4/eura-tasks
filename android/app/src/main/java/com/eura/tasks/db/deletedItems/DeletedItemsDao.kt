@@ -13,6 +13,9 @@ interface DeletedItemsDao {
     @Query("SELECT * FROM deleted_items")
     fun getAllDeletedItems(): Flow<List<DeletedItemsEntity>>
 
+    @Query("DELETE FROM deleted_items WHERE deletedUuid = :uuid")
+    suspend fun deleteDeletedItemByUuid(uuid: String)
+
     @Query("DELETE FROM deleted_items WHERE deletionTime < :cutoffTimestamp")
     suspend fun deleteLogsOlderThan(cutoffTimestamp: Long)
 }

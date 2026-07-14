@@ -23,6 +23,9 @@ interface TagDbDao {
     @Delete
     suspend fun deleteTag(tag: TagsEntity)
 
+    @Query("DELETE FROM tags WHERE tagUuid = :uuid")
+    suspend fun deleteTagByUuid(uuid: String)
+
     @Update
     suspend fun updateTaskTag(tag: TaskTagsEntity)
 

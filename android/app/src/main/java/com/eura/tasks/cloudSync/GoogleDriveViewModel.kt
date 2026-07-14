@@ -289,6 +289,53 @@ class GoogleDriveViewModel(
         return@withContext remoteData
     }
 
+    suspend fun downloadAllDeletedItems(): List<DeletedItemsEntity> = withContext(Dispatchers.IO) {
+        val downloadedLists = mutableListOf<DeletedItemsEntity>()
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
+
+        try {
+            val syncFolderId = getOrCreateSubFolderId(
+                folderName = ".sync",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+            ) ?: return@withContext emptyList()
+
+            val folderId = getOrCreateSubFolderId(
+                folderName = "deleted_items",
+                parentFolder = syncFolderId
+            ) ?: return@withContext emptyList()
+
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+
+            fileList.forEach { file ->
+                try {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
+
+                    val jsonString = outputStream.toString()
+                    val syncModel = gson.fromJson(jsonString, DeletedItemsSyncModel::class.java)
+
+                    downloadedLists.add(
+                        DeletedItemsEntity(
+                            deletedUuid = syncModel.id,
+                            deletionTime = syncModel.deletionTime,
+                            type = syncModel.type
+                        )
+                    )
+
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to download/parse file ${file.name}: ${e.message}")
+                }
+                }
+
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Download list failed: ${e.message}")
+        }
+        return@withContext downloadedLists
+    }
 
     suspend fun downloadAllTaskLists(): List<UserListEntity> = withContext(Dispatchers.IO) {
         val downloadedLists = mutableListOf<UserListEntity>()
@@ -476,40 +523,6 @@ class GoogleDriveViewModel(
     }
 
 
-    /**
-     * This function gets all db entry and create `.sync` folder
-     */
-    suspend fun syncDeletedItems(): List<DeletedItemsEntity> = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptyList()
-        val folderId = getOrCreateSubFolderId(".sync", mainFolderId) ?: return@withContext emptyList()
-
-        val localDeletedItems = deletedItemsDao.getAllDeletedItems().first()
-        val typeToken = object : com.google.gson.reflect.TypeToken<List<DeletedItemsSyncModel>>() {}.type
-
-        return@withContext sync(
-            folderName = ".sync",
-            folderId = folderId,
-            fileName = "deleted_items.json",
-            localData = localDeletedItems,
-            transformToRemote = { entity ->
-                DeletedItemsSyncModel(
-                    id = entity.deletedUuid,
-                    deletionTime = entity.deletionTime,
-                    type = entity.type
-                )
-            },
-            downloadTypeToken = typeToken,
-            transformToLocal = { model ->
-                DeletedItemsEntity(
-                    deletedUuid = model.id,
-                    deletionTime = model.deletionTime,
-                    type = model.type
-                )
-            }
-        )
-    }
-
-
 
     /**
      * This functions syncs all cloud entries into the db
@@ -529,27 +542,7 @@ class GoogleDriveViewModel(
             _syncMessage.value = "Starting sync..."
 
             try {
-                val cloudDeletedItems = syncDeletedItems()
-
-
-                // 2. Reconciliation Logic
-                val localDeletedItemUuids = deletedItemsDao.getAllDeletedItems()
-                    .first()
-                    .map { it.deletedUuid }
-                    .toSet()
-
-                val cloudDeletedItemUuids = cloudDeletedItems
-                    .map { it.deletedUuid }
-                    .toSet()
-
-                val allDeletedItemUuids = localDeletedItemUuids + cloudDeletedItemUuids
-
-                // Upserts all cloud deleted items not in DB
-                cloudDeletedItems.forEach { remoteDeletedItem ->
-                    if (remoteDeletedItem.deletedUuid !in localDeletedItemUuids) {
-                        deletedItemsDao.upsertDeletedItem(remoteDeletedItem)
-                    }
-                }
+                val allDeletedItemUuids = syncDeletedItems()
 
                 val localActiveListUuids = syncTaskLists(
                     allDeletedItemUuids = allDeletedItemUuids,
@@ -585,6 +578,70 @@ class GoogleDriveViewModel(
                 }
             }
         }
+    }
+
+
+
+    suspend fun syncDeletedItems(): Set<String> = withContext(Dispatchers.IO) {
+        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptySet()
+
+        val syncFolderId = getOrCreateSubFolderId(
+            folderName = ".sync",
+            parentFolder = mainFolderId
+        ) ?: return@withContext emptySet()
+
+        val folderId = getOrCreateSubFolderId(
+            folderName = "deleted_items",
+            parentFolder = syncFolderId
+        ) ?: return@withContext emptySet()
+
+        val localDeletedItems = deletedItemsDao.getAllDeletedItems().first()
+        localDeletedItems.forEach { item ->
+            try {
+                val fileName = "deleted_item_${item.deletedUuid}.json"
+                val syncModel = DeletedItemsSyncModel(
+                    id = item.deletedUuid,
+                    deletionTime = item.deletionTime,
+                    type = item.type
+                )
+                val jsonContent = gson.toJson(syncModel)
+
+                val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+
+                val checkQuery = "name = '$fileName' and '$folderId' in parents and trashed = false"
+
+                val existingFile = driveService?.files()?.list()?.setQ(checkQuery)?.execute()?.files?.firstOrNull()
+
+                val result = if (existingFile != null) {
+                    driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
+                } else {
+                    val metadata = com.google.api.services.drive.model.File().apply {
+                        name = fileName
+                        parents = listOf(folderId)
+                    }
+                    driveService?.files()?.create(metadata, contentStream)?.execute()
+                }
+
+                if (result != null) {
+                    deletedItemsDao.deleteDeletedItemByUuid(item.deletedUuid)
+                    Log.d("eura-tasks", "Uploaded and removed deleted item ${item.deletedUuid} from local DB")
+                }
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Upload failed for deleted item ${item.deletedUuid}: ${e.message}")
+            }
+        }
+
+        val cloudDeletedItems = downloadAllDeletedItems()
+        cloudDeletedItems.forEach { remoteItem ->
+            when (remoteItem.type) {
+                1 -> taskDao.deleteTaskByUuid(remoteItem.deletedUuid)
+                2 -> listDao.deleteListById(remoteItem.deletedUuid)
+                3 -> tagDao.deleteTagByUuid(remoteItem.deletedUuid)
+            }
+            Log.d("eura-tasks", "Synced deletion for ${remoteItem.deletedUuid} (type ${remoteItem.type})")
+        }
+
+        return@withContext (localDeletedItems.map { it.deletedUuid } + cloudDeletedItems.map { it.deletedUuid }).toSet()
     }
 
 
