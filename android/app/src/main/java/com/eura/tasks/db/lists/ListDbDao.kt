@@ -12,9 +12,11 @@ interface ListDbDao {
     @Upsert
     suspend fun upsertList(list: UserListEntity)
     @Update
-    suspend fun update(list: UserListEntity)
+    suspend fun updateList(list: UserListEntity)
     @Delete
     suspend fun deleteList(list: UserListEntity)
+    @Query("SELECT * FROM user_lists")
+    fun getAllTaskLists(): Flow<List<UserListEntity>>
     @Query("DELETE FROM user_lists WHERE listId = :uuid")
     suspend fun deleteListById(uuid: String)
     @Query("DELETE FROM user_lists WHERE title = :name")

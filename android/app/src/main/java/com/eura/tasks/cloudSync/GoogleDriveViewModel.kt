@@ -5,7 +5,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.eura.tasks.cloudSync.syncModels.DeletedItemsSyncModel
-import com.eura.tasks.cloudSync.syncModels.ListSyncModel
+import com.eura.tasks.cloudSync.syncModels.TaskListSyncModel
 import com.eura.tasks.cloudSync.syncModels.TagSyncModel
 import com.eura.tasks.cloudSync.syncModels.TaskSyncModel
 import com.eura.tasks.cloudSync.syncModels.TaskTagsSyncModel
@@ -289,72 +289,49 @@ class GoogleDriveViewModel(
         return@withContext remoteData
     }
 
-    suspend fun syncUserLists(): List<UserListEntity> = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptyList()
-        val folderId = getOrCreateSubFolderId("lists", mainFolderId) ?: return@withContext emptyList()
 
-        val localLists = listDao.getAllLists().first()
-        val typeToken = object : com.google.gson.reflect.TypeToken<List<ListSyncModel>>() {}.type
+    suspend fun downloadAllTaskLists(): List<UserListEntity> = withContext(Dispatchers.IO) {
+        val downloadedLists = mutableListOf<UserListEntity>()
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
 
-        return@withContext sync(
-            folderName = "lists",
-            folderId = folderId,
-            fileName = "lists.json",
-            localData = localLists,
-            transformToRemote = { entity ->
-                ListSyncModel(
-                    id = entity.listId,
-                    title = entity.title,
-                    color = entity.colorString,
-                    type = entity.type,
-                    creationTime = entity.creationTime,
-                    updateTime = entity.updateTime
-                )
-            },
-            downloadTypeToken = typeToken,
-            transformToLocal = { model ->
-                UserListEntity(
-                    listId = model.id,
-                    title = model.title,
-                    colorString = model.color,
-                    type = model.type,
-                    creationTime = model.creationTime,
-                    updateTime = model.updateTime
-                )
+        try {
+            val folderId = getOrCreateSubFolderId(
+                folderName = "task_lists",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+            ) ?: return@withContext emptyList()
+
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+
+            fileList.forEach { file ->
+                try {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
+
+                    val jsonString = outputStream.toString()
+                    val syncModel = gson.fromJson(jsonString, TaskListSyncModel::class.java)
+
+                    downloadedLists.add(
+                        UserListEntity(
+                            listId = syncModel.id,
+                            title = syncModel.title,
+                            colorString = syncModel.color,
+                            type = syncModel.type,
+                            creationTime = syncModel.creationTime,
+                            updateTime = syncModel.updateTime
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to download/parse file ${file.name}: ${e.message}")
+                }
             }
-        )
-    }
-
-    suspend fun syncTags(): List<TagsEntity> = withContext(Dispatchers.IO) {
-        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext emptyList()
-        val folderId = getOrCreateSubFolderId("tags", mainFolderId) ?: return@withContext emptyList()
-
-        val localTags = tagDao.getAllTags().first()
-        val typeToken = object : com.google.gson.reflect.TypeToken<List<TagSyncModel>>() {}.type
-
-        return@withContext sync(
-            folderName = "tags",
-            folderId = folderId,
-            fileName = "tags.json",
-            localData = localTags,
-            transformToRemote = { entity ->
-                TagSyncModel(
-                    uuid = entity.tagUuid,
-                    name = entity.title,
-                    creationTime = entity.creationTime,
-                    updateTime = entity.updateTime
-                )
-            },
-            downloadTypeToken = typeToken,
-            transformToLocal = { model ->
-                TagsEntity(
-                    tagUuid = model.uuid,
-                    title = model.name,
-                    creationTime = model.creationTime,
-                    updateTime = model.updateTime
-                )
-            }
-        )
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Download list failed: ${e.message}")
+        }
+        return@withContext downloadedLists
     }
 
     suspend fun downloadTaskTags(): List<TaskTagsEntity> = withContext(Dispatchers.IO) {
@@ -398,6 +375,7 @@ class GoogleDriveViewModel(
         }
         return@withContext downloadedTaskTags
     }
+
 
 
     suspend fun downloadAllTasks(): List<TaskEntity> = withContext(Dispatchers.IO) {
@@ -552,8 +530,6 @@ class GoogleDriveViewModel(
 
             try {
                 val cloudDeletedItems = syncDeletedItems()
-                val cloudActiveLists = syncUserLists()
-                val cloudActiveTags = syncTags()
 
 
                 // 2. Reconciliation Logic
@@ -575,133 +551,14 @@ class GoogleDriveViewModel(
                     }
                 }
 
-                val localActiveLists = listDao.getAllLists().first()
-                val localActiveListUuids = localActiveLists.map { it.listId }.toMutableSet()
-                Log.d("eura-tasks", "Local Active List Uuids: $localActiveListUuids")
-                Log.d("eura-tasks", "Cloud Active Lists: $cloudActiveLists")
+                val localActiveListUuids = syncTaskLists(
+                    allDeletedItemUuids = allDeletedItemUuids,
+                    listDbViewModel = listDbViewModel
+                )
 
-                val cleanActiveCloudLists = cloudActiveLists.filter { list ->
-                    list.listId !in allDeletedItemUuids
-                }
-                Log.d("eura-tasks", "Clean Active Cloud Lists: $cleanActiveCloudLists")
-
-                var needsReupload = false
-
-                for (cloudList in cleanActiveCloudLists) {
-                    if (cloudList.listId !in localActiveListUuids) {
-                        val conflict = localActiveLists.find { it.title == cloudList.title }
-                        if (conflict != null) {
-                            val deferred = CompletableDeferred<UserListEntity>()
-                            _listConflict.value = ListConflict(
-                                localList = conflict,
-                                remoteList = cloudList,
-                                onResolved = { resolved ->
-                                    _listConflict.value = null
-                                    deferred.complete(resolved)
-                                }
-                            )
-                            val winner = deferred.await()
-                            if (winner === cloudList) {
-                                listDao.upsertList(
-                                    conflict.copy(
-                                        listId = cloudList.listId,
-                                        colorString = cloudList.colorString,
-                                        type = cloudList.type
-                                    )
-                                )
-                                Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.title}")
-                                _syncMessage.value = "Conflict resolved: Kept cloud list ${cloudList.title}"
-                                needsReupload = true
-                            } else {
-                                Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.title}")
-                                _syncMessage.value = "Conflict resolved: Kept local list ${conflict.title}"
-                            }
-                        } else {
-                            listDbViewModel.insertList(
-                                name = cloudList.title,
-                                color = cloudList.colorString,
-                                type = cloudList.type,
-                                creationTime = cloudList.creationTime,
-                                updateTime = cloudList.updateTime,
-                                uuid = cloudList.listId
-                            )
-                            Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.title}")
-                            _syncMessage.value = "Downloaded new cloud list: ${cloudList.title}"
-                            localActiveListUuids.add(cloudList.listId)
-                        }
-                    }
-                }
-
-                if (cleanActiveCloudLists.size < cloudActiveLists.size || needsReupload) {
-                    val listFolderId = getOrCreateSubFolderId("lists", getOrCreateMainFolderId())
-                    if (listFolderId != null) {
-                        try {
-                            val finalLocalLists = listDao.getAllLists().first()
-                            val syncLists = finalLocalLists.map { entity ->
-                                ListSyncModel(
-                                    id = entity.listId,
-                                    title = entity.title,
-                                    color = entity.colorString,
-                                    type = entity.type,
-                                    creationTime = entity.creationTime,
-                                    updateTime = entity.updateTime
-                                )
-                            }
-                            val jsonContent = gson.toJson(syncLists)
-                            val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
-                            val query = "name = 'lists.json' and '$listFolderId' in parents and trashed = false"
-                            val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
-                            if (existingFile != null) {
-                                driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
-                            }
-                        } catch (e: Exception) {
-                            Log.e("eura-tasks", "Failed to fix lists.json on cloud: ${e.message}")
-                        }
-                    }
-                }
-
-                Log.d("eura-tasks", "Lists reconciled, saved locally, and updated on cloud.")
-                _syncUiState.value = SyncUiState.Success("Lists reconciled, saved locally, and updated on cloud.")
-
-                val localActiveTags = tagDao.getAllTags().first()
-                val localActiveTagUuids = localActiveTags.map { it.tagUuid }.toSet()
-                val cleanActiveCloudTags = cloudActiveTags.filter { tag ->
-                    tag.tagUuid !in allDeletedItemUuids
-                }
-
-                cleanActiveCloudTags.forEach { cloudTag ->
-                    if (cloudTag.tagUuid !in localActiveTagUuids) {
-                        tagDao.upsertTag(cloudTag)
-                        Log.d("eura-tasks", "Downloaded new cloud tag: ${cloudTag.title}")
-                        _syncMessage.value = "Downloaded new cloud tag: ${cloudTag.title}"
-                    }
-                }
-
-                if (cleanActiveCloudTags.size < cloudActiveTags.size) {
-                    val tagFolderId = getOrCreateSubFolderId("tags", getOrCreateMainFolderId())
-                    if (tagFolderId != null) {
-                        try {
-                            val finalLocalTags = tagDao.getAllTags().first()
-                            val syncTags = finalLocalTags.map { entity ->
-                                TagSyncModel(
-                                    uuid = entity.tagUuid,
-                                    name = entity.title,
-                                    creationTime = entity.creationTime,
-                                    updateTime = entity.updateTime
-                                )
-                            }
-                            val jsonContent = gson.toJson(syncTags)
-                            val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
-                            val query = "name = 'tags.json' and '$tagFolderId' in parents and trashed = false"
-                            val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
-                            if (existingFile != null) {
-                                driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
-                            }
-                        } catch (e: Exception) {
-                            Log.e("eura-tasks", "Failed to fix tags.json on cloud: ${e.message}")
-                        }
-                    }
-                }
+                syncTags(
+                    allDeletedItemUuids = allDeletedItemUuids
+                )
 
                 Log.d("eura-tasks", "Tags reconciled, saved locally, and updated on cloud.")
                 _syncUiState.value = SyncUiState.Success("Tags reconciled, saved locally, and updated on cloud.")
@@ -732,7 +589,152 @@ class GoogleDriveViewModel(
 
 
 
+    suspend fun syncTaskLists(
+        allDeletedItemUuids: Set<String>,
+        listDbViewModel: ListDbViewModel
+    ): MutableSet<String> = withContext(Dispatchers.IO) {
+        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext mutableSetOf()
+        val taskListFolderId = getOrCreateSubFolderId(
+            folderName = "task_lists",
+            parentFolder = mainFolderId
+        ) ?: return@withContext mutableSetOf()
 
+        val localTaskLists = listDao.getAllTaskLists().first()
+        localTaskLists.forEach { entity ->
+            try {
+                val fileName = "task_list_${entity.listId}.json"
+                val syncModel = TaskListSyncModel(
+                    id = entity.listId,
+                    title = entity.title,
+                    color = entity.colorString,
+                    type = entity.type,
+                    creationTime = entity.creationTime,
+                    updateTime = entity.updateTime
+                )
+                val jsonContent = gson.toJson(syncModel)
+
+                val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+
+                val checkQuery = "name = '$fileName' and '$taskListFolderId' in parents and trashed = false"
+
+                val existingFile = driveService?.files()?.list()?.setQ(checkQuery)?.execute()?.files?.firstOrNull()
+
+                if (existingFile != null) {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
+                    val cloudModel = gson.fromJson(outputStream.toString(), TaskListSyncModel::class.java)
+
+                    if (cloudModel != null && cloudModel.updateTime > entity.updateTime) {
+                        Log.d("eura-tasks", "Cloud version is newer for task list ${entity.listId}. Skipping upload.")
+
+                    } else {
+                        driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
+                    }
+                } else {
+                    val metadata = com.google.api.services.drive.model.File().apply {
+                        name = fileName
+                        parents = listOf(taskListFolderId)
+                    }
+                    driveService?.files()?.create(metadata, contentStream)?.execute()
+                }
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Upload failed for task list ${entity.listId}: ${e.message}")
+            }
+        }
+
+        val cloudTaskLists = downloadAllTaskLists()
+        val localActiveLists = listDao.getAllLists().first()
+        val localActiveListUuids = localActiveLists.map { it.listId }.toMutableSet()
+
+        val cleanActiveCloudLists = cloudTaskLists.filter { list ->
+            list.listId !in allDeletedItemUuids
+        }
+
+        var needsReupload = false
+
+        for (cloudList in cleanActiveCloudLists) {
+            if (cloudList.listId !in localActiveListUuids) {
+                val conflict = localActiveLists.find { it.title == cloudList.title }
+                if (conflict != null) {
+                    val deferred = CompletableDeferred<UserListEntity>()
+                    _listConflict.value = ListConflict(
+                        localList = conflict,
+                        remoteList = cloudList,
+                        onResolved = { resolved ->
+                            _listConflict.value = null
+                            deferred.complete(resolved)
+                        }
+                    )
+                    val winner = deferred.await()
+                    if (winner === cloudList) {
+                        listDao.upsertList(
+                            conflict.copy(
+                                listId = cloudList.listId,
+                                colorString = cloudList.colorString,
+                                type = cloudList.type
+                            )
+                        )
+                        Log.d("eura-tasks", "Conflict resolved: Kept cloud list ${cloudList.title}")
+                        _syncMessage.value = "Conflict resolved: Kept cloud list ${cloudList.title}"
+                        needsReupload = true
+                    } else {
+                        Log.d("eura-tasks", "Conflict resolved: Kept local list ${conflict.title}")
+                        _syncMessage.value = "Conflict resolved: Kept local list ${conflict.title}"
+                    }
+                } else {
+                    listDbViewModel.insertList(
+                        name = cloudList.title,
+                        color = cloudList.colorString,
+                        type = cloudList.type,
+                        creationTime = cloudList.creationTime,
+                        updateTime = cloudList.updateTime,
+                        uuid = cloudList.listId
+                    )
+                    Log.d("eura-tasks", "Downloaded new cloud list: ${cloudList.title}")
+                    _syncMessage.value = "Downloaded new cloud list: ${cloudList.title}"
+                    localActiveListUuids.add(cloudList.listId)
+                }
+            } else {
+                val localList = localActiveLists.find { it.listId == cloudList.listId }
+                if (localList != null && cloudList.updateTime > localList.updateTime) {
+                    listDao.updateList(cloudList)
+                }
+            }
+        }
+
+        if (cleanActiveCloudLists.size < cloudTaskLists.size || needsReupload) {
+            val listFolderId = getOrCreateSubFolderId("lists", mainFolderId)
+            if (listFolderId != null) {
+                try {
+                    val finalLocalLists = listDao.getAllLists().first()
+                    val syncLists = finalLocalLists.map { entity ->
+                        TaskListSyncModel(
+                            id = entity.listId,
+                            title = entity.title,
+                            color = entity.colorString,
+                            type = entity.type,
+                            creationTime = entity.creationTime,
+                            updateTime = entity.updateTime
+                        )
+                    }
+                    val jsonContent = gson.toJson(syncLists)
+                    val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+                    val query = "name = 'lists.json' and '$listFolderId' in parents and trashed = false"
+                    val existingFile = driveService?.files()?.list()?.setQ(query)?.execute()?.files?.firstOrNull()
+                    if (existingFile != null) {
+                        driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
+                    }
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to fix lists.json on cloud: ${e.message}")
+                }
+            }
+        }
+
+        Log.d("eura-tasks", "Lists reconciled, saved locally, and updated on cloud.")
+        _syncUiState.value = SyncUiState.Success("Lists reconciled, saved locally, and updated on cloud.")
+
+        return@withContext localActiveListUuids
+    }
 
 
     suspend fun syncTasks(
@@ -763,16 +765,20 @@ class GoogleDriveViewModel(
                     updateTime = entity.updateTime,
                     parentListId = entity.parentListId
                 )
-                val jsonContent = gson.toJson(syncModel)
-                val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+                val jsonContent =
+                    gson.toJson(syncModel)
+                val contentStream =
+                    ByteArrayContent.fromString("application/json", jsonContent)
                 val checkQuery =
                     "name = '$fileName' and '$taskFolderId' in parents and trashed = false"
                 val existingFile = driveService?.files()?.list()?.setQ(checkQuery)
                     ?.execute()?.files?.firstOrNull()
                 if (existingFile != null) {
-                    val outputStream = java.io.ByteArrayOutputStream()
+                    val outputStream =
+                        java.io.ByteArrayOutputStream()
                     driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
-                    val cloudModel = gson.fromJson(outputStream.toString(), TaskSyncModel::class.java)
+                    val cloudModel =
+                        gson.fromJson(outputStream.toString(), TaskSyncModel::class.java)
 
                     if (cloudModel != null && cloudModel.updateTime > entity.updateTime) {
                         Log.d("eura-tasks", "Cloud version is newer for task ${entity.taskUuid}. Skip upload.")
@@ -889,6 +895,117 @@ class GoogleDriveViewModel(
                 val localTag = localActiveTaskTags.find { it.uuid == tag.uuid }
                 if (localTag != null && tag.updateTime > localTag.updateTime) {
                     tagDao.updateTaskTag(tag)
+                }
+            }
+        }
+    }
+
+    suspend fun downloadAllTags(): List<TagsEntity> = withContext(Dispatchers.IO) {
+        val downloadedTags = mutableListOf<TagsEntity>()
+        if (driveService == null) {
+            Log.e("eura-tasks", "Drive Service not initialized")
+            return@withContext emptyList()
+        }
+
+        try {
+            val folderId = getOrCreateSubFolderId(
+                folderName = "tags",
+                parentFolder = getOrCreateMainFolderId() ?: return@withContext emptyList()
+            ) ?: return@withContext emptyList()
+
+            val query = "'$folderId' in parents and mimeType = 'application/json' and trashed = false"
+            val fileList = driveService?.files()?.list()?.setQ(query)?.execute()?.files ?: emptyList()
+
+            fileList.forEach { file ->
+                try {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(file.id)?.executeMediaAndDownloadTo(outputStream)
+
+                    val jsonString = outputStream.toString()
+                    val syncModel = gson.fromJson(jsonString, TagSyncModel::class.java)
+
+                    downloadedTags.add(
+                        TagsEntity(
+                            tagUuid = syncModel.uuid,
+                            title = syncModel.name,
+                            creationTime = syncModel.creationTime,
+                            updateTime = syncModel.updateTime
+                        )
+                    )
+                } catch (e: Exception) {
+                    Log.e("eura-tasks", "Failed to download/parse file ${file.name}: ${e.message}")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("eura-tasks", "Download tags failed: ${e.message}")
+        }
+        return@withContext downloadedTags
+    }
+
+    suspend fun syncTags(
+        allDeletedItemUuids: Set<String>
+    ) = withContext(Dispatchers.IO) {
+        val mainFolderId = getOrCreateMainFolderId() ?: return@withContext
+        val tagFolderId = getOrCreateSubFolderId(
+            folderName = "tags",
+            parentFolder = mainFolderId
+        ) ?: return@withContext
+        val localTags = tagDao.getAllTags().first()
+        localTags.forEach { entity ->
+            try {
+                val fileName = "tag_${entity.tagUuid}.json"
+                val syncModel = TagSyncModel(
+                    uuid = entity.tagUuid,
+                    name = entity.title,
+                    creationTime = entity.creationTime,
+                    updateTime = entity.updateTime
+                )
+                val jsonContent = gson.toJson(syncModel)
+
+                val contentStream = ByteArrayContent.fromString("application/json", jsonContent)
+
+                val checkQuery = "name = '$fileName' and '$tagFolderId' in parents and trashed = false"
+
+                val existingFile = driveService?.files()?.list()?.setQ(checkQuery)?.execute()?.files?.firstOrNull()
+
+                if (existingFile != null) {
+                    val outputStream = java.io.ByteArrayOutputStream()
+                    driveService?.files()?.get(existingFile.id)?.executeMediaAndDownloadTo(outputStream)
+                    val cloudModel = gson.fromJson(outputStream.toString(), TagSyncModel::class.java)
+
+                    if (cloudModel != null && cloudModel.updateTime > entity.updateTime) {
+                        Log.d("eura-tasks", "Cloud version is newer for tag ${entity.tagUuid}. Skipping upload.")
+
+                    } else {
+                        driveService?.files()?.update(existingFile.id, null, contentStream)?.execute()
+                    }
+                } else {
+                    val metadata = com.google.api.services.drive.model.File().apply {
+                        name = fileName
+                        parents = listOf(tagFolderId)
+                    }
+                    driveService?.files()?.create(metadata, contentStream)?.execute()
+                }
+            } catch (e: Exception) {
+                Log.e("eura-tasks", "Upload failed for tag ${entity.tagUuid}: ${e.message}")
+            }
+        }
+
+        val cloudTags = downloadAllTags()
+        val localActiveTags = tagDao.getAllTags().first()
+
+        cloudTags.forEach { tag ->
+            if (tag.tagUuid in allDeletedItemUuids) {
+                // Delete file after specific time
+            } else if (tag.tagUuid !in localActiveTags.map { it.tagUuid }) {
+                tagDao.upsertTag(tag)
+                Log.d("eura-tasks", "Downloaded new cloud tag: ${tag.tagUuid}")
+                _syncMessage.value = "Downloaded new cloud tag: ${tag.tagUuid}"
+
+            } else {
+                val localTag = localActiveTags.find { it.tagUuid == tag.tagUuid }
+                if (localTag != null && tag.updateTime > localTag.updateTime) {
+                    tagDao.upsertTag(tag)
                 }
             }
         }
