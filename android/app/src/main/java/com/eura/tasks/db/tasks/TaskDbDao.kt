@@ -18,13 +18,16 @@ interface TaskDbDao {
     suspend fun upsertTask(todo: TaskEntity): Long
 
     @Update
-    suspend fun update(todo: TaskEntity)
+    suspend fun updateTask(task: TaskEntity)
     @Delete
     suspend fun deleteTask(todo: TaskEntity)
     @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
     suspend fun deleteTaskByUuid(uuid: String)
     @Query("DELETE FROM tasks WHERE parentListId = :listName")
     suspend fun deleteTasksByListName(listName: String)
+
+    @Query("SELECT * FROM tasks")
+    fun getAllTasks(): Flow<List<TaskEntity>>
 
     @Query("SELECT * FROM deleted_items WHERE type = 1")
     suspend fun getAllDeletedTasks(): List<DeletedItemsEntity>

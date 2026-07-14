@@ -38,7 +38,7 @@ import com.eura.tasks.ui.screens.tagScreen.TagScreen
 import com.eura.tasks.ui.screens.taskScreen.TaskScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.TaskDetailsScreen
 import com.eura.tasks.ui.screens.taskScreen.taskScreenSubScreens.taskDetailsScreen.taskDetailsSubScreen.tagManagmentScreen.TagManagementScreen
-import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import com.eura.tasks.cloudSync.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 

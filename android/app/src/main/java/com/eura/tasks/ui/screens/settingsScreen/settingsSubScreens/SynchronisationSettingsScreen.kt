@@ -42,7 +42,7 @@ import com.eura.tasks.ui.UiEvent
 import com.eura.tasks.ui.UiState
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.synchronisationSettingsScreenComponents.DeleteAllCloudDataWarningDialog
 import com.eura.tasks.ui.screens.settingsScreen.settingsSubScreens.synchronisationSettingsScreenComponents.ManageSyncIntervalsDialog
-import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import com.eura.tasks.cloudSync.GoogleDriveViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

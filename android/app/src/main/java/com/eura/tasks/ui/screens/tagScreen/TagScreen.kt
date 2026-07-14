@@ -148,6 +148,7 @@ fun TagScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 8.dp),
+            state = listState,
             contentPadding = innerPadding,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
