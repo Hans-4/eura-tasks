@@ -197,11 +197,16 @@ class TagDbViewModel(
 
             is TagDbEvent.UpdateTaskTag -> {
                 viewModelScope.launch {
-                    tagDao.updateTaskTagActive(event.taskUuid, event.tagId, event.isActive, Clock.System.now())
-                    _state.update {
-                        it.copy(
-                            taskTags = tagDao.getAllTagsFromTaskById(event.taskUuid)
+                    tagDao.upsertTaskTag(
+                        TaskTagsEntity(
+                            taskUuid = event.taskUuid,
+                            tagUuid = event.tagId,
+                            isActive = event.isActive,
+                            updateTime = Clock.System.now()
                         )
+                    )
+                    _state.update {
+                        it.copy(taskTags = tagDao.getAllTagsFromTaskById(event.taskUuid))
                     }
                 }
             }

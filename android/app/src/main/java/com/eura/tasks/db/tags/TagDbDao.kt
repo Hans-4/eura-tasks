@@ -42,7 +42,7 @@ interface TagDbDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertTaskTag(taskTag: TaskTagsEntity)
 
-    @Query("UPDATE task_tags SET isActive = :isActive AND updateTime = :updateTime WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid")
+    @Query("UPDATE task_tags SET isActive = :isActive, updateTime = :updateTime WHERE taskUuid = :taskUuid AND tagUuid = :tagUuid")
     suspend fun updateTaskTagActive(taskUuid: String, tagUuid: String, isActive: Boolean, updateTime: Instant)
     
     @Query("DELETE FROM task_tags WHERE taskUuid = :taskUuid")
