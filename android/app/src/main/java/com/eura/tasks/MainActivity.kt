@@ -14,7 +14,7 @@ import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.AppNavHost
 import com.eura.tasks.ui.theme.EuraTasksTheme
-import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import com.eura.tasks.cloudSync.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel

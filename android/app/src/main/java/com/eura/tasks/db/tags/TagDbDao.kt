@@ -5,6 +5,7 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import androidx.room.Upsert
 import com.eura.tasks.db.deletedItems.DeletedItemsEntity
 import com.eura.tasks.db.tasks.tags.TaskTagsEntity
@@ -21,6 +22,10 @@ interface TagDbDao {
 
     @Delete
     suspend fun deleteTag(tag: TagsEntity)
+
+    @Update
+    suspend fun updateTaskTag(tag: TaskTagsEntity)
+
 
     @Query("SELECT tagUuid FROM tags WHERE tagUuid = :uuid")
     suspend fun getTagUuidById(uuid: String): String

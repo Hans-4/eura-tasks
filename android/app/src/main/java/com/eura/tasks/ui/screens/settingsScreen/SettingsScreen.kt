@@ -50,9 +50,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.eura.tasks.R
 import com.eura.tasks.openExactAlarmSettings
 import com.eura.tasks.openNotificationSettings
-import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import com.eura.tasks.cloudSync.GoogleDriveViewModel
 import com.eura.tasks.ui.viewModels.ListDbViewModel
-import com.eura.tasks.ui.viewModels.SyncUiState
+import com.eura.tasks.cloudSync.SyncUiState
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds

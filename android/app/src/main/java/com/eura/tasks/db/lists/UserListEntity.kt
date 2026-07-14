@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 import kotlinx.datetime.Instant
 import java.util.UUID
 import com.eura.tasks.ui.Converter
-import com.eura.tasks.ui.viewModels.GoogleDriveViewModel
+import com.eura.tasks.cloudSync.GoogleDriveViewModel
 import kotlinx.datetime.Clock
 
 /**
