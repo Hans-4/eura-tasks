@@ -8,14 +8,16 @@ import androidx.compose.ui.res.stringResource
 import com.eura.tasks.R
 
 @Composable
-fun DeleteAllTasksInListAlert(
+fun DeleteWarningDialog(
+    title: String,
+    text: String,
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
     AlertDialog(
-        title =  {Text("Warning")},
+        title =  {Text(title)},
         text = {
-            Text("Are you sure to delete this list? This will also delete all Tasks in it.")
+            Text(text)
         },
         onDismissRequest = {onDismiss()},
         confirmButton = {

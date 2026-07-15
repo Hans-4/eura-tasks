@@ -15,8 +15,16 @@ sealed interface UiEvent {
     object CloseConfirmDeletionDialog: UiEvent
     object OpenHomeFABMenu: UiEvent
     object CloseHomeFABMenu: UiEvent
+
+    object OpenDeleteAllCompletedTasksWarningDialog: UiEvent
+    object CloseDeleteAllCompletedTasksWarningDialog: UiEvent
+
+    object OpenRenameListDialog: UiEvent
+    object CloseRenameListDialog: UiEvent
+
     object OpenManageListSheet: UiEvent
     object CloseManageListSheet: UiEvent
+
     object OpenItemWithSimilarNameWarningDialog: UiEvent
     object CloseItemWithSimilarNameWarningDialog: UiEvent
     data class SetReason(val reason: Int): UiEvent

@@ -31,4 +31,9 @@ interface ListDbDao {
     suspend fun searchForExistingTitle(title: String): Boolean
     @Query("SELECT * FROM user_lists WHERE LOWER(title) LIKE LOWER('%' || :query || '%')")
     suspend fun searchForLists(query: String): List<UserListEntity>
+    @Query("SELECT * FROM user_lists WHERE listId = :id")
+    suspend fun getListById(id: String): UserListEntity
+
+    @Query("UPDATE user_lists SET title = :newTitle WHERE listId = :id")
+    suspend fun updateListTitle(id: String, newTitle: String)
 }

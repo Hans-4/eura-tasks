@@ -400,6 +400,20 @@ class TaskDbViewModel(
                     }
                 }
             }
+
+            is TaskDbEvent.DeleteAllCompletedTasksByListId -> {
+                viewModelScope.launch {
+                    val completedTasks = taskDao.getAllCompletedTasksFromList(event.listId)
+                    completedTasks.forEach { task ->
+                        taskDao.deleteTask(task)
+                        val deletedItem = DeletedItemsEntity(
+                            type = 1,
+                            deletedUuid = task.taskUuid
+                        )
+                        deletedItemsDao.upsertDeletedItem(deletedItem)
+                    }
+                }
+            }
         }
     }
 

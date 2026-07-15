@@ -23,8 +23,8 @@ interface TaskDbDao {
     suspend fun deleteTask(todo: TaskEntity)
     @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
     suspend fun deleteTaskByUuid(uuid: String)
-    @Query("DELETE FROM tasks WHERE parentListId = :listName")
-    suspend fun deleteTasksByListName(listName: String)
+    @Query("DELETE FROM tasks WHERE parentListId = :listId")
+    suspend fun deleteTasksByListId(listId: String)
 
     @Query("SELECT * FROM tasks")
     fun getAllTasks(): Flow<List<TaskEntity>>
@@ -72,4 +72,7 @@ interface TaskDbDao {
 
     @Query("SELECT listId FROM user_lists WHERE title = :title")
     suspend fun getParentListId(title: String): String?
+
+    @Query("SELECT * FROM tasks WHERE isCompleted = 1 AND parentListId = :listId")
+    suspend fun getAllCompletedTasksFromList(listId: String): List<TaskEntity>
 }

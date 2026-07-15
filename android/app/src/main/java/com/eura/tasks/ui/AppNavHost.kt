@@ -145,7 +145,7 @@ fun AppNavHost(
                 repeatDbState = repeatDbState,
 
 
-                onTaskList = { listId, listName -> navController.navigate("taskLists/$listId/$listName")},
+                onTaskList = { listId -> navController.navigate("taskLists/$listId")},
                 onTagList = { tagId -> navController.navigate("tagList/$tagId")},
                 onSettings = { navController.navigate("settings")},
                 onSearch = { navController.navigate("search") },
@@ -241,7 +241,7 @@ fun AppNavHost(
         }
 
         composable(
-            route = "taskLists/{listId}/{listName}",
+            route = "taskLists/{listId}",
             enterTransition = {
                 defaultEnterTransition()
             },
@@ -255,12 +255,11 @@ fun AppNavHost(
                 defaultPopExitTransition()
             }
         ) { backStackEntry ->
-            val listName = backStackEntry.arguments?.getString("listName")
             val listId = backStackEntry.arguments?.getString("listId")
             TaskScreen(
                 tagDbState = tagDbState,
                 onTagDbEvent = onTagDbEvent,
-                pageData = Pair(listId ?: "", listName ?: "Error"),
+                pageId = listId ?: "",
                 taskDbState = taskDbState,
                 listDbState = listDbState,
                 uiState = uiState,
