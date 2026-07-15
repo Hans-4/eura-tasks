@@ -26,4 +26,6 @@ sealed interface TaskDbEvent {
     data class SetTaskDate(val date: Long?): TaskDbEvent
     data class SetTaskTime(val hour: Int?, val minute: Int?): TaskDbEvent
     data class UpdateTaskDateTime(val taskUuid: String, val date: Long?, ): TaskDbEvent
+
+    data class DeleteAllCompletedTasksByListId(val listId: String): TaskDbEvent
 }

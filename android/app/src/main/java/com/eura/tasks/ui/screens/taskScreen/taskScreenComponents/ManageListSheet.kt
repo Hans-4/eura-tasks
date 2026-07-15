@@ -24,7 +24,9 @@ import com.eura.tasks.ui.SYSTEM_LISTS
 @Composable
 fun ManageListSheet(
     pageName: String,
-    onConfirm: () -> Unit,
+    onDeleteAllCompletedTasks: () -> Unit,
+    onRenameList: () -> Unit,
+    onDeleteList: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val isSystemList = pageName in SYSTEM_LISTS
@@ -44,6 +46,16 @@ fun ManageListSheet(
             modifier = Modifier.fillMaxWidth()
         ) {
             Button(
+                onClick = { onDeleteAllCompletedTasks() },
+                text = "Delete all completed tasks"
+            )
+
+            Button(
+                onClick = { onRenameList() },
+                text = "Rename list"
+            )
+
+            Button(
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
@@ -51,7 +63,7 @@ fun ManageListSheet(
                     disabledContentColor = MaterialTheme.colorScheme.outline
                 ),
                 enabled = !isSystemList,
-                onClick = { onConfirm() },
+                onClick = { onDeleteList() },
                 shape = RoundedCornerShape(0.dp),
                 modifier = Modifier.fillMaxWidth(),
                 contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
@@ -77,5 +89,31 @@ fun ManageListSheet(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun Button(
+    onClick: () -> Unit,
+    text: String,
+) {
+    Button(
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = MaterialTheme.colorScheme.surface,
+            disabledContentColor = MaterialTheme.colorScheme.outline
+        ),
+        onClick = { onClick() },
+        shape = RoundedCornerShape(0.dp),
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 16.dp)
+    ) {
+        Text(
+            text = text,
+            fontSize = 16.sp,
+            modifier = Modifier.fillMaxWidth(),
+            textAlign = TextAlign.Start,
+        )
     }
 }

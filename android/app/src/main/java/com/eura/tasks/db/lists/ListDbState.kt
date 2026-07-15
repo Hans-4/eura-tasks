@@ -10,5 +10,9 @@ data class ListDbState(
     val listColor: String = "RED",
 
     val searchQuery: String = "",
-    val searchResults: List<UserListEntity> = emptyList()
+    val searchResults: List<UserListEntity> = emptyList(),
+
+    val updateListTitle: String = "",
+
+    val currentListName: UserListEntity? = null,
 )

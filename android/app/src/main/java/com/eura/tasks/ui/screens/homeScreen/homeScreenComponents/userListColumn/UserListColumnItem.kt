@@ -26,7 +26,7 @@ fun UserListColumnItem(
     taskLists: List<TaskListInterface>,
     systemThemeIndex: Int,
     taskDbState: TaskDbState,
-    onTaskList: (String, String) -> Unit
+    onTaskList: (String) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -64,7 +64,7 @@ fun UserListColumnItem(
                         icon = icon,
                         count = taskListCount,
                         color = colorItem,
-                        onClick = { onTaskList(item.listId, item.title) }
+                        onClick = { onTaskList(item.listId) }
                     )
                 }
             }

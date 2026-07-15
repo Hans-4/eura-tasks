@@ -1,11 +1,14 @@
 package com.eura.tasks.ui.screens.taskScreen
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,11 +43,15 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -58,7 +65,6 @@ import kotlinx.coroutines.launch
 import com.eura.tasks.R
 import com.eura.tasks.db.lists.ListDbEvent
 import com.eura.tasks.db.lists.ListDbState
-import com.eura.tasks.db.lists.systemTaskList
 import com.eura.tasks.db.tags.TagDbEvent
 import com.eura.tasks.db.tags.TagDbState
 import com.eura.tasks.db.tasks.TaskDbEvent
@@ -71,8 +77,9 @@ import com.eura.tasks.ui.UiState
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addList.AddNewTaskListDialog
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.AddTaskBottomSheet
 import com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.SortItemsSheet
-import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.DeleteAllTasksInListAlert
+import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.DeleteWarningDialog
 import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.ManageListSheet
+import com.eura.tasks.ui.screens.taskScreen.taskScreenComponents.RenameListDialog
 import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
@@ -93,7 +100,7 @@ fun TaskScreen(
     taskDbState: TaskDbState,
     listDbState: ListDbState,
 
-    pageData: Pair<String, String>, //first = listId, second = listName
+    pageId: String,
 
     darkTheme: Boolean = isSystemInDarkTheme(),
 
@@ -104,21 +111,23 @@ fun TaskScreen(
 
     val scope = rememberCoroutineScope()
 
-    val pageId = pageData.first
-    val pageTitle = Converter.pageNameConverter(pageName = pageData.second)
+    LaunchedEffect(pageId, listDbState.userLists) {
+        onListDbEvent(ListDbEvent.GetListsById(pageId))
+    }
+
+    val pageList = listDbState.currentListName
+    val pageName = pageList?.title ?: ""
+
+    val pageTitle = Converter.pageNameConverter(pageName = pageName)
 
     val taskLists = listDbState.userLists
-
-    val pageList = remember(pageData.second, taskLists) {
-        taskLists.find { it.title == pageData.second } ?: systemTaskList.find { it.title == pageData.second }
-    }
 
     val pageColor = Converter.colorStringConverter(
         systemThemeIndex = systemThemeIndex,
         colorString = pageList?.colorString
     )
 
-    val tasksToShow = when (pageData.second) {
+    val tasksToShow = when (pageName) {
         "SYSTEM_TODAY" -> taskDbState.tasks.filter { it.notificationTime?.toLocalDateTime(TimeZone.currentSystemDefault())?.date == Clock.System.todayIn(TimeZone.currentSystemDefault()) }
         "SYSTEM_SCHEDULE" -> taskDbState.tasks.filter { it.notificationTime != null }
         "SYSTEM_ALL" -> taskDbState.tasks
@@ -129,6 +138,14 @@ fun TaskScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val snackbarMessage = stringResource(R.string.there_is_no_user_list_please_add_one_first)
+
+    var isCompletedTasksExpanded by remember { mutableStateOf(false) }
+
+    val rotation by animateFloatAsState(
+        targetValue = if (isCompletedTasksExpanded) 270f else 90f,
+        animationSpec = spring(stiffness = Spring.StiffnessLow),
+        label = "Arrow rotation"
+    )
 
     LaunchedEffect(uiState.isAddingTask) {
         if (uiState.isAddingTask && taskLists.isEmpty()) {
@@ -259,15 +276,13 @@ fun TaskScreen(
                             modifier = Modifier.padding(8.dp)
                         ) {
                             Row(
-                                modifier = Modifier
-                                    .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
                                     pageTitle
                                 )
-
-                                Spacer(Modifier.weight(1f))
 
                                 IconButton(
                                     onClick = { onUiEvent(UiEvent.OpenSortItemSheet) }
@@ -275,15 +290,6 @@ fun TaskScreen(
                                     Icon(
                                         imageVector = Icons.Rounded.SwapVert,
                                         contentDescription = "Change sort type"
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { TODO("Options like delete all uncompleted or completed or all tasks") }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Rounded.MoreVert,
-                                        contentDescription = "More options"
                                     )
                                 }
                             }
@@ -354,65 +360,79 @@ fun TaskScreen(
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
                                     "Completed",
                                     style = MaterialTheme.typography.titleMedium
                                 )
 
-                                Spacer(Modifier.weight(1f))
-
                                 IconButton(
-                                    onClick = { TODO() }
+                                    onClick = { isCompletedTasksExpanded = !isCompletedTasksExpanded }
                                 ) {
                                     Icon(
-                                        imageVector = Icons.Rounded.MoreVert,
-                                        contentDescription = "More options"
+                                        imageVector = Icons.Rounded.ArrowBackIosNew,
+                                        contentDescription = "Expand",
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .rotate(rotation)
                                     )
                                 }
                             }
 
-                            tasksToShow.filter { it.isCompleted }.forEach { task ->
-                                Button(
-                                    onClick = { onTaskDetails(task.taskUuid, pageTitle) },
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(vertical = 4.dp),
-                                        verticalAlignment = Alignment.CenterVertically
+                            AnimatedVisibility(visible = isCompletedTasksExpanded) {
+                                tasksToShow.filter { it.isCompleted }.forEach { task ->
+                                    Button(
+                                        onClick = { onTaskDetails(task.taskUuid, pageTitle) },
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        shape = RoundedCornerShape(16.dp)
                                     ) {
-                                        RadioButton(
-                                            onClick = {
-                                                onTaskDbEvent(TaskDbEvent.SetIsCompleted(!task.isCompleted, task))
-                                            },
-                                            selected = task.isCompleted
-                                        )
-                                        Column(modifier = Modifier.weight(1f)) {
-                                            Text(text = task.title, fontSize = 18.sp)
-                                            if (task.description?.isNotBlank() ?: false) {
-                                                Text(
-                                                    text = task.description,
-                                                    fontSize = 14.sp,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        Row(
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(vertical = 4.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            RadioButton(
+                                                onClick = {
+                                                    onTaskDbEvent(
+                                                        TaskDbEvent.SetIsCompleted(
+                                                            !task.isCompleted,
+                                                            task
+                                                        )
+                                                    )
+                                                },
+                                                selected = task.isCompleted
+                                            )
+                                            Column(modifier = Modifier.weight(1f)) {
+                                                Text(text = task.title, fontSize = 18.sp)
+                                                if (task.description?.isNotBlank() ?: false) {
+                                                    Text(
+                                                        text = task.description,
+                                                        fontSize = 14.sp,
+                                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+                                            }
+                                            IconButton(
+                                                onClick = {
+                                                    onTaskDbEvent(
+                                                        TaskDbEvent.SetTodoIsFavorite(
+                                                            !task.isFavorite,
+                                                            task
+                                                        )
+                                                    )
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
+                                                    contentDescription = "Toggle favorite"
                                                 )
                                             }
-                                        }
-                                        IconButton(
-                                            onClick = {
-                                                onTaskDbEvent(TaskDbEvent.SetTodoIsFavorite(!task.isFavorite, task))
-                                            }
-                                        ) {
-                                            Icon(
-                                                imageVector = if (task.isFavorite) Icons.Rounded.Star else Icons.Rounded.StarBorder,
-                                                contentDescription = "Toggle favorite"
-                                            )
                                         }
                                     }
                                 }
@@ -447,7 +467,7 @@ fun TaskScreen(
                     onUiEvent = onUiEvent,
                     taskDbState = taskDbState,
                     uiState = uiState,
-                    currentTab = pageData.second,
+                    currentTab = pageName,
                     firstUserTaskList = taskLists.first().title,
                     taskLists = taskLists,
 
@@ -458,18 +478,52 @@ fun TaskScreen(
         }
         if (uiState.isManageListSheetOpen) {
             ManageListSheet(
-                pageName = pageData.second,
-                onConfirm = {
-                    onUiEvent(UiEvent.OpenDeleteAllTasksWarningDialog)
-                },
+                pageName = pageName,
+                onDeleteAllCompletedTasks = { onUiEvent(UiEvent.OpenDeleteAllCompletedTasksWarningDialog) },
+                onRenameList = { onUiEvent(UiEvent.OpenRenameListDialog) },
+                onDeleteList = { onUiEvent(UiEvent.OpenDeleteAllTasksWarningDialog) },
                 onDismiss = { onUiEvent(UiEvent.CloseManageListSheet) }
             )
         }
-        if (uiState.isDeleteAllTasksWarningDialogOpen) {
-            DeleteAllTasksInListAlert(
+
+        if (uiState.isDeleteAllCompletedTasksWarningDialogOpen) {
+            DeleteWarningDialog(
+                title = "Warning",
+                text = "Are you sure you want to delete all completed tasks from this list?",
+
                 onConfirm = {
                     pageList?.let {
-                        onListDbEvent(ListDbEvent.DeleteListByName(pageData.second))
+                        onTaskDbEvent(TaskDbEvent.DeleteAllCompletedTasksByListId(pageId))
+                        scope.launch {
+                            onUiEvent(UiEvent.CloseDeleteAllCompletedTasksWarningDialog)
+                            onUiEvent(UiEvent.CloseManageListSheet)
+                        }
+                    }
+                },
+                onDismiss = {onUiEvent(UiEvent.CloseDeleteAllCompletedTasksWarningDialog)},
+            )
+        }
+        if (uiState.isRenameListDialogOpen) {
+            RenameListDialog(
+                listTitle = pageName,
+                onDismiss = { onUiEvent(UiEvent.CloseRenameListDialog) },
+                onConfirm = {
+                    onListDbEvent(ListDbEvent.RenameList(pageId))
+                    onUiEvent(UiEvent.CloseRenameListDialog)
+                    onUiEvent(UiEvent.CloseManageListSheet)
+                },
+
+                onListDbEvent = onListDbEvent,
+            )
+        }
+        if (uiState.isDeleteAllTasksWarningDialogOpen) {
+            DeleteWarningDialog(
+                title = "Warning",
+                text = "Are you sure you want to delete all tasks from this list? This will also delete all Tasks in it.",
+
+                onConfirm = {
+                    pageList?.let {
+                        onListDbEvent(ListDbEvent.DeleteListById(pageId))
                         scope.launch {
                             onUiEvent(UiEvent.CloseDeleteAllTasksWarningDialog)
                             onUiEvent(UiEvent.CloseManageListSheet)

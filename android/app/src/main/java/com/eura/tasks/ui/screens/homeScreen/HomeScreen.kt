@@ -114,7 +114,7 @@ fun HomeScreen(
     repeatDbState: RepeatDbState,
 
 
-    onTaskList: (String, String) -> Unit,
+    onTaskList: (String) -> Unit,
     onTagList: (String) -> Unit,
     onSettings: () -> Unit,
     onSearch: () -> Unit,
@@ -387,7 +387,7 @@ fun HomeScreen(
                                             title = title,
                                             progress = progress,
                                             color = color,
-                                            onTask = { onTaskList(item.listId, item.title) }
+                                            onTask = { onTaskList(item.listId) }
                                         )
                                     }
                                 }

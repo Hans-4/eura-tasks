@@ -169,6 +169,36 @@ class UiViewModel: ViewModel() {
                 }
             }
 
+            UiEvent.CloseDeleteAllCompletedTasksWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllCompletedTasksWarningDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenDeleteAllCompletedTasksWarningDialog -> {
+                _state.update {
+                    it.copy(
+                        isDeleteAllCompletedTasksWarningDialogOpen = true
+                    )
+                }
+            }
+
+            UiEvent.CloseRenameListDialog -> {
+                _state.update {
+                    it.copy(
+                        isRenameListDialogOpen = false
+                    )
+                }
+            }
+            UiEvent.OpenRenameListDialog -> {
+                _state.update {
+                    it.copy(
+                        isRenameListDialogOpen = true
+                    )
+                }
+            }
+
             UiEvent.CloseDeleteAllTasksWarningDialog -> {
                 _state.update {
                     it.copy(
@@ -176,7 +206,6 @@ class UiViewModel: ViewModel() {
                     )
                 }
             }
-
             UiEvent.OpenDeleteAllTasksWarningDialog -> {
                 _state.update {
                     it.copy(

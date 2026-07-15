@@ -19,7 +19,7 @@ import com.eura.tasks.db.lists.ListDbState
 import com.eura.tasks.db.lists.UserListEntity
 import com.eura.tasks.db.tasks.TaskDbDao
 import com.eura.tasks.ui.UiEvent
-import kotlinx.datetime.Clock
+import com.eura.tasks.ui.UiEvent.*
 import kotlinx.datetime.Instant
 import java.util.UUID
 
@@ -50,8 +50,8 @@ class ListDbViewModel(
 
                 viewModelScope.launch {
                     if (listDao.searchForExistingTitle(title)) {
-                        onUiEvent(UiEvent.SetReason(1))
-                        onUiEvent(UiEvent.OpenItemWithSimilarNameWarningDialog)
+                        onUiEvent(SetReason(1))
+                        onUiEvent(OpenItemWithSimilarNameWarningDialog)
                     } else {
 
                         val list = UserListEntity(
@@ -68,7 +68,7 @@ class ListDbViewModel(
                             )
                         }
                         cleanUpOldLogs { cutoff -> deletedItemsDao.deleteLogsOlderThan(cutoff) }
-                        onUiEvent(UiEvent.CloseAddTaskListDialog)
+                        onUiEvent(CloseAddTaskListDialog)
                     }
                 }
             }
@@ -93,19 +93,50 @@ class ListDbViewModel(
                     )
                 }
             }
-            is ListDbEvent.DeleteListByName -> {
-                val currentDateTime: Instant = Clock.System.now()
+            is ListDbEvent.DeleteListById -> {
                 viewModelScope.launch {
-                    val list = listDao.getListUuidByName(event.name)
+                    val list = listDao.getListUuidByName(event.id)
 
                     val deletedList = DeletedItemsEntity(
                         deletedUuid = list.listId,
-                        deletionTime = currentDateTime,
                         type = 2
                     )
-                    taskDao.deleteTasksByListName(event.name)
+                    taskDao.deleteTasksByListId(event.id)
                     deletedItemsDao.upsertDeletedItem(deletedList)
                     listDao.deleteList(list)
+                }
+            }
+
+            is ListDbEvent.SetUpdateListTitle -> {
+                _state.update {
+                    it.copy(
+                        updateListTitle = event.title
+                    )
+                }
+            }
+
+            is ListDbEvent.RenameList -> {
+                viewModelScope.launch {
+                    val newTitle = _state.value.updateListTitle
+                    if (!newTitle.isBlank()) {
+                        listDao.updateListTitle(event.listId, newTitle)
+                    }
+                    _state.update {
+                        it.copy(
+                            updateListTitle = ""
+                        )
+                    }
+                }
+            }
+
+            is ListDbEvent.GetListsById -> {
+                viewModelScope.launch {
+                    val listName = listDao.getListById(event.listId)
+                    _state.update {
+                        it.copy(
+                            currentListName = listName
+                        )
+                    }
                 }
             }
         }
