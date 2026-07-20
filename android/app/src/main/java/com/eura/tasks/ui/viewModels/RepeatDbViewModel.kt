@@ -41,7 +41,8 @@ class RepeatDbViewModel(
 
                 viewModelScope.launch {
                     val endsRadiobutton = _state.value.selectedRadioButton
-                    val endsNever = if (endsRadiobutton == 0) true else false
+                    val endsNever =
+                        endsRadiobutton == 0
 
                     val endDateInstant = endDate?.let { Instant.fromEpochMilliseconds(it) }
                     val endDate = if (endsRadiobutton == 1) endDateInstant else null

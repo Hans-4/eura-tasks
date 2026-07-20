@@ -10,17 +10,23 @@ import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.eura.tasks.db.AppDatabase
 import com.eura.tasks.notifications.AlarmScheduler
 import com.eura.tasks.ui.AppNavHost
 import com.eura.tasks.ui.theme.EuraTasksTheme
 import com.eura.tasks.cloudSync.GoogleDriveViewModel
+import com.eura.tasks.notifications.repeats.RepeatsWorker
 import com.eura.tasks.ui.viewModels.ListDbViewModel
 import com.eura.tasks.ui.viewModels.RepeatDbViewModel
 import com.eura.tasks.ui.viewModels.SearchViewModel
 import com.eura.tasks.ui.viewModels.TagDbViewModel
 import com.eura.tasks.ui.viewModels.TaskDbViewModel
 import com.eura.tasks.ui.viewModels.UiViewModel
+import java.util.concurrent.TimeUnit
 
 class MainActivity : ComponentActivity() {
 
@@ -157,4 +163,15 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun scheduleSyncUserDataTask() {
+        val repeatingRequest = PeriodicWorkRequestBuilder<RepeatsWorker>(
+            15, TimeUnit.MINUTES
+        ).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "EuraTaskRepeatWorkManager",
+            ExistingPeriodicWorkPolicy.REPLACE,
+            repeatingRequest
+        )
+    }
 }
