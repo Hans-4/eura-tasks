@@ -15,7 +15,7 @@ import kotlinx.datetime.Instant
 @Dao
 interface TaskDbDao {
     @Upsert
-    suspend fun upsertTask(todo: TaskEntity): Long
+    suspend fun upsertTask(todo: TaskEntity): String
 
     @Update
     suspend fun updateTask(task: TaskEntity)
@@ -32,7 +32,9 @@ interface TaskDbDao {
     @Query("SELECT * FROM deleted_items WHERE type = 1")
     suspend fun getAllDeletedTasks(): List<DeletedItemsEntity>
     @Query("SELECT * FROM tasks WHERE taskUuid = :id")
-    suspend fun getTaskById(id: List<String>): List<TaskEntity>
+    suspend fun getTasksById(id: List<String>): List<TaskEntity>
+    @Query("SELECT * FROM tasks WHERE taskUuid = :id")
+    suspend fun getTaskById(id: String): TaskEntity?
     @Query("DELETE FROM tasks WHERE taskUuid = :uuid")
     suspend fun deleteTodoByUuid(uuid: String)
     @Query("SELECT * FROM tasks ORDER BY taskUuid ASC")

@@ -42,9 +42,10 @@ data class TaskEntity(
     override val isCompleted: Boolean,
     override val hasTags: Boolean,
     override val repeatType: Int? = null,
-    override val notificationTime: Instant?,
+    override val notificationTime: Instant? = null,
 
     override val parentListId: String,
+    override val parentTaskUuid: String? = null,
 
     override val creationTime: Instant = Clock.System.now(),
     override val updateTime: Instant = Clock.System.now(),

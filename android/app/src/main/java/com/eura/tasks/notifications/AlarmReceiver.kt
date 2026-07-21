@@ -5,15 +5,20 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import com.eura.tasks.db.AppDatabase
+import com.eura.tasks.db.tasks.TaskEntity
 import com.eura.tasks.notifications.AlarmService.Companion.ACTION_MARK_AS_COMPLETE
 import com.eura.tasks.notifications.AlarmService.Companion.ACTION_RESCHEDULE_TOMORROW
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.datetime.Clock
 import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import kotlinx.datetime.plus
+import kotlinx.datetime.toLocalDateTime
 
-class AlarmReceiver : BroadcastReceiver() {
+class AlarmReceiver(private val alarmScheduler: AlarmScheduler) : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent?) {
         if (intent == null) return
@@ -40,7 +45,57 @@ class AlarmReceiver : BroadcastReceiver() {
                 when (action) {
                     ACTION_MARK_AS_COMPLETE -> {
                         db.taskDao.markAsCompleteByUuid(uuid)
+
+
+                        val task = db.taskDao.getTaskById(uuid)
+
+                        val dayRepeatEntry = db.repeatDao.getRepeatDayYear(uuid)
+                        val weekRepeatEntry = db.repeatDao.getRepeatWeek(uuid)
+                        val monthRepeatEntry = db.repeatDao.getRepeatMonth(uuid)
+
+                        if (task != null) {
+                            if (task.repeatType != null) {
+                                val triggerAtMillis = when (task.repeatType) {
+                                    1 -> {
+                                        val timeZone = TimeZone.currentSystemDefault()
+                                        val today = Clock.System.now().toLocalDateTime(timeZone).date
+                                        val tomorrow = today.plus(1, DateTimeUnit.DAY)
+
+                                        val tomorrowMidnightMillis = tomorrow.atStartOfDayIn(timeZone).toEpochMilliseconds()
+
+                                        db.repeatDao.dayReduceRemainingRepeats(taskUuid = uuid, currentTime = Clock.System.now())
+                                        
+                                        tomorrowMidnightMillis + dayRepeatEntry!!.minutesSinceMidnight!!.toLong() * 10000
+                                    }
+                                    2 -> return@launch
+                                    3 -> return@launch
+                                    else -> return@launch
+                                }
+
+                                val newTask = TaskEntity(
+                                    title = task.title,
+                                    description = task.description,
+                                    isFavorite = task.isFavorite,
+                                    isCompleted = false,
+                                    hasTags = task.hasTags,
+                                    repeatType = task.repeatType,
+                                    parentListId = task.parentListId,
+                                    parentTaskUuid = dayRepeatEntry.taskUuid //TODO: Update to use the specific repeat type entry
+                                )
+
+                                val id = db.taskDao.upsertTask(newTask)
+
+                                alarmScheduler.scheduleAlarm(
+                                    id = id.hashCode(),
+                                    uuid = id,
+                                    title = title,
+                                    description = description,
+                                    triggerAtMillis = triggerAtMillis
+                                )
+                            }
+                        }
                     }
+
                     ACTION_RESCHEDULE_TOMORROW -> {
                         val instant = db.taskDao.getNotificationTimeByUuid(uuid)
                         val instantIn24Hour = instant?.plus(24, DateTimeUnit.HOUR)

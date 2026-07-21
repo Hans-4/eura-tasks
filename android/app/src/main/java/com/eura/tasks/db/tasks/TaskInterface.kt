@@ -15,6 +15,7 @@ interface TaskInterface {
     val notificationTime: Instant?
 
     val parentListId: String
+    val parentTaskUuid: String?
 
     val creationTime: Instant
     val updateTime: Instant

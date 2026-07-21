@@ -312,7 +312,7 @@ class TaskDbViewModel(
             is TaskDbEvent.GetTaskById -> {
                 viewModelScope.launch {
                     val taskIds = tagDao.getTasksByTagUuid(event.id)
-                    val tasks = taskDao.getTaskById(taskIds)
+                    val tasks = taskDao.getTasksById(taskIds)
                     _state.update {
                         it.copy(
                             tasksFromCurrentTag = tasks

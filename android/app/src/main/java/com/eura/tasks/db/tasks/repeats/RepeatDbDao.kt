@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Query
 import androidx.room.Upsert
+import kotlinx.datetime.Instant
 
 @Dao
 interface RepeatDbDao {
@@ -20,6 +21,13 @@ interface RepeatDbDao {
     suspend fun getRepeatWeek(taskUuid: String): RepeatEveryWeekEntity?
     @Query("SELECT * FROM repeat_every_mont WHERE taskUuid = :taskUuid")
     suspend fun getRepeatMonth(taskUuid: String): RepeatEveryMonthEntity?
+
+    @Query("""
+        UPDATE repeat_every_day_year 
+        SET endAfterRepetitions = endAfterRepetitions - 1, updateTime = :currentTime 
+        WHERE taskUuid = :taskUuid AND endAfterRepetitions > 0
+    """)
+    suspend fun dayReduceRemainingRepeats(taskUuid: String, currentTime: Instant)
 
     @Delete
     suspend fun removeRepeatDay(entity: RepeatEveryDayYearEntity)
