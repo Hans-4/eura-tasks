@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -225,6 +226,42 @@ fun AddRepeatsDialog(
                                                 expanded = false
                                             }
                                         )
+                                    }
+                                }
+                            }
+                        }
+
+                        if (repeatDbState.selectedRepeatType == 1) {
+                            val days = listOf("M", "D", "W", "T", "F", "S", "S")
+
+                            var selectedDays by remember { mutableStateOf(listOf<Int>()) }
+
+                            Row(
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                days.forEachIndexed { index, day ->
+                                    Button(
+                                        onClick = {
+                                            selectedDays = if (index in selectedDays) {
+                                                selectedDays - index
+                                            } else {
+                                                selectedDays + index
+                                            }
+                                        },
+                                        shape = MaterialTheme.shapes.extraLarge,
+                                        contentPadding = PaddingValues(2.dp),
+                                        colors = ButtonDefaults.buttonColors(
+                                            containerColor = if (index in selectedDays) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                                            contentColor = if (index in selectedDays) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        ),
+                                        border = BorderStroke(
+                                            width = 1.dp,
+                                            brush = SolidColor(MaterialTheme.colorScheme.outlineVariant)
+                                        ),
+                                        modifier = Modifier.size(40.dp)
+                                    ) {
+                                        Text(day)
                                     }
                                 }
                             }
