@@ -129,7 +129,7 @@ class Converter() {
                     "Monthly"
                 }
                 3 -> {
-                    if (repeatDbState.repeatEvery.toInt() != 3)
+                    if (repeatDbState.repeatEvery.toInt() != 1)
                         "Every ${repeatDbState.repeatEvery} years"
                     else
                         "Yearly"
@@ -139,7 +139,14 @@ class Converter() {
                 }
             }
 
-            return "${text}${timeText}"
+            val endText = when (repeatDbState.selectedRadioButton) {
+                0 -> ""
+                1 -> ", until ${repeatDbState.endDateString}"
+                2 -> ", ${repeatDbState.endAfterRepeats} times"
+                else -> ""
+            }
+
+            return "${text}${timeText}${endText}"
         }
     }
 }
