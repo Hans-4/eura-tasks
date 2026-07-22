@@ -15,7 +15,7 @@ import kotlinx.datetime.Instant
 @Dao
 interface TaskDbDao {
     @Upsert
-    suspend fun upsertTask(todo: TaskEntity): String
+    suspend fun upsertTask(todo: TaskEntity): Long
 
     @Update
     suspend fun updateTask(task: TaskEntity)

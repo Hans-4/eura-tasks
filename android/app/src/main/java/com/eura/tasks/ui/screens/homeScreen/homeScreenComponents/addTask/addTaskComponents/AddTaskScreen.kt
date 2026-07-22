@@ -1,6 +1,5 @@
 package com.eura.tasks.ui.screens.homeScreen.homeScreenComponents.addTask.addTaskComponents
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -16,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.ArrowDropDown
+import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -155,6 +155,21 @@ fun AddTaskScreen(
             )
         }
 
+        if (repeatDbState.toSave) {
+            Button(
+                onClick = { onUiEvent(UiEvent.OpenAddRepeatsDialog) }
+            ) {
+                IconButton(
+                    onClick = { onRepeatDbEvent(RepeatDbEvent.RemoveToSave) }
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.Clear,
+                        contentDescription = null
+                    )
+                }
+            }
+        }
+
         Row(
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
@@ -186,7 +201,11 @@ fun AddTaskScreen(
 
             IconButton(
                 onClick = {
-                    onUiEvent(UiEvent.OpenAddReminderDialog)
+                    if (repeatDbState.toSave) {
+                        onUiEvent(UiEvent.OpenAddRepeatsDialog)
+                    } else {
+                        onUiEvent(UiEvent.OpenAddReminderDialog)
+                    }
                 }
             ) {
                 Icon(

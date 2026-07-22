@@ -34,7 +34,15 @@ class RepeatDbViewModel(
                 val instant = Instant.fromEpochMilliseconds(startDate)
 
                 val repeatEvery = _state.value.repeatEvery.toIntOrNull() ?: 1
-                val minutesSinceMidnight = (_state.value.repeatTimeHour ?: 0) * 60 + (_state.value.repeatTimeMinute ?: 0)
+
+                val hour = _state.value.repeatTimeHour
+                val minute = _state.value.repeatTimeMinute
+
+                val minutesSinceMidnight = if (hour == null || minute == null) {
+                    null
+                } else {
+                    (_state.value.repeatTimeHour ?: 0) * 60 + (_state.value.repeatTimeMinute ?: 0)
+                }
 
                 val endDate = _state.value.endDate
                 val endAfterRepeats = _state.value.endAfterRepeats
@@ -175,6 +183,13 @@ class RepeatDbViewModel(
                 _state.update {
                     it.copy(
                         toSave = true
+                    )
+                }
+            }
+            RepeatDbEvent.RemoveToSave -> {
+                _state.update {
+                    it.copy(
+                        toSave = false
                     )
                 }
             }

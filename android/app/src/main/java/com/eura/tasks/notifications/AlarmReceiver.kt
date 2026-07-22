@@ -83,7 +83,8 @@ class AlarmReceiver(private val alarmScheduler: AlarmScheduler) : BroadcastRecei
                                     parentTaskUuid = dayRepeatEntry.taskUuid //TODO: Update to use the specific repeat type entry
                                 )
 
-                                val id = db.taskDao.upsertTask(newTask)
+                                db.taskDao.upsertTask(newTask)
+                                val id = newTask.taskUuid
 
                                 alarmScheduler.scheduleAlarm(
                                     id = id.hashCode(),

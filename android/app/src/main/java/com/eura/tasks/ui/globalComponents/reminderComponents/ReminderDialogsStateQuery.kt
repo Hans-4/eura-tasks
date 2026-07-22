@@ -70,10 +70,16 @@ fun ReminderDialogs(
             onUiEvent = onUiEvent,
             onConfirm = {
                 onRepeatDbEvent(RepeatDbEvent.SetToSave)
+
+                //Directly return to the bottom sheet
                 onUiEvent(UiEvent.CloseAddRepeatsDialog)
+                onUiEvent(UiEvent.CloseAddReminderDialog)
+
+                //Remove notification time
+                onTaskDbEvent(TaskDbEvent.SetTaskDate(null))
+                onTaskDbEvent(TaskDbEvent.SetTaskTime(null, null))
             },
             onDismiss = {
-                onRepeatDbEvent(RepeatDbEvent.ResetState)
                 onUiEvent(UiEvent.CloseAddRepeatsDialog)
             }
         )
