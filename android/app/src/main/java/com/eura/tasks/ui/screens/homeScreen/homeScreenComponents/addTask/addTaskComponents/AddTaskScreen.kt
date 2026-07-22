@@ -4,18 +4,24 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ShortText
 import androidx.compose.material.icons.rounded.Alarm
 import androidx.compose.material.icons.rounded.ArrowDropDown
 import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.Repeat
 import androidx.compose.material.icons.rounded.Sell
 import androidx.compose.material.icons.rounded.Star
 import androidx.compose.material.icons.rounded.StarBorder
@@ -23,6 +29,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -33,6 +40,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.eura.tasks.R
@@ -125,6 +133,7 @@ fun AddTaskScreen(
         TextField(
             modifier = Modifier
                 .focusRequester(focusRequester)
+                .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
             value = taskDbState.taskTitle,
             onValueChange = {
@@ -144,7 +153,9 @@ fun AddTaskScreen(
             ) + fadeIn(animationSpec = tween(300, delayMillis = 100))
         ) {
             TextField(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth(),
                 value = taskDbState.todoDescription,
                 onValueChange = {
                     onTaskDbEvent(TaskDbEvent.SetTodoDescription(it))
@@ -157,15 +168,45 @@ fun AddTaskScreen(
 
         if (repeatDbState.toSave) {
             Button(
-                onClick = { onUiEvent(UiEvent.OpenAddRepeatsDialog) }
+                onClick = { onUiEvent(UiEvent.OpenAddRepeatsDialog) },
+                shape = MaterialTheme.shapes.small,
+                border = BorderStroke(
+                    width = 1.dp,
+                    brush = SolidColor(MaterialTheme.colorScheme.onSurface)
+                ),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.onSurface
+                ),
+                contentPadding = PaddingValues(start = 6.dp, end = 4.dp),
+                modifier = Modifier
+                    .padding(16.dp, 8.dp, 0.dp, 0.dp)
+                    .height(30.dp)
             ) {
-                IconButton(
-                    onClick = { onRepeatDbEvent(RepeatDbEvent.RemoveToSave) }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Icon(
-                        imageVector = Icons.Rounded.Clear,
-                        contentDescription = null
+                        imageVector = Icons.Rounded.Repeat,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
                     )
+
+                    Text(
+                        text = Converter.taskRepeatInfoString(repeatDbState),
+                    )
+
+                    IconButton(
+                        onClick = { onRepeatDbEvent(RepeatDbEvent.RemoveToSave) },
+                        modifier = Modifier.size(20.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Clear,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }

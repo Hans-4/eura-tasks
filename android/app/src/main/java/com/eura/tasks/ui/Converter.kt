@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import com.eura.tasks.R
+import com.eura.tasks.db.tasks.repeats.RepeatDbState
 import com.eura.tasks.ui.theme.ColorItems
 import com.eura.tasks.ui.theme.blue
 import com.eura.tasks.ui.theme.green
@@ -93,6 +94,52 @@ class Converter() {
                 "PINK" -> pink
                 else -> purple
             }
+        }
+
+        @Composable
+        fun taskRepeatInfoString(
+            repeatDbState: RepeatDbState
+        ): String {
+            val hour = if (repeatDbState.repeatTimeHour == null)
+                null else if (repeatDbState.repeatTimeHour < 10)
+                    "0${repeatDbState.repeatTimeHour}"
+            else
+                repeatDbState.repeatTimeHour
+
+            val minute = if (repeatDbState.repeatTimeMinute == null)
+                null
+            else if (repeatDbState.repeatTimeMinute < 10)
+                "0${repeatDbState.repeatTimeMinute}"
+            else
+                repeatDbState.repeatTimeMinute
+
+            val timeText = if (hour != null && minute != null) ", at ${hour}:${minute}" else ""
+
+            val text = when (repeatDbState.selectedRepeatType) {
+                0 -> {
+                    if (repeatDbState.repeatEvery.toInt() != 1)
+                        "Every ${repeatDbState.repeatEvery} days"
+                    else
+                        "Daily"
+                }
+                1 -> {
+                    "Weekly"
+                }
+                2 -> {
+                    "Monthly"
+                }
+                3 -> {
+                    if (repeatDbState.repeatEvery.toInt() != 3)
+                        "Every ${repeatDbState.repeatEvery} years"
+                    else
+                        "Yearly"
+                }
+                else -> {
+                    ""
+                }
+            }
+
+            return "${text}${timeText}"
         }
     }
 }
