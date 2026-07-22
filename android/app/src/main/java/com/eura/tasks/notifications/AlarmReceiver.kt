@@ -64,35 +64,41 @@ class AlarmReceiver(private val alarmScheduler: AlarmScheduler) : BroadcastRecei
                                         val tomorrowMidnightMillis = tomorrow.atStartOfDayIn(timeZone).toEpochMilliseconds()
 
                                         db.repeatDao.dayReduceRemainingRepeats(taskUuid = uuid, currentTime = Clock.System.now())
+
+                                        val minutesSinceMidnight = dayRepeatEntry?.minutesSinceMidnight
+
+                                        val time = if (dayRepeatEntry != null) minutesSinceMidnight!!.toLong() else 540 //Uses 9 am if time is null
                                         
-                                        tomorrowMidnightMillis + dayRepeatEntry!!.minutesSinceMidnight!!.toLong() * 10000
+                                        tomorrowMidnightMillis + time * 10000
                                     }
                                     2 -> return@launch
                                     3 -> return@launch
                                     else -> return@launch
                                 }
 
-                                val newTask = TaskEntity(
-                                    title = task.title,
-                                    description = task.description,
-                                    isFavorite = task.isFavorite,
-                                    isCompleted = false,
-                                    hasTags = task.hasTags,
-                                    repeatType = task.repeatType,
-                                    parentListId = task.parentListId,
-                                    parentTaskUuid = dayRepeatEntry.taskUuid //TODO: Update to use the specific repeat type entry
-                                )
+                                if (task.repeatType == 1) { //Temporary safe call
+                                    val newTask = TaskEntity(
+                                        title = task.title,
+                                        description = task.description,
+                                        isFavorite = task.isFavorite,
+                                        isCompleted = false,
+                                        hasTags = task.hasTags,
+                                        repeatType = task.repeatType,
+                                        parentListId = task.parentListId,
+                                        parentTaskUuid = dayRepeatEntry?.taskUuid //TODO: Update to use the specific repeat type entry
+                                    )
 
-                                db.taskDao.upsertTask(newTask)
-                                val id = newTask.taskUuid
+                                    db.taskDao.upsertTask(newTask)
+                                    val id = newTask.taskUuid
 
-                                alarmScheduler.scheduleAlarm(
-                                    id = id.hashCode(),
-                                    uuid = id,
-                                    title = title,
-                                    description = description,
-                                    triggerAtMillis = triggerAtMillis
-                                )
+                                    alarmScheduler.scheduleAlarm(
+                                        id = id.hashCode(),
+                                        uuid = id,
+                                        title = title,
+                                        description = description,
+                                        triggerAtMillis = triggerAtMillis
+                                    )
+                                }
                             }
                         }
                     }
